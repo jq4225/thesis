@@ -9,9 +9,54 @@ library(tidyverse)
 library(janitor)
 library(readxl)
 library(lubridate)
+library(stringr)
 ```
 
-```{r}
+```{r making employment impact by county!}
+# cleaning the industry data
+employ_dirty <- read_csv('data/county_stats/cbp2019.csv', show_col_types = FALSE) %>%
+  mutate(fipstate = as.character(fipstate),
+         fipscty = as.character(fipscty)) %>%
+  mutate(fipstate = str_pad(fipstate, width = 2, side = "left", pad = "0"),
+         fipscty = str_pad(fipscty, width = 3, side = "left", pad = "0")) %>%
+  
+  # cleaning up the naics codes
+  mutate(naics = gsub('------', 'all', naics)) %>%
+  mutate(naics = gsub('/', '', naics)) %>%
+  mutate(naics = gsub('-', '', naics)) %>%
+  select(fipstate, fipscty, naics, emp) %>%
+  filter(naics == "all" | str_length(naics) == 3)
+
+propensity <- read_csv('data/county_stats/pone.0239113.s001.csv') %>%
+  select(industry_code, affected_share) %>%
+  mutate(affected_share = affected_share/100) %>%
+  mutate(industry_code = as.character(industry_code))
+
+#matching propensity scores
+
+employ_propensity <- left_join(employ_dirty, propensity, by = c("naics" = "industry_code")) %>%
+  mutate(fips = str_c(fipstate, fipscty, sep = "")) %>%
+  select(-fipstate, -fipscty) 
+
+all_employ <- employ_propensity %>%
+  filter(naics == "all") %>%
+  select(fips, emp) %>%
+  rename("total_emp" = "emp")
+
+employ_propensity_2 <- employ_propensity %>%
+  filter(naics != "all") %>%
+  left_join(all_employ, by = "fips") %>%
+  mutate(affected_emp = emp * affected_share)
+
+employ_propensity_3 <- employ_propensity_2 %>%
+  group_by(fips) %>%
+  mutate(affected_emp = replace_na(affected_emp, 0)) %>%
+  summarize(affect_emp = sum(affected_emp), total_emp = total_emp) %>%
+  distinct() %>%
+  mutate(affected_share = affect_emp/total_emp)
+
+# saved this as an RDS
+
 
 ```
 
