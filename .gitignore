@@ -10,3 +10,5 @@
 .DS_Store
 
 data/**
+
+clean_data/**

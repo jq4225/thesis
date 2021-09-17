@@ -59,4 +59,9 @@ employ_propensity_3 <- employ_propensity_2 %>%
 
 
 ```
+```{r}
+# let's do liquor stores
+
+
+```
 
