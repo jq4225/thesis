@@ -1,0 +1,137 @@
+---
+title: "2_google"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(gtrendsR)
+```
+
+Search terms:
+
+Depression: 640
+Anxiety and Stress: 639
+Mental Health: 437
+
+Headaches & Migraines: 631
+Sleep Disorders: 633
+
+Movies: 34
+Comics & Animation: 316
+Books & Literature: 22
+Music & Audio: 35
+Online Media: 613
+TV & Video: 36
+Games: 8
+
+Substance Abuse: 257
+Subcats:
+- Drug & Alcohol Treatment: 1350
+- Smoking & Smoking Cessation: 1237
+
+Alcoholic Beverages: 277
+Tobacco Products: 123
+
+```{r setup}
+# Don't need to run this -- this is replication code from the junior paper, I
+# have the results already
+
+data(countries)
+
+us_codes <- countries %>%
+  filter(country_code == "US") %>%
+  slice(20267:20476) %>%
+  mutate(name = tolower(name)) %>%
+  select(-country_code) %>%
+  clean_names()
+
+google_crosswalk <- read_csv('data/GoogleTrends_CountyDMA_Mapping.csv') %>%
+  clean_names() %>%
+  mutate(google_dma = tolower(google_dma))
+
+dma_codes <- left_join(google_crosswalk, us_codes, by = c("google_dma" = "name"))
+
+dma_codes_csv <- dma_codes %>%
+  drop_na(sub_code) %>%
+  mutate(state_dma = str_sub(google_dma, start = str_length(google_dma) - 1),
+         dma_code = str_sub(sub_code, start = str_length(sub_code) - 2)) %>%
+  mutate(google_code = str_c("US", state_dma, dma_code, sep = "-")) %>%
+  mutate(google_code = toupper(google_code))
+```
+
+```{r}
+# START HERE
+
+dma_codes <- read_csv('dma_codes.csv', col_types = cols()) %>%
+  select(google_code) %>%
+  mutate(google_code = ifelse(google_code == "US-D)-511",
+                              "US-DC-511", google_code)) %>%
+  distinct()
+```
+
+```{r}
+# And start reading in data here
+
+search_term <- 'books'
+
+books <- tibble()
+
+```
+
+
+```{r}
+# Run this
+
+for(i in 1:54) {
+  
+  if(i < 53) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                 dma_codes[(i-1)*4 + 2],
+                                                 dma_codes[(i-1)*4 + 3],
+                                                 dma_codes[(i-1)*4 + 4]),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+    pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+    mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+  }
+  
+  else if(i == 53) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+    pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+    mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+  }
+  
+  else{
+    temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-501-FINAL` = `US-NY-501`)
+  }
+  
+  if(i == 1) {
+    books <- temp
+  }
+  else {
+    books <- cbind(books, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+books_clean <- books[, -which(duplicated(names(books)))] %>%
+  select(-`US-NY-501`) %>%
+  rename(`US-NY-501` = `US-NY-501-FINAL`)
+
+saveRDS(books_clean, file = "books_scaled.rds")
+```
+
