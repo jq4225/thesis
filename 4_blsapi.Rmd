@@ -5,6 +5,11 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Install the BLS API with:
+# library(devtools)
+# install_github("mikeasilva/blsAPI")
+
 library(blsAPI)
 library(tidyverse)
 ```

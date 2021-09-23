@@ -11,6 +11,8 @@
 
 *csv
 
+*rds
+
 data/**
 
 clean_data/**
