@@ -2,17 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
-
+*Rhistory
 *Rproj
-
 .tmp.driveupload/
-
 .DS_Store
-
 *csv
-
 *rds
-
 data/**
-
 clean_data/**
+.Rhistory (1)

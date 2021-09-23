@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(janitor)
 library(gtrendsR)
+library(readxl)
 ```
 
 Search terms:
@@ -251,5 +252,55 @@ for(i in 1:209) {
 # depression_clean <- depression[, -which(duplicated(names(depression)))] %>%
 #   select(-`US-NY-501`) %>%
 #   rename(`US-NY-501` = `US-NY-501-FINAL`)
+```
+
+```{r}
+# Internet user data by DMA
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+# internet <- read_excel("data/county_stats/county_connections_dec_2018.xlsx",
+#                        sheet = "County Connections Dec 2018") %>%
+#   mutate_at(c("consumer", "non_consumer", "all", "ratio"),
+#             ~ ifelse(. == -9999, 0, .))
+
+internet <- read_excel("data/county_stats/broadband_long2000-2018rev.xlsx") %>%
+  filter(year == 2018) %>%
+  select(id, broadband, cfips) %>%
+  mutate(cfips = str_pad(cfips, width = 5, side = "left", pad = "0"))
+
+# match with population
+
+population <- read_csv("data/county_stats/pop_race.csv", skip = 1) %>%
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population, 
+         estimate_sex_and_age_total_population_5_to_9_years,
+         estimate_sex_and_age_total_population_5_to_9_years,
+         estimate_sex_and_age_total_population_10_to_14_years) %>%
+  mutate(adult_pop = estimate_sex_and_age_total_population - 
+           estimate_sex_and_age_total_population_5_to_9_years - 
+           estimate_sex_and_age_total_population_10_to_14_years) %>%
+  select(id, adult_pop)
+
+internet_users <- left_join(internet, population, by = "id") %>%
+  drop_na(adult_pop) %>%
+  mutate(internet_users = broadband * adult_pop / 1000) %>%
+  select(cfips, internet_users)
+
+# Match with DMA
+
+dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %>%
+  drop_na(google_code) %>%
+  select(-cfips) %>%
+  group_by(google_code) %>%
+  summarize(internet_users = sum(internet_users))
+  
+
+  
 ```
 
