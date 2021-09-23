@@ -1,0 +1,126 @@
+---
+title: "4_blsapitest"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(blsAPI)
+library(tidyverse)
+```
+03 = unemployment rate
+04 = unemployment raw number - what I need
+05 = employment
+06 = labor force - what I need
+
+```{r}
+# List of county FIPS codes
+
+fips_dirty <- read_excel('data/county_stats/laucntycur14_jul19_aug20.xlsx', skip = 4) %>%
+  clean_names() %>%
+  drop_na(laus_code) %>%
+  select(state_fips_code, county_fips_code) %>%
+  mutate(fips = str_c(state_fips_code, county_fips_code, sep = "")) %>%
+  select(fips) %>%
+  distinct()
+
+laus_codes <- fips_dirty %>%
+  mutate(unemploy = str_c("LAUCN", fips, "0000000004", sep = ""),
+         labor_force = str_c("LAUCN", fips, "0000000006", sep = ""))
+
+laus_list <- c(laus_codes$unemploy, laus_codes$labor_force)
+```
+
+```{r}
+payload <- list(
+ 'seriesid'= laus_list,
+ 'startyear'=2016,
+ 'endyear'=2020,
+ 'registrationKey'='e5dab3b51a48478e99712f51f824e927')
+```
+
+```{r}
+test <- blsAPI(payload = payload, api_version = 1, return_data_frame = TRUE)
+```
+
+```{r}
+unemploy <- tibble()
+
+# Each query is only 3000 terms unfortunately
+for(i in 1:129) {
+  if(i < 129) {
+    payload <- list('seriesid'= laus_list[(i*50-49):(i*50)],
+                    'startyear'=2016,
+                    'endyear'=2020,
+                    'registrationKey'='e5dab3b51a48478e99712f51f824e927')
+    temp <- blsAPI(payload = payload, api_version = 2, return_data_frame = TRUE)
+    
+    if(i == 1) {
+      unemploy <- temp
+    }
+    
+    else {
+      unemploy <- rbind(unemploy, temp)
+    }
+  }
+  else {
+    payload <- list('seriesid'= laus_list[(i*50-49):(i*50-10)],
+                    'startyear'=2016,
+                    'endyear'=2020,
+                    'registrationKey'='e5dab3b51a48478e99712f51f824e927')
+    temp <- blsAPI(payload = payload, api_version = 2, return_data_frame = TRUE)
+    unemploy <- rbind(unemploy, temp)
+    
+  }
+  Sys.sleep(2)
+  print(i)
+}
+```
+```{r}
+# Checking our missing stuff
+
+unemploy_fips <- unemploy %>%
+  select(seriesID) %>%
+  mutate(present = 1) %>%
+  distinct()
+
+laus_tibble <- tibble(laus_list) %>%
+  left_join(unemploy_fips, by = c("laus_list" = "seriesID")) %>%
+  filter(is.na(present))
+
+laus_tibble2 <- tibble(laus_list) %>%
+  filter(is.na(laus_list))
+```
+
+```{r}
+# Turns out the missing stuff was just some NAs so let's do some filtering
+
+unemploy2 <- unemploy %>%
+  mutate(fips = str_sub(seriesID, 6, 10),
+         period = as.integer(str_sub(period, 2, 3)),
+         series_type = ifelse(str_sub(seriesID, str_length(seriesID)) == "4",
+                              "unemploy", "labor_force")) %>%
+  select(-seriesID, -periodName) %>%
+  pivot_wider(names_from = series_type, values_from = value)
+
+# Let's make some DMA unemployment numbers, shall we?
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+dma_unemploy <- left_join(unemploy2, dma_codes, by = "fips") %>%
+  # Some places do not have data sad
+  mutate(unemploy = as.numeric(unemploy),
+         labor_force = as.numeric(labor_force)) %>%
+  drop_na(unemploy, labor_force) %>%
+  drop_na(google_code) %>%
+  group_by(year, period, google_code) %>%
+  select(-fips) %>%
+  summarize(unemploy = sum(unemploy), labor_force = sum(labor_force)) %>%
+  mutate(unemploy_rate = unemploy/labor_force * 100)
+```
+

@@ -155,6 +155,13 @@ sadness_clean <- sadness[, -which(duplicated(names(sadness)))] %>%
 saveRDS(sadness_clean, file = "sadness_scaled.rds")
 ```
 
+```{r}
+# Getting the week beginning dates -- each date is the BEGINNING of the week
+
+week_begin <- sadness_clean %>%
+  select(date)
+
+```
 
 ```{r}
 # And this is for categories

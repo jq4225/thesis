@@ -128,9 +128,13 @@ dma_hospitality <- left_join(hospitality_emp, dma_codes, by = "fips") %>%
 
 ```{r}
 # Vaccinations
-vaccinations_dirty <- read_csv('data/vaccinations.csv') %>%
+vaccinations_dirty <- read_csv('data/vaccinations.csv', show_col_types = FALSE) %>%
   clean_names() %>%
   select(date, fips, series_complete_pop_pct, series_complete_yes,
          administered_dose1_recip, administered_dose1_pop_pct)
+
+# Let's match this by week!
+
+week_begin <- readRDS('week_begin.rds')
 ```
 
