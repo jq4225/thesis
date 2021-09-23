@@ -1,0 +1,43 @@
+---
+title: "3_lockdowndates"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(lubridate)
+```
+
+```{r}
+interventions_dirty <- 
+read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ (1).xlsx',
+           sheet = 'Local Policies') %>%
+  # Get rid of city-specific policies
+  filter(is.na(cityname)) %>%
+  select(stfips, countyfips, stsipstart, stsipend, localsipstart, localsipend,
+         dummysipstart, dummysipend, stbusclose, localbusclose, stbusopen, 
+         localbusopen, dummybusclose, dummybusopen) %>%
+  # Pick the earliest starts and the latest ends
+  mutate(sipstart = ifelse(dummysipstart == 1, as_date(localsipstart), as_date(stsipstart)),
+         sipend = ifelse(dummysipend == 1, as_date(localsipend), as_date(stsipend)),
+         busclose = ifelse(dummybusclose == 1, as_date(localbusclose), as_date(stbusclose)),
+         busopen = ifelse(dummybusopen == 1, as_date(localbusopen), as_date(stbusopen))) %>%
+  select(stfips, countyfips, sipstart, sipend, busclose, busopen) %>%
+  mutate(stfips = str_pad(stfips, width = 2, side = "left", pad = "0"),
+         countyfips = str_pad(countyfips, width = 3, side = "left", pad = "0")) %>%
+  mutate(fips = str_c(stfips, countyfips, sep = "")) %>%
+  select(-stfips, -countyfips) %>%
+  mutate(sipstart = as_date(sipstart),
+         sipend = as_date(sipend),
+         busclose = as_date(busclose),
+         busopen = as_date(busopen)) %>%
+  # Replace NAs with 2021 dates that never trigger to stop NA errors
+  mutate(sipstart = replace_na(sipstart, as_date("2021-01-01")),
+         sipend = replace_na(sipend, as_date("2021-01-01")),
+         busclose = replace_na(busclose, as_date("2021-01-01")),
+         busopen = replace_na(busopen, as_date("2021-01-01")))
+```
+

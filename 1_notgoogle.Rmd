@@ -57,11 +57,80 @@ employ_propensity_3 <- employ_propensity_2 %>%
 
 # saved this as an RDS
 
+# Now let's match this with DMAs
+
+county_propensity <- readRDS('clean_data/employment_propensity.rds')
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+dma_propensity <- left_join(county_propensity, dma_codes, by = "fips") %>%
+  drop_na(google_code) %>%
+  select(-fips) %>%
+  group_by(google_code) %>%
+  select(-affected_share) %>%
+  summarize(affect_emp = sum(affect_emp),
+            total_emp = sum(total_emp)) %>%
+  mutate(affected_share = affect_emp/total_emp)
+  
+
 
 ```
 ```{r}
 # let's do liquor stores
 
 
+```
+
+```{r}
+# Try this again with just hospitality
+
+employ_dirty <- read_csv('data/county_stats/cbp2019.csv', show_col_types = FALSE) %>%
+  mutate(fipstate = as.character(fipstate),
+         fipscty = as.character(fipscty)) %>%
+  mutate(fipstate = str_pad(fipstate, width = 2, side = "left", pad = "0"),
+         fipscty = str_pad(fipscty, width = 3, side = "left", pad = "0")) %>%
+  
+  # cleaning up the naics codes
+  mutate(naics = gsub('------', 'all', naics)) %>%
+  mutate(naics = gsub('/', '', naics)) %>%
+  mutate(naics = gsub('-', '', naics)) %>%
+  select(fipstate, fipscty, naics, emp) %>%
+  filter(naics == "all" | naics == "72")
+
+all_emp <- employ_dirty %>%
+  filter(naics == "all") %>%
+  select(fipstate, fipscty, emp) %>%
+  rename("all_emp" = "emp")
+
+hospitality_emp <- employ_dirty %>%
+  filter(naics == "72") %>%
+  select(-naics) %>%
+  left_join(all_emp, by = c("fipstate", "fipscty")) %>%
+  mutate(fips = str_c(fipstate, fipscty, sep = "")) %>%
+  select(-fipstate, -fipscty)
+
+# rerun the dma codes bit in the previous cell
+
+dma_hospitality <- left_join(hospitality_emp, dma_codes, by = "fips") %>%
+  drop_na(google_code) %>%
+  select(-fips) %>%
+  group_by(google_code) %>%
+  summarize(emp = sum(emp),
+            all_emp = sum(all_emp)) %>%
+  mutate(affected_share = emp/all_emp)
+```
+
+
+```{r}
+# Vaccinations
+vaccinations_dirty <- read_csv('data/vaccinations.csv') %>%
+  clean_names() %>%
+  select(date, fips, series_complete_pop_pct, series_complete_yes,
+         administered_dose1_recip, administered_dose1_pop_pct)
 ```
 
