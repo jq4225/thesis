@@ -70,14 +70,18 @@ dma_codes <- read_csv('dma_codes.csv', col_types = cols()) %>%
   mutate(google_code = ifelse(google_code == "US-D)-511",
                               "US-DC-511", google_code)) %>%
   distinct()
+
+dma_codes <- pull(dma_codes, google_code)
+
+dma_codes <- sort(dma_codes)
 ```
 
 ```{r}
 # And start reading in data here -- this is for individual search terms
+# Sadness here
+search_term <- '/m/02y_3dj'
 
-search_term <- 'books'
-
-books <- tibble()
+sadness <- tibble()
 
 ```
 
@@ -85,23 +89,39 @@ books <- tibble()
 ```{r}
 # Run this
 
-for(i in 1:54) {
+for(i in 32:54) {
   
   if(i < 53) {
-    temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+    # Exception case for when we need to search twice for NY
+    if(i != 32) {
+       temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
                                                  dma_codes[(i-1)*4 + 2],
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
     mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+    }
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                 dma_codes[(i-1)*4 + 2],
+                                                 dma_codes[(i-1)*4 + 3],
+                                                 dma_codes[(i-1)*4 + 4]),
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+        distinct() %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY-501`))
+    }
+   
   }
   
   else if(i == 53) {
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
@@ -110,7 +130,7 @@ for(i in 1:54) {
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
@@ -118,21 +138,21 @@ for(i in 1:54) {
   }
   
   if(i == 1) {
-    books <- temp
+    sadness <- temp
   }
   else {
-    books <- cbind(books, temp)
+    sadness <- cbind(sadness, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-books_clean <- books[, -which(duplicated(names(books)))] %>%
+sadness_clean <- sadness[, -which(duplicated(names(sadness)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-saveRDS(books_clean, file = "books_scaled.rds")
+saveRDS(sadness_clean, file = "sadness_scaled.rds")
 ```
 
 
@@ -155,7 +175,7 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 2],
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
@@ -164,7 +184,7 @@ for(i in 1:54) {
   
   else if(i == 53) {
     temp <- gtrends(cat = category, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
@@ -173,7 +193,7 @@ for(i in 1:54) {
   
   else{
     temp <- gtrends(cat = category, geo = c('US-NY-501'),
-                            time = '2019-01-01 2020-09-01', 
+                            time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
@@ -181,20 +201,48 @@ for(i in 1:54) {
   }
   
   if(i == 1) {
-    books <- temp
+    depression <- temp
   }
   else {
-    books <- cbind(books, temp)
+    depression <- cbind(depression, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-books_clean <- books[, -which(duplicated(names(books)))] %>%
+depression_clean <- depression[, -which(duplicated(names(depression)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-saveRDS(books_clean, file = "books_scaled.rds")
+saveRDS(depression_clean, file = "depression_scaled.rds")
+```
+```{r}
+# For only one DMA at a time ... 
+
+for(i in 1:209) {
+  temp <- gtrends(cat = category, geo = dma_codes[i],
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+                pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits)
+  
+  if(i == 1) {
+    depression <- temp
+  }
+  else {
+    temp <- temp %>%
+        select(-date)
+    
+    depression <- cbind(depression, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+# depression_clean <- depression[, -which(duplicated(names(depression)))] %>%
+#   select(-`US-NY-501`) %>%
+#   rename(`US-NY-501` = `US-NY-501-FINAL`)
 ```
 
