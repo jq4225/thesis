@@ -73,7 +73,7 @@ dma_codes <- read_csv('dma_codes.csv', col_types = cols()) %>%
 ```
 
 ```{r}
-# And start reading in data here
+# And start reading in data here -- this is for individual search terms
 
 search_term <- 'books'
 
@@ -110,6 +110,69 @@ for(i in 1:54) {
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-501-FINAL` = `US-NY-501`)
+  }
+  
+  if(i == 1) {
+    books <- temp
+  }
+  else {
+    books <- cbind(books, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+books_clean <- books[, -which(duplicated(names(books)))] %>%
+  select(-`US-NY-501`) %>%
+  rename(`US-NY-501` = `US-NY-501-FINAL`)
+
+saveRDS(books_clean, file = "books_scaled.rds")
+```
+
+
+```{r}
+# And this is for categories
+
+category <- '639'
+
+depression <- tibble()
+```
+
+
+```{r}
+# Run this
+
+for(i in 1:54) {
+  
+  if(i < 53) {
+    temp <- gtrends(cat = category, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                 dma_codes[(i-1)*4 + 2],
+                                                 dma_codes[(i-1)*4 + 3],
+                                                 dma_codes[(i-1)*4 + 4]),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+    pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+    mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+  }
+  
+  else if(i == 53) {
+    temp <- gtrends(cat = category, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
+                            time = '2019-01-01 2020-09-01', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+    pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+    mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+  }
+  
+  else{
+    temp <- gtrends(cat = category, geo = c('US-NY-501'),
                             time = '2019-01-01 2020-09-01', 
                          onlyInterest = TRUE)$interest_over_time %>%
       pivot_wider(id_cols = date, names_from = geo,
