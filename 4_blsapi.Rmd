@@ -29,6 +29,8 @@ fips_dirty <- read_excel('data/county_stats/laucntycur14_jul19_aug20.xlsx', skip
   select(fips) %>%
   distinct()
 
+# Make unemployment and labor force codes out of the FIPS
+
 laus_codes <- fips_dirty %>%
   mutate(unemploy = str_c("LAUCN", fips, "0000000004", sep = ""),
          labor_force = str_c("LAUCN", fips, "0000000006", sep = ""))
@@ -37,6 +39,7 @@ laus_list <- c(laus_codes$unemploy, laus_codes$labor_force)
 ```
 
 ```{r}
+# Ignore this
 payload <- list(
  'seriesid'= laus_list,
  'startyear'=2016,
