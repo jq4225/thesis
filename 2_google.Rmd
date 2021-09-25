@@ -11,7 +11,7 @@ library(gtrendsR)
 library(readxl)
 ```
 
-Search terms:
+Search terms: (don't use anymore -- look at the google doc)
 
 Depression: 640
 Anxiety and Stress: 639
@@ -80,9 +80,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/02y_3dj'
+search_term <- '/m/05c7vv'
 
-sadness <- tibble()
+loneliness <- tibble()
 
 ```
 
@@ -90,7 +90,7 @@ sadness <- tibble()
 ```{r}
 # Run this
 
-for(i in 32:54) {
+for(i in 1:54) {
   
   if(i < 53) {
     # Exception case for when we need to search twice for NY
@@ -139,21 +139,21 @@ for(i in 32:54) {
   }
   
   if(i == 1) {
-    sadness <- temp
+    loneliness <- temp
   }
   else {
-    sadness <- cbind(sadness, temp)
+    loneliness <- cbind(loneliness, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-sadness_clean <- sadness[, -which(duplicated(names(sadness)))] %>%
+loneliness_clean <- loneliness[, -which(duplicated(names(loneliness)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-saveRDS(sadness_clean, file = "sadness_scaled.rds")
+saveRDS(loneliness_clean, file = "loneliness_scaled.rds")
 ```
 
 ```{r}
