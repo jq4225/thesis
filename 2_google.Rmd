@@ -304,3 +304,15 @@ dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %
   
 ```
 
+```{r}
+# TESTING 
+
+word <- gtrends(keyword = 'loneliness', geo = c('US-NY-501', 'US-AL-606'),
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time
+
+topic <- gtrends(keyword = '/m/05c7vv', geo = c('US-NY-501'),
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time
+```
+
