@@ -80,9 +80,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/05c7vv'
+search_term <- '/m/0k_9'
 
-loneliness <- tibble()
+anxiety <- tibble()
 
 ```
 
@@ -139,21 +139,21 @@ for(i in 1:54) {
   }
   
   if(i == 1) {
-    loneliness <- temp
+    anxiety <- temp
   }
   else {
-    loneliness <- cbind(loneliness, temp)
+    anxiety <- cbind(anxiety, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-loneliness_clean <- loneliness[, -which(duplicated(names(loneliness)))] %>%
+anxiety_clean <- anxiety[, -which(duplicated(names(anxiety)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-saveRDS(loneliness_clean, file = "loneliness_scaled.rds")
+saveRDS(anxiety_clean, file = "anxiety_scaled.rds")
 ```
 
 ```{r}
@@ -307,7 +307,7 @@ dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %
 ```{r}
 # TESTING 
 
-word <- gtrends(keyword = 'loneliness', geo = c('US-NY-501', 'US-AL-606'),
+word <- gtrends(keyword = 'anxiety', geo = c('US-NY-501', 'US-AL-606'),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
 
