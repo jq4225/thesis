@@ -79,7 +79,6 @@ dma_codes <- sort(dma_codes)
 
 ```{r}
 # And start reading in data here -- this is for individual search terms
-# Sadness here
 search_term <- '/m/04rlf'
 
 music <- tibble()
@@ -159,6 +158,7 @@ for(i in 1:54) {
   }
   else {
     music <- cbind(music, temp)
+
   }
   Sys.sleep(3)
   
@@ -329,5 +329,17 @@ crying_clean %>%
   mutate(mean = rowMeans(across(where(is.numeric)))) %>%
   ggplot(mapping = aes(x = date, y = mean)) +
     geom_line()
+```
+
+```{r}
+# TESTING 
+
+word <- gtrends(keyword = 'anxiety', geo = c('US-NY-501', 'US-AL-606'),
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time
+
+topic <- gtrends(keyword = '/m/05c7vv', geo = c('US-NY-501'),
+                            time = '2016-01-01 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time
 ```
 
