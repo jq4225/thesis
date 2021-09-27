@@ -53,10 +53,50 @@ dma_codes <- read_csv('dma_codes.csv') %>%
   mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
   select(google_code, fips)
 
-goolsbee_interventions <- readRDS('clean_data/goolsbee_interventions.rds')
+goolsbee_interventions <- readRDS('clean_data/goolsbee_interventions.rds') %>%
+  mutate(across(c(`sipstart`:`busopen`), ~ ifelse(. == as_date("2021-01-01"),
+                                                   as_date("2030-01-01"), .))) %>%
+  mutate(across(c(`sipstart`:`busopen`), as_date))
 
 # Unfinished
 
+# Let's make a tibble of every FIPS-date combination
+
+week_begin <- readRDS('week_begin.rds')
+
+fips <- tibble(goolsbee_interventions$fips)
+
+merged <- merge(week_begin, fips) %>%
+  clean_names() %>%
+  left_join(., goolsbee_interventions, by = c("goolsbee_interventions_fips" = "fips"))
+
+# This gives us a dataframe of all county implementation dates
+
+merged2 <- merged %>%
+  as_tibble() %>%
+  mutate(date = as_date(date)) %>%
+  mutate(sip = ifelse(sipstart <= (date + days(6)) & sipend >= date + days(6),
+                      1, 0),
+         busclose = ifelse(busclose <= (date + days(6)) & busopen >= date + days(6),
+                           1, 0)) %>%
+  select(date, goolsbee_interventions_fips, sip, busclose)
+
+# Now let's group this by DMA too -- read in the DMA codes here
+
+merged3 <- left_join(merged2, dma_codes, by = c("goolsbee_interventions_fips" = "fips")) %>%
+  drop_na(google_code) %>%
+  group_by(date, google_code) %>%
+  summarize(dmas = n(),
+            sip_sum = sum(sip),
+            busclose_sum = sum(busclose)) %>%
+  mutate(sip_prop = sip_sum / dmas,
+         busclose_prop = busclose_sum / dmas,
+         sip_first = ifelse(sip_sum > 0, 1, 0),
+         busclose_first = ifelse(busclose_sum > 0, 1, 0)) %>%
+  mutate(sip_most = ifelse(sip_prop >= 0.5, 1, 0),
+         busclose_most = ifelse(busclose_prop >= 0.5, 1, 0)) %>%
+  select(date, google_code, sip_prop, busclose_prop,
+         sip_first, busclose_first, sip_most, busclose_most)
 ```
 
 
