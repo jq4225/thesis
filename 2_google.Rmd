@@ -343,3 +343,79 @@ topic <- gtrends(keyword = '/m/05c7vv', geo = c('US-NY-501'),
                          onlyInterest = TRUE)$interest_over_time
 ```
 
+
+```{r}
+# Longing the data that wasn't long before 
+
+depression_clean <- readRDS('clean_data/search/depression_scaled.rds')
+
+depression_clean_2 <- depression_clean %>%
+  pivot_longer(cols = `US-AK-743`:`US-NY-501`, names_to = "dma", 
+               values_to = "depression")
+
+saveRDS(depression_clean_2, file = "depression_scaled.rds")
+
+# Editing some of the stuff we're doing that had bad results
+
+depression_scaled <- readRDS('clean_data/search/long/depression_scaled.rds') %>%
+  select(date, dma, depression) %>%
+  mutate(dma = str_replace(dma, ".x", ""))
+
+saveRDS(depression_scaled, file = "depression_scaled.rds")
+```
+
+
+```{r}
+# Let's combine our data together!
+
+searches <- tibble()
+
+files <- list.files(path = 'clean_data/search/long')
+
+for(i in 1:length(files)) {
+  temp <- readRDS(paste('clean_data/search/long/', files[i], sep = ""))
+  
+  if(i == 1) {
+    searches <- temp
+  }
+  else {
+    searches <- left_join(searches, temp, by = c("dma", "date"))
+  }
+}
+```
+
+
+```{r}
+
+# Let's combine some of the time series stuff we have 
+
+# Read in unemployment
+
+dma_unemploy <- readRDS('clean_data/dma_unemploy.rds') %>%
+  mutate(year = as.numeric(year),
+         period = as.numeric(period))
+
+# Read in covid
+
+dma_covid <- readRDS('clean_data/covid_dma.rds')
+
+# Bring in searches
+
+searches_2 <- searches %>%
+  mutate(month = month(date), year = year(date)) %>%
+  left_join(., dma_unemploy, by = c("year", "month" = "period", 
+                                    "dma" = "google_code")) %>%
+  select(-unemploy, -labor_force)
+
+# Bring in COVID -- this is searches v2
+
+searches_3 <- searches_2 %>%
+  mutate(date = as_date(date)) %>%
+  left_join(., dma_covid, by = c("dma" = "google_code",
+                                  "date")) %>%
+  select(-total_pop) %>%
+  mutate(cases_per_100k = replace_na(cases_per_100k, 0),
+         deaths_per_100k = replace_na(cases_per_100k, 0))
+
+```
+

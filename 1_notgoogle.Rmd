@@ -135,7 +135,20 @@ vaccinations_dirty <- read_csv('data/vaccinations.csv', show_col_types = FALSE) 
 
 # Let's match this by week!
 
-week_begin <- readRDS('week_begin.rds')
+week_begin <- as_tibble(readRDS('week_begin.rds')) %>%
+  mutate(week_end = as_date(date) + days(6))
+  # We want data from the END of each week rather than the beginning
+
+
+# Read in the daily vaccination data
+
+vaccinations_daily <- readRDS('data/vaccinations_daily.rds') %>%
+  mutate(date = mdy(date)) %>%
+  filter(date <= as_date("2020-12-31")) %>%
+  filter(fips != "UNK") %>%
+  filter(date %in% pull(week_begin, week_end))
+
+# Vax data is pretty insignificant at the end of 2020
 ```
 
 
@@ -168,4 +181,43 @@ elections <- read_csv('data/county_stats/countypres_2000-2020.csv',
 
   
 ```
+```{r}
+# COVID cases
+# Read in week begin first
+
+covid_county <- read_csv('data/covid_county.csv', show_col_types = FALSE) %>%
+  select(-county, -state) %>%
+  filter(date %in% pull(week_begin, week_end)) %>%
+  group_by(fips) %>%
+  arrange(date) %>%
+  mutate(new_cases = cases - lag(cases),
+         new_deaths = deaths - lag(deaths)) %>%
+  mutate(new_cases = ifelse(is.na(new_cases), cases, new_cases),
+         new_deaths = ifelse(is.na(new_deaths), deaths, new_deaths)) %>%
+  select(-cases, -deaths)
+
+# Read in some population data first
+pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population) %>%
+  mutate(fips = str_sub(id, str_length(id) - 4, str_length(id))) %>%
+  select(-id) %>%
+  left_join(., dma_codes, by = "fips") %>%
+  drop_na(google_code) %>%
+  group_by(google_code) %>%
+  summarize(total_pop = sum(estimate_sex_and_age_total_population))
+
+covid_dma <- left_join(covid_county, dma_codes, by = "fips") %>%
+  drop_na(google_code) %>%
+  ungroup() %>%
+  group_by(google_code, date) %>%
+  summarize(new_cases = sum(new_cases),
+            new_deaths = sum(new_deaths)) %>%
+  left_join(., pop, by = "google_code") %>%
+  drop_na(total_pop) %>%
+  mutate(cases_per_100k = new_cases / (total_pop/100000),
+         deaths_per_100k = new_deaths / (total_pop/100000)) %>%
+  select(-new_cases, -new_deaths)
+```
+
 

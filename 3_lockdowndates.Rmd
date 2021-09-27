@@ -41,3 +41,8 @@ read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ 
          busopen = replace_na(busopen, as_date("2021-01-01")))
 ```
 
+
+```{r}
+# State policy spreadsheets -- you need to add a state column to other things first
+```
+
