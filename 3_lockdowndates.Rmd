@@ -43,6 +43,24 @@ read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ 
 
 
 ```{r}
+# Let's try to aggregate this by DMA and (maybe) week -- read in 
+# goolsbee interventions
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+goolsbee_interventions <- readRDS('clean_data/goolsbee_interventions.rds')
+
+# Unfinished
+
+```
+
+
+```{r}
 # State policy spreadsheets -- you need to add a state column to other things first
 ```
 
