@@ -138,3 +138,34 @@ vaccinations_dirty <- read_csv('data/vaccinations.csv', show_col_types = FALSE) 
 week_begin <- readRDS('week_begin.rds')
 ```
 
+
+```{r}
+# politics
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+elections <- read_csv('data/county_stats/countypres_2000-2020.csv',
+                      show_col_types = FALSE) %>%
+  filter(year == 2020, party == "REPUBLICAN") %>%
+  select(county_fips, candidatevotes, totalvotes) %>%
+  mutate(county_fips = str_pad(county_fips, width = 5, side = "left", pad = "0")) %>%
+  left_join(., dma_codes, by = c("county_fips" = "fips")) %>%
+  drop_na(google_code) %>%
+  select(google_code, candidatevotes, totalvotes) %>%
+  group_by(google_code) %>%
+  summarize(candidatevotes = sum(candidatevotes),
+            totalvotes = sum(totalvotes)) %>% 
+  mutate(gop_pct = candidatevotes/totalvotes * 100) %>%
+  select(google_code, gop_pct)
+  
+
+
+
+  
+```
+

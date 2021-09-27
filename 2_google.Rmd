@@ -80,9 +80,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/05c7vv'
+search_term <- '/m/04rlf'
 
-loneliness <- tibble()
+music <- tibble()
 
 ```
 
@@ -100,10 +100,16 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
                             time = '2016-01-01 2020-12-31', 
-                         onlyInterest = TRUE)$interest_over_time %>%
-    pivot_wider(id_cols = date, names_from = geo,
-                values_from = hits) %>%
-    mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+                         onlyInterest = TRUE)$interest_over_time
+       
+       temp <- temp %>% 
+         # This is some shady rounding but only ever seems to matter for NY,
+         # which we end up re-searching for anyway so it doesn't really matter
+         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+         mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
+                                    values_from = hits) %>%
+                        mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
     }
     else {
       temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
@@ -111,7 +117,13 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
                             time = '2016-01-01 2020-12-31', 
-                         onlyInterest = TRUE)$interest_over_time %>%
+                         onlyInterest = TRUE)$interest_over_time 
+      
+      temp <- temp %>% 
+         # This is some shady rounding but only ever seems to matter for NY,
+         # which we end up re-searching for anyway so it doesn't really matter
+         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+         mutate(hits = as.numeric(hits)) %>%
         distinct() %>%
         pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
@@ -124,36 +136,44 @@ for(i in 1:54) {
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
-    pivot_wider(id_cols = date, names_from = geo,
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
-    mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+      mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
   }
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
       rename(`US-NY-501-FINAL` = `US-NY-501`)
   }
   
   if(i == 1) {
-    loneliness <- temp
+    music <- temp
   }
   else {
-    loneliness <- cbind(loneliness, temp)
+    music <- cbind(music, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-loneliness_clean <- loneliness[, -which(duplicated(names(loneliness)))] %>%
+music_clean <- music[, -which(duplicated(names(music)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-saveRDS(loneliness_clean, file = "loneliness_scaled.rds")
+music_clean_2 <- music_clean %>%
+  pivot_longer(cols = `US-AK-743`:`US-NY-501`, names_to = "dma", 
+               values_to = "music")
+
+saveRDS(music_clean_2, file = "music_scaled.rds")
 ```
 
 ```{r}
@@ -299,8 +319,15 @@ dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %
   select(-cfips) %>%
   group_by(google_code) %>%
   summarize(internet_users = sum(internet_users))
-  
+```
 
-  
+
+```{r}
+# Some sample plots
+
+crying_clean %>%
+  mutate(mean = rowMeans(across(where(is.numeric)))) %>%
+  ggplot(mapping = aes(x = date, y = mean)) +
+    geom_line()
 ```
 
