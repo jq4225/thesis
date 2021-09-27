@@ -70,6 +70,14 @@ merged <- merge(week_begin, fips) %>%
   clean_names() %>%
   left_join(., goolsbee_interventions, by = c("goolsbee_interventions_fips" = "fips"))
 
+# population data here
+
+pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population) %>%
+  mutate(fips = str_sub(id, str_length(id) - 4, str_length(id))) %>%
+  select(-id)
+
 # This gives us a dataframe of all county implementation dates
 
 merged2 <- merged %>%
@@ -79,7 +87,11 @@ merged2 <- merged %>%
                       1, 0),
          busclose = ifelse(busclose <= (date + days(6)) & busopen >= date + days(6),
                            1, 0)) %>%
-  select(date, goolsbee_interventions_fips, sip, busclose)
+  select(date, goolsbee_interventions_fips, sip, busclose) %>%
+  # merge in population data
+  left_join(., pop, by = c("goolsbee_interventions_fips" = "fips")) %>%
+  mutate(sip_pop = sip * estimate_sex_and_age_total_population,
+         busclose_pop = busclose * estimate_sex_and_age_total_population)
 
 # Now let's group this by DMA too -- read in the DMA codes here
 
@@ -88,19 +100,54 @@ merged3 <- left_join(merged2, dma_codes, by = c("goolsbee_interventions_fips" = 
   group_by(date, google_code) %>%
   summarize(dmas = n(),
             sip_sum = sum(sip),
-            busclose_sum = sum(busclose)) %>%
+            busclose_sum = sum(busclose),
+            pop = sum(estimate_sex_and_age_total_population),
+            sip_pop = sum(sip_pop),
+            busclose_pop = sum(busclose_pop)) %>%
   mutate(sip_prop = sip_sum / dmas,
          busclose_prop = busclose_sum / dmas,
          sip_first = ifelse(sip_sum > 0, 1, 0),
-         busclose_first = ifelse(busclose_sum > 0, 1, 0)) %>%
-  mutate(sip_most = ifelse(sip_prop >= 0.5, 1, 0),
-         busclose_most = ifelse(busclose_prop >= 0.5, 1, 0)) %>%
+         busclose_first = ifelse(busclose_sum > 0, 1, 0),
+         sip_pop_pct = sip_pop/pop,
+         busclose_pop_pct = busclose_pop/pop) %>%
+  mutate(sip_most_dma = ifelse(sip_prop >= 0.5, 1, 0),
+         busclose_most_dma = ifelse(busclose_prop >= 0.5, 1, 0),
+         sip_most_pop = ifelse(sip_pop_pct >= 0.5, 1, 0),
+         busclose_most_pop = ifelse(busclose_pop_pct >= 0.5, 1, 0)) %>%
   select(date, google_code, sip_prop, busclose_prop,
-         sip_first, busclose_first, sip_most, busclose_most)
+         sip_first, busclose_first, sip_most_dma, busclose_most_dma,
+         sip_pop_pct, busclose_pop_pct, sip_most_pop,
+         busclose_most_pop)
 ```
 
 
 ```{r}
 # State policy spreadsheets -- you need to add a state column to other things first
+
+cgrt <- read_csv('data/policy/OxCGRT_latest.csv', col_types = cols()) %>%
+  clean_names() %>%
+  filter(country_code == "USA",
+         jurisdiction == "STATE_TOTAL") %>%
+  select(region_code, date, e1_income_support,
+         e2_debt_contract_relief, economic_support_index) %>%
+  # Based on previous AK data we replace the only missing values which are from
+  # AK
+  mutate(e1_income_support = replace_na(e1_income_support, 0),
+         economic_support_index = replace_na(economic_support_index, 25)) %>%
+  filter(date <= 20210105) %>%
+  mutate(region_code = str_sub(region_code, start = 4),
+         date = as.character(date)) %>%
+  mutate(date = ymd(date))
+
+# Let's do this weekly now 
+
+week_begin <- readRDS('week_begin.rds') %>%
+  mutate(date = as_date(date)) %>%
+  # we want policy by the week's end
+  mutate(week_end = date + days(6))
+
+cgrt_weekly <- cgrt %>%
+  filter(date %in% c(week_begin$week_end)) %>%
+  mutate(date = date - days(6))
 ```
 

@@ -417,7 +417,11 @@ searches_3 <- searches_2 %>%
   mutate(cases_per_100k = replace_na(cases_per_100k, 0),
          deaths_per_100k = replace_na(cases_per_100k, 0))
 
-# Next: state policy and local lockdown indicators!!!!!!!!!
+# Modify searches v2 quickly to have state indicators
+
+searches_v2 <- searches_v2 %>%
+  mutate(state = str_sub(dma, start = 4, end = 5))
+
 
 ```
 
