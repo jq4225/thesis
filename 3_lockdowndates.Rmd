@@ -203,5 +203,7 @@ searches_v3 <- readRDS('clean_data/search/searches_v3.rds') %>%
          deaths_per_100k = lag(deaths_per_100k)) %>%
   fill(c(`cases_per_100k`, `deaths_per_100k`), .direction = "up") %>%
   ungroup()
+
+# to do: merge in lockdown dates and make some graphs
 ```
 
