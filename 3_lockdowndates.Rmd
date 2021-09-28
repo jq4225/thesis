@@ -122,6 +122,35 @@ merged3 <- left_join(merged2, dma_codes, by = c("goolsbee_interventions_fips" = 
 
 
 ```{r}
+# now let's make a slight modification to our lockdowns indicator by making it
+# for every year
+
+dma_interventions <- readRDS('clean_data/dma_interventions.rds') %>%
+  mutate(year = year(date)) %>%
+  group_by(year, google_code) %>%
+  mutate(week = 1:n()) %>%
+  ungroup()
+
+dma_interventions_20 <- dma_interventions %>%
+  filter(year == 2020) %>%
+  select(-date, -year)
+
+# Note: version 2 just complies with our regression model estimation thing
+
+dma_interventions_2 <- dma_interventions %>%
+  select(date, google_code, year, week) %>%
+  left_join(., dma_interventions_20, by = c("google_code", "week")) %>%
+  group_by(google_code) %>%
+  arrange(date) %>%
+  fill(sip_prop:busclose_most_pop, .direction = "down")
+
+week_begin <- readRDS('week_begin.rds') %>%
+  as_tibble() %>%
+  mutate(date = as_date(date))
+```
+
+
+```{r}
 # State policy spreadsheets -- you need to add a state column to other things first
 
 cgrt <- read_csv('data/policy/OxCGRT_latest.csv', col_types = cols()) %>%
@@ -149,5 +178,29 @@ week_begin <- readRDS('week_begin.rds') %>%
 cgrt_weekly <- cgrt %>%
   filter(date %in% c(week_begin$week_end)) %>%
   mutate(date = date - days(6))
+```
+
+
+```{r}
+# Join this onto searches v2 to make v3
+
+searches_v3 <- readRDS('clean_data/search/searches_v2.rds') %>%
+  left_join(., cgrt_weekly, by = c("state" = "region_code", "date")) %>%
+  mutate(e1_income_support = replace_na(e1_income_support, 0),
+         e2_debt_contract_relief = replace_na(e2_debt_contract_relief, 0),
+         economic_support_index = replace_na(economic_support_index, 0)) %>%
+  rename('income_support' = 'e1_income_support',
+         'debt_contract_relief'= 'e2_debt_contract_relief') %>%
+  mutate(year = as.factor(year),
+         year_indicator = ifelse(year == "2020", 1, 0))
+
+# Fixing searches v3 to have lagged covid cases instead of covid cases
+
+searches_v3 <- readRDS('clean_data/search/searches_v3.rds') %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(cases_per_100k = lag(cases_per_100k),
+         deaths_per_100k = lag(deaths_per_100k)) %>%
+  fill(c(`cases_per_100k`, `deaths_per_100k`), .direction = "up")  
 ```
 
