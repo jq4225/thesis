@@ -11,6 +11,9 @@ library(texreg)
 library(fixest)
 ```
 
+```{r}
+searches_v4 <- readRDS('searches_v4.rds')
+```
 
 ```{r}
 # read in searches v4 or later

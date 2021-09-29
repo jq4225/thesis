@@ -80,9 +80,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/012lyw'
+search_term <- '/m/03f_cb'
 
-stress <- tibble()
+depression <- tibble()
 
 ```
 
@@ -90,7 +90,7 @@ stress <- tibble()
 ```{r}
 # Run this
 
-for(i in 28:54) {
+for(i in 1:54) {
   
   if(i < 53) {
     # Exception case for when we need to search twice for NY
@@ -155,6 +155,17 @@ stress_clean <- stress[, -which(duplicated(names(stress)))] %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
 saveRDS(stress_clean, file = "stress_scaled.rds")
+```
+```{r}
+# Pivot longer really quickly
+
+depression_long <- depression_scaled %>%
+  pivot_longer(cols = `US-AK-743`:`US-NY-501`,
+               names_to = "dma", values_to = "depression")
+
+saveRDS(depression_long, file = "depression_scaled.rds")
+
+
 ```
 
 ```{r}
