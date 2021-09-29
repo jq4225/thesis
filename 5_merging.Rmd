@@ -1,0 +1,98 @@
+---
+title: "5_merging"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+```
+
+```{r}
+# start with searches v6
+
+# read in covid_dma
+covid_dma_v2 <- readRDS('clean_data/covid_dma_v2.rds')
+# don't need to lag
+
+searches_v7 <- searches_v6 %>%
+  select(-cases_per_100k, -deaths_per_100k) %>%
+  left_join(., covid_dma_v2, by = c("dma" = "google_code", "date")) %>%
+  mutate(cases_per_100k = replace_na(cases_per_100k, 0),
+         deaths_per_100k = replace_na(deaths_per_100k, 0))
+```
+
+
+```{r}
+# Make some numerical counters for when lockdowns happen
+sip_first <- searches_v7 %>%
+  filter(sip_first == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+busclose_first <- searches_v7 %>%
+  filter(busclose_first == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+sip_most_pop <- searches_v7 %>%
+  filter(sip_most_pop == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+busclose_most_pop <- searches_v7 %>%
+  filter(busclose_most_pop == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+busclose_most_dma <- searches_v7 %>%
+  filter(busclose_most_dma == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+sip_most_dma <- searches_v7 %>%
+  filter(sip_most_dma == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+searches_v8 <- searches_v7 %>%
+  left_join(., sip_first, by = "dma") %>%
+  mutate(sip_first_counter = week - start_week) %>%
+  select(-start_week) %>%
+  left_join(., busclose_first, by = "dma") %>%
+  mutate(busclose_first_counter = week - start_week) %>%
+  select(-start_week) %>%
+  left_join(., sip_most_pop, by = "dma") %>%
+  mutate(sip_most_pop_counter = week - start_week) %>%
+  select(-start_week) %>% 
+  left_join(., busclose_most_pop, by = "dma") %>%
+  mutate(busclose_most_pop_counter = week - start_week) %>%
+  select(-start_week) %>%
+  left_join(., sip_most_dma, by = "dma") %>%
+  mutate(sip_most_dma_counter = week - start_week) %>%
+  select(-start_week) %>% 
+  left_join(., busclose_most_dma, by = "dma") %>%
+  mutate(busclose_most_dma_counter = week - start_week) %>%
+  select(-start_week)
+```
+

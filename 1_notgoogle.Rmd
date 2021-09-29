@@ -194,7 +194,9 @@ covid_county <- read_csv('data/covid_county.csv', show_col_types = FALSE) %>%
          new_deaths = deaths - lag(deaths)) %>%
   mutate(new_cases = ifelse(is.na(new_cases), cases, new_cases),
          new_deaths = ifelse(is.na(new_deaths), deaths, new_deaths)) %>%
-  select(-cases, -deaths)
+  select(-cases, -deaths) %>%
+  # lag the dates
+  mutate(date = date + days(1))
 
 # Read in some population data first
 pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 

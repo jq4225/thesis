@@ -1,0 +1,27 @@
+---
+title: "5_regressions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lfe)
+library(texreg)
+library(fixest)
+```
+
+```{r}
+searches_v7 <- readRDS('clean_data/search/searches_v7.rds')
+```
+
+```{r}
+# read in searches v4 or later
+
+test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator + 
+               deaths_per_100k + cases_per_100k +  
+               unemploy_rate + economic_support_index|factor(dma):factor(week) + year|0|dma, 
+             data = searches_v7)
+```
+
+

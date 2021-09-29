@@ -1,0 +1,348 @@
+---
+title: "graphing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+depression_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(depression = mean(depression)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = depression, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "Depression vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+depression_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(depression = mean(depression)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = depression, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "Depression vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+
+anxiety_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = anxiety, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "anxiety vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+anxiety_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = anxiety, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "anxiety vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+worry_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(worry = mean(worry)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = worry, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "worry vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+worry_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(worry = mean(worry)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = worry, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "worry vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+loneliness_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(loneliness = mean(loneliness)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = loneliness, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "loneliness vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+loneliness_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(loneliness = mean(loneliness)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = loneliness, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "loneliness vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+crying_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(crying = mean(crying)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = crying, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "crying vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+crying_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(crying = mean(crying)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = crying, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "crying vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+stress_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(stress = mean(stress)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = stress, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "stress vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+stress_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(stress = mean(stress)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = stress, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "stress vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+
+    
+```
+```{r}
+# Substance abuse
+
+alcohol_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(alcohol = mean(alcohol)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = alcohol, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "alcohol vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+alcohol_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(alcohol = mean(alcohol)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = alcohol, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "alcohol vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+smoking_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(smoking = mean(smoking)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = smoking, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "smoking vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+smoking_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(smoking = mean(smoking)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = smoking, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "smoking vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+substance_abuse_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(substance_abuse = mean(substance_abuse)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = substance_abuse, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "substance_abuse vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+substance_abuse_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(substance_abuse = mean(substance_abuse)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = substance_abuse, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "substance_abuse vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+```
+
+
+```{r}
+# Leisure
+
+books_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(books = mean(books)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = books, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "books vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+books_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(books = mean(books)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = books, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "books vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+film_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(film = mean(film)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = film, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "film vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+film_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(film = mean(film)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = film, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "film vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+games_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(games = mean(games)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = games, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "games vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+games_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(games = mean(games)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = games, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "games vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+music_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(music = mean(music)) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = music, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "music vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+music_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(music = mean(music)) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = music, color = factor(year_indicator))) +   
+    geom_line() + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "music vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+
+
+```
+
+
+```{r}
+
+ggsave(plot = worry_sip, file = "worry_sip.png")
+
+ggsave(plot = worry_busclose, file = "worry_busclose.png")
+```
+
