@@ -258,6 +258,18 @@ searches_v5 <- searches_v4 %>%
   rbind(searches_dc) %>%
   mutate(year_indicator = ifelse(year == 2020, 1, 0),
          year = as.factor(year))
+```
+
+
+```{r}
+# Fixing the depression data
+
+depression <- readRDS('depression_scaled.rds') %>%
+  mutate(date = as_date(date))
+
+searches_v4 <- readRDS('searches_v4.rds') %>%
+  select(-depression) %>%
+  left_join(depression, by = c("date", "dma"))
 
 ```
 
