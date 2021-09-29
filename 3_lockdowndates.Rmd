@@ -144,6 +144,8 @@ dma_interventions_2 <- dma_interventions %>%
   arrange(date) %>%
   fill(sip_prop:busclose_most_pop, .direction = "down")
 
+# Add in DC data
+
 week_begin <- readRDS('week_begin.rds') %>%
   as_tibble() %>%
   mutate(date = as_date(date))
@@ -205,5 +207,55 @@ searches_v3 <- readRDS('clean_data/search/searches_v3.rds') %>%
   ungroup()
 
 # to do: merge in lockdown dates and make some graphs
+```
+
+
+```{r}
+# Note we are missing DC data!!!! -- let's do this manually
+
+dc <- tibble(dma = "US-DC-511", sipstart = as_date("2020-04-01"),
+             sipend = as_date("2020-05-29"), busclose = as_date("2020-03-25"),
+             busopen = as_date("2020-05-29"))
+
+# Look at the dc unemployment data from here
+
+dc_unemploy <- dc_unemploy %>%
+  mutate(year = as.numeric(year))
+
+dma_interventions_v2 <- readRDS('clean_data/dma_interventions_v2.rds') %>%
+  select(-year)
+
+searches_v4 <- left_join(searches_v3, dma_interventions_v2, 
+                         by = c("date", "dma" = "google_code"))
+
+searches_dc <- searches_v4 %>%
+  filter(dma == "US-DC-511") %>%
+  select(-unemploy_rate) %>%
+  group_by(year) %>%
+  arrange(date) %>%
+  mutate(week = 1:n()) %>%
+  # join in our unemployment rate
+  left_join(., dc_unemploy, by = c("year", "month" = "period", "dma")) %>%
+  rename("unemploy_rate" = "value") %>%
+  mutate(sip_first = ifelse(dc$sipstart[1] >= (date + days(6)) & 
+                              dc$sipend[1] <= (date + days(6)),
+                            1, 0),
+         busclose_first = ifelse(dc$busclose[1] >= (date + days(6)) & 
+                              dc$busclose[1] <= (date + days(6)),
+                            1, 0)) %>%
+  mutate(sip_prop = sip_first,
+         busclose_prop = busclose_first,
+         sip_most_dma = sip_first,
+         busclose_most_dma = busclose_first,
+         sip_pop_pct = sip_first,
+         busclose_pop_pct = busclose_first,
+         sip_most_pop = sip_first,
+         busclose_most_pop = busclose_first)
+
+# This is actually searches_v4
+searches_v5 <- searches_v4 %>%
+  filter(dma != "US-DC-511") %>%
+  rbind(searches_dc)
+
 ```
 

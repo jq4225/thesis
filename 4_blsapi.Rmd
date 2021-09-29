@@ -133,3 +133,19 @@ dma_unemploy <- left_join(unemploy2, dma_codes, by = "fips") %>%
   mutate(unemploy_rate = unemploy/labor_force * 100)
 ```
 
+
+```{r}
+# Let's do the DC stuff
+
+payload <- list('seriesid'= 'LAUST110000000000003',
+                    'startyear'=2016,
+                    'endyear'=2020,
+                    'registrationKey'='e5dab3b51a48478e99712f51f824e927')
+
+dc_unemploy <- blsAPI(payload = payload, api_version = 2, return_data_frame = TRUE) %>%
+  mutate(period = as.integer(str_sub(period, 2, 3)),
+         dma = "US-DC-511") %>%
+  select(year, period, value, dma)
+  
+```
+
