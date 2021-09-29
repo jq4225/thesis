@@ -79,9 +79,10 @@ dma_codes <- sort(dma_codes)
 
 ```{r}
 # And start reading in data here -- this is for individual search terms
-search_term <- '/m/04rlf'
+# Sadness here
+search_term <- '/m/012lyw'
 
-music <- tibble()
+stress <- tibble()
 
 ```
 
@@ -89,7 +90,7 @@ music <- tibble()
 ```{r}
 # Run this
 
-for(i in 1:54) {
+for(i in 28:54) {
   
   if(i < 53) {
     # Exception case for when we need to search twice for NY
@@ -101,12 +102,7 @@ for(i in 1:54) {
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
        
-       temp <- temp %>% 
-         # This is some shady rounding but only ever seems to matter for NY,
-         # which we end up re-searching for anyway so it doesn't really matter
-         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
-         mutate(hits = as.numeric(hits)) %>%
-         pivot_wider(id_cols = date, names_from = geo,
+       temp <- temp %>% pivot_wider(id_cols = date, names_from = geo,
                                     values_from = hits) %>%
                         mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
     }
@@ -116,13 +112,7 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
                             time = '2016-01-01 2020-12-31', 
-                         onlyInterest = TRUE)$interest_over_time 
-      
-      temp <- temp %>% 
-         # This is some shady rounding but only ever seems to matter for NY,
-         # which we end up re-searching for anyway so it doesn't really matter
-         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
-         mutate(hits = as.numeric(hits)) %>%
+                         onlyInterest = TRUE)$interest_over_time %>%
         distinct() %>%
         pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
@@ -135,45 +125,36 @@ for(i in 1:54) {
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
-      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
-      mutate(hits = as.numeric(hits)) %>%
-      pivot_wider(id_cols = date, names_from = geo,
+    pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
-      mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+    mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
   }
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
-      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
-      mutate(hits = as.numeric(hits)) %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
       rename(`US-NY-501-FINAL` = `US-NY-501`)
   }
   
   if(i == 1) {
-    music <- temp
+    stress <- temp
   }
   else {
-    music <- cbind(music, temp)
-
+    stress <- cbind(stress, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-music_clean <- music[, -which(duplicated(names(music)))] %>%
+stress_clean <- stress[, -which(duplicated(names(stress)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`)
 
-music_clean_2 <- music_clean %>%
-  pivot_longer(cols = `US-AK-743`:`US-NY-501`, names_to = "dma", 
-               values_to = "music")
-
-saveRDS(music_clean_2, file = "music_scaled.rds")
+saveRDS(stress_clean, file = "stress_scaled.rds")
 ```
 
 ```{r}
@@ -319,109 +300,8 @@ dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %
   select(-cfips) %>%
   group_by(google_code) %>%
   summarize(internet_users = sum(internet_users))
-```
-
-
-```{r}
-# Some sample plots
-
-crying_clean %>%
-  mutate(mean = rowMeans(across(where(is.numeric)))) %>%
-  ggplot(mapping = aes(x = date, y = mean)) +
-    geom_line()
-```
-
-```{r}
-# TESTING 
-
-word <- gtrends(keyword = 'anxiety', geo = c('US-NY-501', 'US-AL-606'),
-                            time = '2016-01-01 2020-12-31', 
-                         onlyInterest = TRUE)$interest_over_time
-
-topic <- gtrends(keyword = '/m/05c7vv', geo = c('US-NY-501'),
-                            time = '2016-01-01 2020-12-31', 
-                         onlyInterest = TRUE)$interest_over_time
-```
-
-
-```{r}
-# Longing the data that wasn't long before 
-
-depression_clean <- readRDS('clean_data/search/depression_scaled.rds')
-
-depression_clean_2 <- depression_clean %>%
-  pivot_longer(cols = `US-AK-743`:`US-NY-501`, names_to = "dma", 
-               values_to = "depression")
-
-saveRDS(depression_clean_2, file = "depression_scaled.rds")
-
-# Editing some of the stuff we're doing that had bad results
-
-depression_scaled <- readRDS('clean_data/search/long/depression_scaled.rds') %>%
-  select(date, dma, depression) %>%
-  mutate(dma = str_replace(dma, ".x", ""))
-
-saveRDS(depression_scaled, file = "depression_scaled.rds")
-```
-
-
-```{r}
-# Let's combine our data together!
-
-searches <- tibble()
-
-files <- list.files(path = 'clean_data/search/long')
-
-for(i in 1:length(files)) {
-  temp <- readRDS(paste('clean_data/search/long/', files[i], sep = ""))
   
-  if(i == 1) {
-    searches <- temp
-  }
-  else {
-    searches <- left_join(searches, temp, by = c("dma", "date"))
-  }
-}
-```
 
-
-```{r}
-
-# Let's combine some of the time series stuff we have 
-
-# Read in unemployment
-
-dma_unemploy <- readRDS('clean_data/dma_unemploy.rds') %>%
-  mutate(year = as.numeric(year),
-         period = as.numeric(period))
-
-# Read in covid
-
-dma_covid <- readRDS('clean_data/covid_dma.rds')
-
-# Bring in searches
-
-searches_2 <- searches %>%
-  mutate(month = month(date), year = year(date)) %>%
-  left_join(., dma_unemploy, by = c("year", "month" = "period", 
-                                    "dma" = "google_code")) %>%
-  select(-unemploy, -labor_force)
-
-# Bring in COVID -- this is searches v2
-
-searches_3 <- searches_2 %>%
-  mutate(date = as_date(date)) %>%
-  left_join(., dma_covid, by = c("dma" = "google_code",
-                                  "date")) %>%
-  select(-total_pop) %>%
-  mutate(cases_per_100k = replace_na(cases_per_100k, 0),
-         deaths_per_100k = replace_na(cases_per_100k, 0))
-
-# Modify searches v2 quickly to have state indicators
-
-searches_v2 <- searches_v2 %>%
-  mutate(state = str_sub(dma, start = 4, end = 5))
-
-
+  
 ```
 

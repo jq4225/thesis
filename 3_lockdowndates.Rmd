@@ -255,7 +255,9 @@ searches_dc <- searches_v4 %>%
 # This is actually searches_v4
 searches_v5 <- searches_v4 %>%
   filter(dma != "US-DC-511") %>%
-  rbind(searches_dc)
+  rbind(searches_dc) %>%
+  mutate(year_indicator = ifelse(year == 2020, 1, 0),
+         year = as.factor(year))
 
 ```
 
