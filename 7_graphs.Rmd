@@ -421,3 +421,397 @@ ggsave(plot = worry_sip, file = "worry_sip.png")
 ggsave(plot = worry_busclose, file = "worry_busclose.png")
 ```
 
+```{r}
+# Try ratio
+
+depression_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(depression = mean(depression)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = depression) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "Depression vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+depression_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(depression = mean(depression)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = depression) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "Depression vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+alcohol_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(alcohol = mean(alcohol)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = alcohol) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "alcohol vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+alcohol_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(alcohol = mean(alcohol)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = alcohol) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "alcohol vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+anxiety_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = anxiety) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "anxiety vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+anxiety_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = anxiety) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "anxiety vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+books_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(books = mean(books)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = books) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "books vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+books_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(books = mean(books)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = books) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "books vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+crying_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(crying = mean(crying)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = crying) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "crying vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+crying_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(crying = mean(crying)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = crying) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "crying vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+film_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(film = mean(film)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = film) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "film vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+film_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(film = mean(film)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = film) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "film vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+games_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(games = mean(games)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = games) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "games vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+games_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(games = mean(games)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = games) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "games vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+loneliness_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(loneliness = mean(loneliness)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = loneliness) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "loneliness vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+loneliness_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(loneliness = mean(loneliness)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = loneliness) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "loneliness vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+smoking_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(smoking = mean(smoking)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = smoking) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "smoking vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+smoking_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(smoking = mean(smoking)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = smoking) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "smoking vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+stress_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(stress = mean(stress)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = stress) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "stress vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+stress_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(stress = mean(stress)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = stress) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "stress vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+music_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(music = mean(music)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = music) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "music vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+music_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(music = mean(music)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = music) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "music vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+substance_abuse_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(substance_abuse = mean(substance_abuse)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = substance_abuse) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "substance_abuse vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+substance_abuse_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(substance_abuse = mean(substance_abuse)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = substance_abuse) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "substance_abuse vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+worry_busclose <- searches_v8 %>%
+  group_by(year_indicator, busclose_first_counter) %>%
+  summarize(worry = mean(worry)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = worry) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = busclose_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "worry vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    by = 10))
+
+worry_sip <- searches_v8 %>%
+  group_by(year_indicator, sip_first_counter) %>%
+  summarize(worry = mean(worry)) %>%
+  pivot_wider(names_from = year_indicator, 
+              values_from = worry) %>%
+  mutate(ratio = `1`/`0`) %>%
+  ggplot(mapping = aes(x = sip_first_counter, y = ratio)) +   
+    geom_line() + 
+    theme_bw() +
+    labs(title = "worry vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
+         x = "Weeks vs. Lockdown") +
+    scale_x_continuous(breaks = seq(-10, 
+                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    by = 10))
+```
+
