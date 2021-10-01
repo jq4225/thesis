@@ -360,7 +360,7 @@ for(j in 1:length(anchor_list)) {
                           mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
       }
       else {
-        temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+        temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
                                                    dma_codes[(i-1)*4 + 2],
                                                    dma_codes[(i-1)*4 + 3],
                                                    dma_codes[(i-1)*4 + 4]),
@@ -403,18 +403,18 @@ for(j in 1:length(anchor_list)) {
     # print(i)
   }
 
-  keyword_clean <- keyword[, -which(duplicated(names(stress)))] %>%
+  keyword_clean <- keyword[, -which(duplicated(names(keyword)))] %>%
     select(-`US-NY-501`) %>%
     rename(`US-NY-501` = `US-NY-501-FINAL`) %>%
     pivot_longer(cols = `US-AK-743`:`US-NY-501`,
                  names_to = "dma", values_to = anchor[2,j])
   
   if(j == 1) {
-    anchor_index <- keyword
+    anchor_index <- keyword_clean
   }
   
   else {
-    anchor_index <- left_join(anchor_index, keyword, by = c("dma", "date"))
+    anchor_index <- left_join(anchor_index, keyword_clean, by = c("dma", "date"))
   }
   
   print(j)
