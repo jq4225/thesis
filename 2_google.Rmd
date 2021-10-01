@@ -9,6 +9,16 @@ library(tidyverse)
 library(janitor)
 library(gtrendsR)
 library(readxl)
+
+dma_codes <- read_csv('dma_codes.csv', col_types = cols()) %>%
+  select(google_code) %>%
+  mutate(google_code = ifelse(google_code == "US-D)-511",
+                              "US-DC-511", google_code)) %>%
+  distinct()
+
+dma_codes <- pull(dma_codes, google_code)
+
+dma_codes <- sort(dma_codes)
 ```
 
 Search terms: (don't use anymore -- look at the google doc)
@@ -314,5 +324,108 @@ dma_internet <- left_join(internet_users, dma_codes, by = c("cfips" = "fips")) %
   
 
   
+```
+
+```{r}
+# Reading in our anchor index
+
+anchor <- read_excel('anchor_index.xlsx')
+
+anchor_list <- c(anchor$Code)
+```
+
+
+```{r}
+# Googling our anchor index
+anchor_index <- tibble()
+
+for(j in 1:length(anchor_list)) {
+  
+  keyword <- tibble()
+  
+  for(i in 1:54) {
+  
+    if(i < 53) {
+      # Exception case for when we need to search twice for NY
+      if(i != 32) {
+         temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                   dma_codes[(i-1)*4 + 2],
+                                                   dma_codes[(i-1)*4 + 3],
+                                                   dma_codes[(i-1)*4 + 4]),
+                              time = '2016-01-01 2020-12-31', 
+                           onlyInterest = TRUE)$interest_over_time
+         
+         temp <- temp %>% pivot_wider(id_cols = date, names_from = geo,
+                                      values_from = hits) %>%
+                          mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+      }
+      else {
+        temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                   dma_codes[(i-1)*4 + 2],
+                                                   dma_codes[(i-1)*4 + 3],
+                                                   dma_codes[(i-1)*4 + 4]),
+                              time = '2016-01-01 2020-12-31', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+          distinct() %>%
+          pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+          mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY-501`))
+      }
+     
+    }
+    
+    else if(i == 53) {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
+                              time = '2016-01-01 2020-12-31', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+    }
+    
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
+                              time = '2016-01-01 2020-12-31', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                    values_from = hits) %>%
+        rename(`US-NY-501-FINAL` = `US-NY-501`)
+    }
+    
+    if(i == 1) {
+      keyword <- temp
+    }
+    else {
+      keyword <- cbind(keyword, temp)
+    }
+    Sys.sleep(3)
+    
+    # print(i)
+  }
+
+  keyword_clean <- keyword[, -which(duplicated(names(stress)))] %>%
+    select(-`US-NY-501`) %>%
+    rename(`US-NY-501` = `US-NY-501-FINAL`) %>%
+    pivot_longer(cols = `US-AK-743`:`US-NY-501`,
+                 names_to = "dma", values_to = anchor[2,j])
+  
+  if(j == 1) {
+    anchor_index <- keyword
+  }
+  
+  else {
+    anchor_index <- left_join(anchor_index, keyword, by = c("dma", "date"))
+  }
+  
+  print(j)
+  
+  Sys.sleep(30)
+  
+  
+  
+  
+}
+
+
 ```
 
