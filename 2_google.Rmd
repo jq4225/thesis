@@ -407,7 +407,7 @@ for(j in 1:length(anchor_list)) {
     select(-`US-NY-501`) %>%
     rename(`US-NY-501` = `US-NY-501-FINAL`) %>%
     pivot_longer(cols = `US-AK-743`:`US-NY-501`,
-                 names_to = "dma", values_to = anchor[2,j])
+                 names_to = "dma", values_to = anchor[[j,2]])
   
   if(j == 1) {
     anchor_index <- keyword_clean
@@ -422,6 +422,9 @@ for(j in 1:length(anchor_list)) {
   Sys.sleep(30)
 
 }
+
+anchor_index_2 <- anchor_index %>%
+  clean_names()
 
 
 ```
