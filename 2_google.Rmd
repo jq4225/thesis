@@ -420,10 +420,7 @@ for(j in 1:length(anchor_list)) {
   print(j)
   
   Sys.sleep(30)
-  
-  
-  
-  
+
 }
 
 
