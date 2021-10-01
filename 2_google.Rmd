@@ -375,7 +375,7 @@ for(j in 1:length(anchor_list)) {
     }
     
     else if(i == 53) {
-      temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
       pivot_wider(id_cols = date, names_from = geo,
@@ -384,7 +384,7 @@ for(j in 1:length(anchor_list)) {
     }
     
     else {
-      temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501'),
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
         pivot_wider(id_cols = date, names_from = geo,
