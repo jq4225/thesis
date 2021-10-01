@@ -337,9 +337,9 @@ anchor_list <- c(anchor$Code)
 
 ```{r}
 # Googling our anchor index
-anchor_index <- tibble()
+# anchor_index <- tibble()
 
-for(j in 1:length(anchor_list)) {
+for(j in 10:length(anchor_list)) {
   
   keyword <- tibble()
   
@@ -355,9 +355,12 @@ for(j in 1:length(anchor_list)) {
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time
          
-         temp <- temp %>% pivot_wider(id_cols = date, names_from = geo,
+         temp <- temp %>% 
+           mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+           mutate(hits = as.numeric(hits)) %>%
+           pivot_wider(id_cols = date, names_from = geo,
                                       values_from = hits) %>%
-                          mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+            mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
       }
       else {
         temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
@@ -367,6 +370,8 @@ for(j in 1:length(anchor_list)) {
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
           distinct() %>%
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
           pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
           mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY-501`))
@@ -378,6 +383,8 @@ for(j in 1:length(anchor_list)) {
       temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
       mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
@@ -387,6 +394,8 @@ for(j in 1:length(anchor_list)) {
       temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY-501'),
                               time = '2016-01-01 2020-12-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
         pivot_wider(id_cols = date, names_from = geo,
                     values_from = hits) %>%
         rename(`US-NY-501-FINAL` = `US-NY-501`)
