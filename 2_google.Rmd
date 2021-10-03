@@ -339,7 +339,7 @@ anchor_list <- c(anchor$Code)
 # Googling our anchor index
 # anchor_index <- tibble()
 
-for(j in 38:length(anchor_list)) {
+for(j in 44:length(anchor_list)) {
   
   keyword <- tibble()
   
