@@ -12,7 +12,7 @@ library(fixest)
 ```
 
 ```{r}
-searches_v7 <- readRDS('clean_data/search/searches_v7.rds')
+searches_v7 <- readRDS('clean_data/search/searches_v9.rds')
 ```
 
 ```{r}
@@ -20,8 +20,13 @@ searches_v7 <- readRDS('clean_data/search/searches_v7.rds')
 
 test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator + 
                deaths_per_100k + cases_per_100k +  
-               unemploy_rate + economic_support_index|factor(dma):factor(week) + year|0|dma, 
-             data = searches_v7)
-```
+               unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
+             data = searches_v9)
+
+test3 <-  felm(I(log(depression + 1)) ~  sip_first * year_indicator + 
+               deaths_per_100k + cases_per_100k +  
+               unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
+             data = searches_norm3)
+s```
 
 
