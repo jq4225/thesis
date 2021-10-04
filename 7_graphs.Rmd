@@ -11,7 +11,7 @@ library(zoo)
 ```
 
 ```{r}
-depression_busclose <- searches_v8 %>%
+depression_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(depression = mean(depression)) %>%
   mutate(depression = rollmean(depression, k = 5, fill = NA)) %>%
@@ -21,10 +21,10 @@ depression_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "Depression vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-depression_sip <- searches_v8 %>%
+depression_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(depression = mean(depression)) %>%
   mutate(depression = rollmean(depression, k = 5, fill = NA)) %>%
@@ -34,11 +34,11 @@ depression_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "Depression vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
 
-anxiety_sip <- searches_v8 %>%
+anxiety_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   mutate(anxiety = rollmean(anxiety, k = 5, fill = NA)) %>%
@@ -48,10 +48,10 @@ anxiety_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "anxiety vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-anxiety_busclose <- searches_v8 %>%
+anxiety_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   mutate(anxiety = rollmean(anxiety, k = 5, fill = NA)) %>%
@@ -61,10 +61,10 @@ anxiety_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "anxiety vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-worry_sip <- searches_v8 %>%
+worry_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(worry = mean(worry)) %>%
   mutate(worry = rollmean(worry, k = 5, fill = NA)) %>%
@@ -75,10 +75,10 @@ worry_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "worry vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-worry_busclose <- searches_v8 %>%
+worry_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(worry = mean(worry)) %>%
   mutate(worry = rollmean(worry, k = 5, fill = NA)) %>%
@@ -88,10 +88,10 @@ worry_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "worry vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-loneliness_sip <- searches_v8 %>%
+loneliness_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(loneliness = mean(loneliness)) %>%
   mutate(loneliness = rollmean(loneliness, k = 5, fill = NA)) %>%
@@ -101,10 +101,10 @@ loneliness_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "loneliness vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-loneliness_busclose <- searches_v8 %>%
+loneliness_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(loneliness = mean(loneliness)) %>%
   mutate(loneliness = rollmean(loneliness, k = 5, fill = NA)) %>%
@@ -114,10 +114,10 @@ loneliness_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "loneliness vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-crying_sip <- searches_v8 %>%
+crying_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(crying = mean(crying)) %>%
   mutate(crying = rollmean(crying, k = 5, fill = NA)) %>%
@@ -127,10 +127,10 @@ crying_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "crying vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-crying_busclose <- searches_v8 %>%
+crying_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(crying = mean(crying)) %>%
   mutate(crying = rollmean(crying, k = 5, fill = NA)) %>%
@@ -140,10 +140,10 @@ crying_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "crying vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-stress_sip <- searches_v8 %>%
+stress_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(stress = mean(stress)) %>%
   mutate(stress = rollmean(stress, k = 5, fill = NA)) %>%
@@ -153,10 +153,10 @@ stress_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "stress vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-stress_busclose <- searches_v8 %>%
+stress_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(stress = mean(stress)) %>%
   mutate(stress = rollmean(stress, k = 5, fill = NA)) %>%
@@ -166,7 +166,7 @@ stress_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "stress vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
 
@@ -175,7 +175,7 @@ stress_busclose <- searches_v8 %>%
 ```{r}
 # Substance abuse
 
-anxiety_sip <- searches_v8 %>%
+anxiety_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   mutate(anxiety = rollmean(anxiety, k = 5, fill = NA)) %>%
@@ -185,10 +185,10 @@ anxiety_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "anxiety vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-anxiety_busclose <- searches_v8 %>%
+anxiety_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   mutate(anxiety = rollmean(anxiety, k = 5, fill = NA)) %>%
@@ -198,10 +198,10 @@ anxiety_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "anxiety vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-smoking_sip <- searches_v8 %>%
+smoking_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(smoking = mean(smoking)) %>%
   mutate(smoking = rollmean(smoking, k = 5, fill = NA)) %>%
@@ -211,10 +211,10 @@ smoking_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "smoking vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-smoking_busclose <- searches_v8 %>%
+smoking_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(smoking = mean(smoking)) %>%
   mutate(smoking = rollmean(smoking, k = 5, fill = NA)) %>%
@@ -224,10 +224,10 @@ smoking_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "smoking vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-substance_abuse_sip <- searches_v8 %>%
+substance_abuse_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(substance_abuse = mean(substance_abuse)) %>%
   mutate(substance_abuse = rollmean(substance_abuse, k = 5, fill = NA)) %>%
@@ -237,10 +237,10 @@ substance_abuse_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "substance_abuse vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-substance_abuse_busclose <- searches_v8 %>%
+substance_abuse_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(substance_abuse = mean(substance_abuse)) %>%
   mutate(substance_abuse = rollmean(substance_abuse, k = 5, fill = NA)) %>%
@@ -250,7 +250,7 @@ substance_abuse_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "substance_abuse vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 ```
 
@@ -258,7 +258,7 @@ substance_abuse_busclose <- searches_v8 %>%
 ```{r}
 # Leisure
 
-books_sip <- searches_v8 %>%
+books_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(books = mean(books)) %>%
   mutate(books = rollmean(books, k = 5, fill = NA)) %>%
@@ -268,10 +268,10 @@ books_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "books vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-books_busclose <- searches_v8 %>%
+books_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(books = mean(books)) %>%
   mutate(books = rollmean(books, k = 5, fill = NA)) %>%
@@ -281,10 +281,10 @@ books_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "books vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-film_sip <- searches_v8 %>%
+film_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(film = mean(film)) %>%
   mutate(film = rollmean(film, k = 5, fill = NA)) %>%
@@ -294,10 +294,10 @@ film_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "film vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-film_busclose <- searches_v8 %>%
+film_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(film = mean(film)) %>%
   mutate(film = rollmean(film, k = 5, fill = NA)) %>%
@@ -307,10 +307,10 @@ film_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "film vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-games_sip <- searches_v8 %>%
+games_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(games = mean(games)) %>%
   mutate(games = rollmean(games, k = 5, fill = NA)) %>%
@@ -320,10 +320,10 @@ games_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "games vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-games_busclose <- searches_v8 %>%
+games_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(games = mean(games)) %>%
   mutate(games = rollmean(games, k = 5, fill = NA)) %>%
@@ -333,10 +333,10 @@ games_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "games vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-music_sip <- searches_v8 %>%
+music_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(music = mean(music)) %>%
   mutate(music = rollmean(music, k = 5, fill = NA)) %>%
@@ -346,10 +346,10 @@ music_sip <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "music vs. Shelter-in-place", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-music_busclose <- searches_v8 %>%
+music_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(music = mean(music)) %>%
   mutate(music = rollmean(music, k = 5, fill = NA)) %>%
@@ -359,7 +359,7 @@ music_busclose <- searches_v8 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "music vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
 
@@ -424,7 +424,7 @@ ggsave(plot = worry_busclose, file = "worry_busclose.png")
 ```{r}
 # Try ratio
 
-depression_busclose <- searches_v8 %>%
+depression_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(depression = mean(depression)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -436,10 +436,10 @@ depression_busclose <- searches_v8 %>%
     labs(title = "Depression vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-depression_sip <- searches_v8 %>%
+depression_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(depression = mean(depression)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -451,10 +451,10 @@ depression_sip <- searches_v8 %>%
     labs(title = "Depression vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-alcohol_busclose <- searches_v8 %>%
+alcohol_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(alcohol = mean(alcohol)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -466,10 +466,10 @@ alcohol_busclose <- searches_v8 %>%
     labs(title = "alcohol vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-alcohol_sip <- searches_v8 %>%
+alcohol_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(alcohol = mean(alcohol)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -481,10 +481,10 @@ alcohol_sip <- searches_v8 %>%
     labs(title = "alcohol vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-anxiety_busclose <- searches_v8 %>%
+anxiety_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -496,10 +496,10 @@ anxiety_busclose <- searches_v8 %>%
     labs(title = "anxiety vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-anxiety_sip <- searches_v8 %>%
+anxiety_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(anxiety = mean(anxiety)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -511,10 +511,10 @@ anxiety_sip <- searches_v8 %>%
     labs(title = "anxiety vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-books_busclose <- searches_v8 %>%
+books_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(books = mean(books)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -526,10 +526,10 @@ books_busclose <- searches_v8 %>%
     labs(title = "books vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-books_sip <- searches_v8 %>%
+books_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(books = mean(books)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -541,10 +541,10 @@ books_sip <- searches_v8 %>%
     labs(title = "books vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-crying_busclose <- searches_v8 %>%
+crying_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(crying = mean(crying)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -556,10 +556,10 @@ crying_busclose <- searches_v8 %>%
     labs(title = "crying vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-crying_sip <- searches_v8 %>%
+crying_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(crying = mean(crying)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -571,10 +571,10 @@ crying_sip <- searches_v8 %>%
     labs(title = "crying vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-film_busclose <- searches_v8 %>%
+film_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(film = mean(film)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -586,10 +586,10 @@ film_busclose <- searches_v8 %>%
     labs(title = "film vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-film_sip <- searches_v8 %>%
+film_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(film = mean(film)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -601,10 +601,10 @@ film_sip <- searches_v8 %>%
     labs(title = "film vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-games_busclose <- searches_v8 %>%
+games_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(games = mean(games)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -616,10 +616,10 @@ games_busclose <- searches_v8 %>%
     labs(title = "games vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-games_sip <- searches_v8 %>%
+games_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(games = mean(games)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -631,10 +631,10 @@ games_sip <- searches_v8 %>%
     labs(title = "games vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-loneliness_busclose <- searches_v8 %>%
+loneliness_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(loneliness = mean(loneliness)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -646,10 +646,10 @@ loneliness_busclose <- searches_v8 %>%
     labs(title = "loneliness vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-loneliness_sip <- searches_v8 %>%
+loneliness_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(loneliness = mean(loneliness)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -661,10 +661,10 @@ loneliness_sip <- searches_v8 %>%
     labs(title = "loneliness vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-smoking_busclose <- searches_v8 %>%
+smoking_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(smoking = mean(smoking)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -676,10 +676,10 @@ smoking_busclose <- searches_v8 %>%
     labs(title = "smoking vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-smoking_sip <- searches_v8 %>%
+smoking_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(smoking = mean(smoking)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -691,10 +691,10 @@ smoking_sip <- searches_v8 %>%
     labs(title = "smoking vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-stress_busclose <- searches_v8 %>%
+stress_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(stress = mean(stress)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -706,10 +706,10 @@ stress_busclose <- searches_v8 %>%
     labs(title = "stress vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-stress_sip <- searches_v8 %>%
+stress_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(stress = mean(stress)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -721,10 +721,10 @@ stress_sip <- searches_v8 %>%
     labs(title = "stress vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-music_busclose <- searches_v8 %>%
+music_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(music = mean(music)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -736,10 +736,10 @@ music_busclose <- searches_v8 %>%
     labs(title = "music vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-music_sip <- searches_v8 %>%
+music_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(music = mean(music)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -751,10 +751,10 @@ music_sip <- searches_v8 %>%
     labs(title = "music vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-substance_abuse_busclose <- searches_v8 %>%
+substance_abuse_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(substance_abuse = mean(substance_abuse)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -766,10 +766,10 @@ substance_abuse_busclose <- searches_v8 %>%
     labs(title = "substance_abuse vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-substance_abuse_sip <- searches_v8 %>%
+substance_abuse_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(substance_abuse = mean(substance_abuse)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -781,10 +781,10 @@ substance_abuse_sip <- searches_v8 %>%
     labs(title = "substance_abuse vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-worry_busclose <- searches_v8 %>%
+worry_busclose <- searches_norm3 %>%
   group_by(year_indicator, busclose_first_counter) %>%
   summarize(worry = mean(worry)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -796,10 +796,10 @@ worry_busclose <- searches_v8 %>%
     labs(title = "worry vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$busclose_first_counter, na.rm = TRUE), 
                                     by = 10))
 
-worry_sip <- searches_v8 %>%
+worry_sip <- searches_norm3 %>%
   group_by(year_indicator, sip_first_counter) %>%
   summarize(worry = mean(worry)) %>%
   pivot_wider(names_from = year_indicator, 
@@ -811,7 +811,7 @@ worry_sip <- searches_v8 %>%
     labs(title = "worry vs. Business Closure", y = "SVI ratio (2020 to pre-2020)", 
          x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_v8$sip_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3$sip_first_counter, na.rm = TRUE), 
                                     by = 10))
 ```
 

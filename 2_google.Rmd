@@ -437,4 +437,29 @@ anchor_index_2 <- anchor_index %>%
 
 
 ```
+```{r}
+# Rolling average
+
+anchor_index <- anchor_index_2 %>%
+  mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
+  rowwise() %>%
+  mutate(average = mean(c_across(`honey`:`japan`))) %>%
+  ungroup() %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(average_3 = rollmean(average, k = 3, fill = "extend"))
+
+searches_v9 <- left_join(searches_v8, 
+                         anchor_index %>% mutate(date = as_date(date)) %>% 
+                                                   select(date, dma, average, average_3), 
+                         by = c("dma", "date")) 
+
+
+
+searches_norm3 <- searches_v9 %>%
+  mutate(across(c(`alcohol`:`worry`, depression), ~ ./average_3)) %>%
+  # renormalize everything to 100 %>%
+  mutate(across(c(`alcohol`:`worry`, depression), ~ . * 100 / max(.)))
+
+```
 
