@@ -11,6 +11,7 @@ library(readxl)
 library(survival)
 library(survminer)
 library(htmltab)
+library(lubridate)
 ```
 
 ```{r}
@@ -37,6 +38,27 @@ term_limits <- htmltab(
                               end_of_term)) %>%
   mutate(end_of_term = as.numeric(end_of_term)) %>%
   mutate(years_to_election = end_of_term - 2020) 
+```
+```{r}
+# lockdown data again but this time including the dummies for state or local policy first
 
+lockdowns <- 
+read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ (1).xlsx',
+           sheet = 'Local Policies') %>%
+  # Get rid of city-specific policies
+  filter(is.na(cityname)) %>%
+  select(stfips, countyfips, stsipstart, stsipend, localsipstart, localsipend,
+         dummysipstart, dummysipend, stbusclose, localbusclose, stbusopen, 
+         localbusopen, dummybusclose, dummybusopen) %>%
+  # Pick the earliest starts and the latest ends
+  mutate(sipstart = ifelse(dummysipstart == 1, as_date(localsipstart), as_date(stsipstart)),
+         sipend = ifelse(dummysipend == 1, as_date(localsipend), as_date(stsipend)),
+         busclose = ifelse(dummybusclose == 1, as_date(localbusclose), as_date(stbusclose)),
+         busopen = ifelse(dummybusopen == 1, as_date(localbusopen), as_date(stbusopen))) %>%
+  select(stfips, countyfips, sipstart, sipend, busclose, busopen,
+         dummysipstart, dummysipend, dummybusclose, dummybusopen) %>%
+  mutate(across(c('sipstart', 'sipend', 'busclose', 'busopen'), as_date)) %>%
+  mutate(stfips = str_pad(stfips, width = 2, side = "left", pad = "0"),
+         countyfips = str_pad(countyfips, width = 3, side = "left", pad = "0"))
 ```
 
