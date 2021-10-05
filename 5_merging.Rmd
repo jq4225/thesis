@@ -96,3 +96,15 @@ searches_v8 <- searches_v7 %>%
   select(-start_week)
 ```
 
+
+```{r}
+# Let's change up some of the coding practices
+
+searches_norm3_v2 <- searches_norm3 %>%
+  mutate(sip_first_2 = ifelse(sip_first == 0, NA, sip_first)) %>%
+  group_by(dma, year) %>%
+  arrange(date) %>%
+  fill(sip_first_2, .direction = "down") %>%
+  mutate(sip_first_2 = replace_na(sip_first_2, 0))
+```
+

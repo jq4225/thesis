@@ -368,9 +368,9 @@ music_busclose <- searches_norm3 %>%
 
 
 ```{r}
-ggsave(plot = anxiety_sip, file = "alcohol_sip.png")
+ggsave(plot = alcohol_sip, file = "alcohol_sip.png")
 
-ggsave(plot = anxiety_busclose, file = "alcohol_busclose.png")
+ggsave(plot = alcohol_busclose, file = "alcohol_busclose.png")
 
 ggsave(plot = anxiety_sip, file = "anxiety_sip.png")
 

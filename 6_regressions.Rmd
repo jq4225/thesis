@@ -13,6 +13,11 @@ library(fixest)
 
 ```{r}
 searches_v7 <- readRDS('clean_data/search/searches_v9.rds')
+
+# Let's fuck around a bit and se what happens
+
+searches_postlockdown <- searches_norm3 %>%
+  filter(week >= 15)
 ```
 
 ```{r}
@@ -23,9 +28,9 @@ test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator +
                unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
              data = searches_v9)
 
-test3 <-  felm(I(log(depression + 1)) ~  sip_first_counter * year_indicator + 
-               cases_per_100k +  
-               unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
+test3 <-  felm(I(log(substance_abuse + 1)) ~  sip_first * year_indicator + 
+               cases_per_100k +  unemploy_rate + economic_support_index|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
              data = searches_norm3)
 
 test3 <-  felm(I(suicide) ~  sip_first * year_indicator + 
