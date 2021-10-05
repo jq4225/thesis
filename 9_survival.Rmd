@@ -1,0 +1,42 @@
+---
+title: "survival"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(survival)
+library(survminer)
+library(htmltab)
+```
+
+```{r}
+
+# Pull Wikipedia term limit as of February 27, 2020
+
+term_limits <- htmltab(
+  "https://en.wikipedia.org/w/index.php?title=List_of_current_United_States_governors&oldid=942828889"
+  , 1) %>%
+  clean_names() %>%
+  select(democratic_24_republican_26_state, 
+         democratic_24_republican_26_party,
+         democratic_24_republican_26_end_of_term) %>%
+  rename('state' = 'democratic_24_republican_26_state',
+         'party' = 'democratic_24_republican_26_party',
+         'end_of_term' = 'democratic_24_republican_26_end_of_term') %>%
+  mutate(term_limit = ifelse(str_detect(end_of_term, pattern = "term limit"), 1, 0)) %>%
+  mutate(term_limit = ifelse(str_detect(end_of_term, pattern = "retiring"), 1, term_limit)) %>%
+  mutate(end_of_term = ifelse(str_detect(end_of_term, pattern = "term limit"),
+                              str_sub(end_of_term, start = 1, end = str_length(end_of_term) - 14),
+                              end_of_term)) %>%
+  mutate(end_of_term = ifelse(str_detect(end_of_term, pattern = "retiring"),
+                              str_sub(end_of_term, start = 1, end = str_length(end_of_term) - 11),
+                              end_of_term)) %>%
+  mutate(end_of_term = as.numeric(end_of_term)) %>%
+  mutate(years_to_election = end_of_term - 2020) 
+
+```
+
