@@ -143,7 +143,7 @@ for (i in 1:nrow(county_geometry)) {
 ```
 
 ```{r}
-year == 2016
+year <- 2016
 
 for(j in length(gsod_url)) {
   all_county_weather <- list()
