@@ -105,7 +105,8 @@ lockdown_linear %>%
   ggplot(aes(x = date, y = counties, color = type)) + geom_line() + 
     labs(x = "Month", y = "Number of Counties Under NPI") + 
     scale_color_discrete(name = "NPI Type", labels = c("Business Closure", "Stay-at-home Order")) + 
-    scale_y_continuous(breaks = seq(0, 3000, by = 500))
-    theme_classic2()
+    scale_y_continuous(breaks = seq(0, 3000, by = 500)) +
+    theme_classic2() +
+   theme(legend.position = "top")
 ```
 
