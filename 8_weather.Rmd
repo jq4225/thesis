@@ -374,6 +374,7 @@ weather_4 <- left_join(weather_3, dma_codes, by = "fips") %>%
   drop_na(google_code) %>%
   group_by(google_code, year, month) %>%
   summarize(precip = mean(precip, na.rm = TRUE),
-            temp = mean(temp, na.rm = TRUE))
+            temp = mean(temp, na.rm = TRUE)) %>%
+  mutate(year = as.character(year))
 
 ```
