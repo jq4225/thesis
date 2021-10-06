@@ -462,4 +462,38 @@ searches_norm3 <- searches_v9 %>%
   mutate(across(c(`alcohol`:`worry`, depression), ~ . * 100 / max(.)))
 
 ```
+```{r}
+# Redoing average excluding the terms w/ more than 15% of zeroes
+
+# zero_percent_anchor <- anchor_index %>%
+#   group_by(dma) %>%
+#   select(dma, `honey`:`japan`) %>% 
+#   summarize(across(.cols = c(`honey`:`japan`), ~ sum(.==0)),
+#             weeks = n()) %>%
+#   mutate(across(.cols = c(`honey`:`japan`), ~ . * 100 / weeks))
+# 
+# zero_summary_anchor <- zero_percent_anchor %>%
+#   summarize(across(.cols = `honey`:`japan`, mean)) %>%
+#   pivot_longer(cols = `honey`:`japan`, names_to = "term", values_to= "zero_percent")
+
+anchor_index_2 <- anchor_index %>%
+  select(-elevator, -cereal, -waste, -recycling, -debit_card, -soft_drinks, -french_fries,
+         -grain, -currency) %>%
+  mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
+  rowwise() %>%
+  mutate(average = mean(c_across(`honey`:`japan`))) %>%
+  ungroup() %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(average_3 = rollmean(average, k = 3, fill = "extend"))
+
+searches_norm3_v3 <- left_join(searches_v10 %>% select(-average, -average_3), 
+                         anchor_index_2 %>% mutate(date = as_date(date)) %>% 
+                                                   select(date, dma, average, average_3), 
+                         by = c("dma", "date")) %>% 
+  mutate(across(c(`alcohol`:`worry`, depression), ~ ./average_3)) %>%
+  # renormalize everything to 100
+  mutate(across(c(`alcohol`:`worry`, depression), ~ . * 100 / max(.)))
+
+```
 
