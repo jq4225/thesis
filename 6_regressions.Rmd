@@ -74,12 +74,12 @@ test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator +
                unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
              data = searches_v9)
 
-test3 <-  felm(I(log(film + 1)) ~  sip_first * year_indicator + 
+test3 <-  felm(I(log(cigarette + 1)) ~  sip_first * year_indicator + 
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v3_15)
+             data = searches_norm3_v4)
 
 test3 <-  felm(I(suicide) ~  sip_first * year_indicator + 
                deaths_per_100k + cases_per_100k +  

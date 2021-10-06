@@ -534,5 +534,9 @@ searches_norm3_v4 <- searches_norm3_v3 %>%
   mutate(across(`cigarette`:`yoga`, ~ ./average_3)) %>%
   mutate(across(`cigarette`:`yoga`, ~ . * 100 / max(.)))
 
+searches_v11 <- searches_v10 %>%
+  select(-loneliness, -stress) %>%
+  left_join(., new_search, by = c("dma", "date"))
+
 ```
 
