@@ -21,6 +21,37 @@ searches_postlockdown <- searches_norm3 %>%
 ```
 
 ```{r}
+# Percentage of zeroes
+
+zero_percent <- searches_norm3_v2 %>%
+  group_by(dma) %>%
+  select(dma, `alcohol`:`worry`, depression) %>% 
+  summarize(across(.cols = c(`alcohol`:`worry`, depression), ~ sum(.==0)),
+            weeks = n()) %>%
+  mutate(across(.cols = c(`alcohol`:`depression`), ~ . * 100 / weeks))
+
+zero_percent_summary <- zero_percent %>%
+  summarize(across(.cols = `alcohol`:`depression`, mean))
+
+# testing anchor index too 
+
+zero_percent_anchor <- anchor_index %>%
+  group_by(dma) %>%
+  select(dma, `honey`:`japan`) %>% 
+  summarize(across(.cols = c(`honey`:`japan`), ~ sum(.==0)),
+            weeks = n()) %>%
+  mutate(across(.cols = c(`honey`:`japan`), ~ . * 100 / weeks))
+
+zero_summary_anchor <- zero_percent_anchor %>%
+  summarize(across(.cols = `honey`:`japan`, mean)) %>%
+  pivot_longer(cols = `honey`:`japan`, names_to = "term", values_to= "zero_percent")
+
+# Maybe I should revise the anchor index adjusted terms
+
+```
+
+
+```{r}
 # read in searches v4 or later
 
 test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator + 
