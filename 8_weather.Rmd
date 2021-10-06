@@ -11,6 +11,8 @@ library(readxl)
 library(rgeos)
 library(zoo)
 library(sp)
+library(janitor)
+library(lubridate)
 ```
 
 ```{r}
@@ -262,3 +264,116 @@ all_county_weather <- bind_rows(county_weather2016,
 
 ```
 
+```{r}
+# Monthly weather
+
+# https://www.ncdc.noaa.gov/cag/county/mapping/110-pcp-202108-1.csv
+
+precip_begin <- "https://www.ncdc.noaa.gov/cag/county/mapping/110-pcp-"
+
+precip <- tibble()
+
+for(i in 1:5) {
+  year <- as.character(2015 + i)
+  for(j in 1:12) {
+    month_char <- ifelse(str_length(as.character(j)) == 1, str_pad(as.character(j), width = 2,
+                                                              side = "left",
+                                                              pad = "0"), as.character(j))
+    precip_url <- paste(precip_begin, year, month_char, "-1.csv", sep = "")
+    
+    temp <- read_csv(precip_url, show_col_types = FALSE, skip = 3) %>%
+      clean_names() %>%
+      select(location_id, location, value) %>%
+      mutate(value = ifelse(value == -99, NA, value)) %>%
+      rename('precip' = 'value') %>%
+      mutate(month = as.numeric(month_char),
+             year = as.numeric(`year`))
+    
+    if (year == "2016" & j == 1) {
+      precip <- temp
+    }
+    
+    else {
+      precip <- rbind(precip, temp)
+    }
+    
+  }
+}
+```
+
+```{r}
+# temperature
+
+# https://www.ncdc.noaa.gov/cag/county/mapping/110-tavg-202108-1.csv
+
+temp_begin <- "https://www.ncdc.noaa.gov/cag/county/mapping/110-tavg-"
+
+temperature <- tibble()
+
+for(i in 1:5) {
+  year <- as.character(2015 + i)
+  for(j in 1:12) {
+    month_char <- ifelse(str_length(as.character(j)) == 1, str_pad(as.character(j), width = 2,
+                                                              side = "left",
+                                                              pad = "0"), as.character(j))
+    temp_url <- paste(temp_begin, year, month_char, "-1.csv", sep = "")
+    
+    temp <- read_csv(temp_url, show_col_types = FALSE, skip = 3) %>%
+      clean_names() %>%
+      select(location_id, location, value) %>%
+      mutate(value = ifelse(value == -99, NA, value)) %>%
+      rename('temp' = 'value') %>%
+      mutate(month = as.numeric(month_char),
+             year = as.numeric(`year`))
+    
+    if (year == "2016" & j == 1) {
+      temperature <- temp
+    }
+    
+    else {
+      temperature <- rbind(temperature, temp)
+    }
+    
+  }
+}
+
+```
+
+```{r}
+
+
+weather <- full_join(precip, temperature, by = c("location_id", "location",
+                                                 "month", "year")) 
+
+
+weather_2 <- weather %>% 
+  mutate(county = str_sub(location_id, start = 4, end = 6),
+         state = str_sub(location_id, start = 1, end = 2))
+
+statefips <- read_excel('statefips.xlsx') %>% 
+  clean_names() %>%
+  select(postal_code, fips) %>%
+  mutate(fips = as.character(fips)) %>%
+  mutate(fips = str_pad(fips, width = 2, side = "left", pad = "0")) %>%
+  rename('stfips' = 'fips')
+
+weather_3 <- left_join(weather_2, statefips, by = c("state" = "postal_code")) %>%
+  mutate(fips = str_c(stfips, county, sep = "")) %>%
+  select(-location_id, -location, -county, -stfips, -state)
+
+# converting to DMA
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+weather_4 <- left_join(weather_3, dma_codes, by = "fips") %>%
+  drop_na(google_code) %>%
+  group_by(google_code, year, month) %>%
+  summarize(precip = mean(precip, na.rm = TRUE),
+            temp = mean(temp, na.rm = TRUE))
+
+```
