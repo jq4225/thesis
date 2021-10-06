@@ -23,15 +23,23 @@ searches_postlockdown <- searches_norm3 %>%
 ```{r}
 # Percentage of zeroes
 
-zero_percent <- searches_norm3_v2 %>%
+zero_percent <- searches_norm3_v3 %>%
   group_by(dma) %>%
   select(dma, `alcohol`:`worry`, depression) %>% 
   summarize(across(.cols = c(`alcohol`:`worry`, depression), ~ sum(.==0)),
             weeks = n()) %>%
-  mutate(across(.cols = c(`alcohol`:`depression`), ~ . * 100 / weeks))
+  mutate(across(.cols = c(`alcohol`:`depression`), ~ . * 100 / weeks)) %>%
+  group_by(dma) %>%
+  mutate(mean = mean(`alcohol`:`depression`))
 
 zero_percent_summary <- zero_percent %>%
   summarize(across(.cols = `alcohol`:`depression`, mean))
+
+less_than_15 <- zero_percent %>%
+  filter(mean <= 15) %>%
+  select(dma)
+
+less_than_15 <- c(less_than_15$dma)
 
 # testing anchor index too 
 
@@ -50,6 +58,13 @@ zero_summary_anchor <- zero_percent_anchor %>%
 
 ```
 
+```{r}
+# Run only regressions with less than 15 percent zeroes on average?
+
+searches_norm3_v3_15 <- searches_norm3_v3 %>%
+  filter(dma %in% less_than_15)
+```
+
 
 ```{r}
 # read in searches v4 or later
@@ -59,12 +74,12 @@ test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator +
                unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
              data = searches_v9)
 
-test3 <-  felm(I(log(anxiety + 1)) ~  sip_first * year_indicator + 
-               cases_per_100k +  deaths_per_100k + 
-                 unemploy_rate + factor(debt_contract_relief) + factor(income_support)
-               + economic_support_index + precip + temp|
+test3 <-  felm(I(log(film + 1)) ~  sip_first * year_indicator + 
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v2)
+             data = searches_norm3_v3_15)
 
 test3 <-  felm(I(suicide) ~  sip_first * year_indicator + 
                deaths_per_100k + cases_per_100k +  
