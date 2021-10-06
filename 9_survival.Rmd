@@ -1,0 +1,112 @@
+---
+title: "survival"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(survival)
+library(survminer)
+library(htmltab)
+library(lubridate)
+```
+
+```{r}
+
+# Pull Wikipedia term limit as of February 27, 2020
+
+term_limits <- htmltab(
+  "https://en.wikipedia.org/w/index.php?title=List_of_current_United_States_governors&oldid=942828889"
+  , 1) %>%
+  clean_names() %>%
+  select(democratic_24_republican_26_state, 
+         democratic_24_republican_26_party,
+         democratic_24_republican_26_end_of_term) %>%
+  rename('state' = 'democratic_24_republican_26_state',
+         'party' = 'democratic_24_republican_26_party',
+         'end_of_term' = 'democratic_24_republican_26_end_of_term') %>%
+  mutate(term_limit = ifelse(str_detect(end_of_term, pattern = "term limit"), 1, 0)) %>%
+  mutate(term_limit = ifelse(str_detect(end_of_term, pattern = "retiring"), 1, term_limit)) %>%
+  mutate(end_of_term = ifelse(str_detect(end_of_term, pattern = "term limit"),
+                              str_sub(end_of_term, start = 1, end = str_length(end_of_term) - 14),
+                              end_of_term)) %>%
+  mutate(end_of_term = ifelse(str_detect(end_of_term, pattern = "retiring"),
+                              str_sub(end_of_term, start = 1, end = str_length(end_of_term) - 11),
+                              end_of_term)) %>%
+  mutate(end_of_term = as.numeric(end_of_term)) %>%
+  mutate(years_to_election = end_of_term - 2020) 
+```
+```{r}
+# lockdown data again but this time including the dummies for state or local policy first
+
+lockdowns <- 
+read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ (1).xlsx',
+           sheet = 'Local Policies') %>%
+  # Get rid of city-specific policies
+  filter(is.na(cityname)) %>%
+  select(stfips, countyfips, stsipstart, stsipend, localsipstart, localsipend,
+         dummysipstart, dummysipend, stbusclose, localbusclose, stbusopen, 
+         localbusopen, dummybusclose, dummybusopen) %>%
+  # Pick the earliest starts and the latest ends
+  mutate(sipstart = ifelse(dummysipstart == 1, as_date(localsipstart), as_date(stsipstart)),
+         sipend = ifelse(dummysipend == 1, as_date(localsipend), as_date(stsipend)),
+         busclose = ifelse(dummybusclose == 1, as_date(localbusclose), as_date(stbusclose)),
+         busopen = ifelse(dummybusopen == 1, as_date(localbusopen), as_date(stbusopen))) %>%
+  select(stfips, countyfips, sipstart, sipend, busclose, busopen,
+         dummysipstart, dummysipend, dummybusclose, dummybusopen) %>%
+  mutate(across(c('sipstart', 'sipend', 'busclose', 'busopen'), as_date)) %>%
+  mutate(stfips = str_pad(stfips, width = 2, side = "left", pad = "0"),
+         countyfips = str_pad(countyfips, width = 3, side = "left", pad = "0"))
+
+# mean lockdown time for my entertainment
+
+lockdown_stats <- lockdowns %>%
+  select(sipstart, sipend, busclose, busopen) %>%
+  summarize(across(.cols = everything(), list(mean = ~ mean(., na.rm = TRUE),
+                                              sd = ~ sd(., na.rm = TRUE),
+                                              min = ~ min(., na.rm = TRUE),
+                                              max = ~ max(., na.rm = TRUE))))
+
+sip <- lockdowns %>%
+  select(sipstart, busclose, stfips, countyfips) %>%
+  pivot_longer(cols = c(`sipstart`, `busclose`), names_to = "NPI Type", values_to = "Date") %>%
+  ggplot(mapping = aes(x = Date, fill = `NPI Type`)) + 
+    geom_histogram(color = "black", binwidth = 5, alpha = 0.3, position = "identity") + 
+    labs(y = "Number of counties with new SIP order",
+         x = "Date") + 
+    scale_x_date(date_labels = "%b %d", date_breaks = "1 week") +
+    theme_classic()
+
+# Let's try to make a different graph
+
+lockdown_linear <- tibble(date = seq(as_date('2020-03-01'), as_date('2020-07-31'), by = 'days'),
+                          sip_number = 0, busclose_number = 0)
+
+sip_lock <- lockdowns %>%
+  replace(is.na(.), as_date("2030-01-01"))
+
+for (i in 1:nrow(sip_lock)) {
+  lockdown_linear <- lockdown_linear %>%
+    mutate(sip_number = ifelse(as_date(sip_lock[[i,3]]) <= as_date(date) & 
+                                 as_date(sip_lock[[i,4]]) >= as_date(date), sip_number + 1,
+                               sip_number),
+           busclose_number = ifelse(as_date(sip_lock[[i,5]]) <= as_date(date) &
+                                      as_date(sip_lock[[i,6]]) >= as_date(date), 
+                                    busclose_number + 1, busclose_number))
+}
+
+lockdown_linear %>%
+  pivot_longer(cols = `sip_number`:`busclose_number`, 
+               names_to = "type",
+               values_to = "counties") %>%
+  ggplot(aes(x = date, y = counties, color = type)) + geom_line() + 
+    labs(x = "Month", y = "Number of Counties Under NPI") + 
+    scale_color_discrete(name = "NPI Type", labels = c("Business Closure", "Stay-at-home Order")) + 
+    scale_y_continuous(breaks = seq(0, 3000, by = 500)) +
+    theme_classic2() +
+   theme(legend.position = "top")
+```
+

@@ -108,3 +108,18 @@ searches_norm3_v2 <- searches_norm3 %>%
   mutate(sip_first_2 = replace_na(sip_first_2, 0))
 ```
 
+```{r}
+# Merging weather in!
+
+searches_norm3_v2 <- searches_norm3 %>%
+  mutate(year = as.character(year)) %>%
+  left_join(., weather_4, by = c("dma" = "google_code", "year", "month")) %>% 
+  drop_na(precip, temp)
+
+searches_v10 <- searches_v9 %>%
+  mutate(year = as.character(year)) %>%
+  left_join(., weather_4, by = c("dma" = "google_code", "year", "month")) %>% 
+  drop_na(precip, temp)
+
+```
+
