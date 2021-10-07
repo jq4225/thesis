@@ -90,9 +90,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/03f_cb'
+search_term <- '/m/09k76'
 
-depression <- tibble()
+cigarette <- tibble()
 
 ```
 
@@ -112,7 +112,10 @@ for(i in 1:54) {
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
        
-       temp <- temp %>% pivot_wider(id_cols = date, names_from = geo,
+       temp <- temp %>% 
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
                                     values_from = hits) %>%
                         mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
     }
@@ -124,6 +127,8 @@ for(i in 1:54) {
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
         distinct() %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
         pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
         mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY-501`))
@@ -135,45 +140,52 @@ for(i in 1:54) {
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
-    pivot_wider(id_cols = date, names_from = geo,
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
-    mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+      mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
   }
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
       rename(`US-NY-501-FINAL` = `US-NY-501`)
   }
   
   if(i == 1) {
-    stress <- temp
+    cigarette <- temp
   }
   else {
-    stress <- cbind(stress, temp)
+    cigarette <- cbind(cigarette, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-stress_clean <- stress[, -which(duplicated(names(stress)))] %>%
+cigarette_clean <- cigarette[, -which(duplicated(names(cigarette)))] %>%
   select(-`US-NY-501`) %>%
-  rename(`US-NY-501` = `US-NY-501-FINAL`)
+  rename(`US-NY-501` = `US-NY-501-FINAL`) %>% 
+  pivot_longer(cols = `US-AK-743`:`US-NY-501`,
+               names_to = "dma", values_to = "cigarette")
 
-saveRDS(stress_clean, file = "stress_scaled.rds")
+saveRDS(cigarette_clean, file = "cigarette_scaled.rds")
 ```
+
 ```{r}
 # Pivot longer really quickly
 
-depression_long <- depression_scaled %>%
+exercise_long <- exercise_clean %>%
   pivot_longer(cols = `US-AK-743`:`US-NY-501`,
-               names_to = "dma", values_to = "depression")
+               names_to = "dma", values_to = "exercise")
 
-saveRDS(depression_long, file = "depression_scaled.rds")
+saveRDS(exercise_long, file = "exercise_scaled.rds")
 
 
 ```
@@ -207,6 +219,8 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 4]),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
+    mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+    mutate(hits = as.numeric(hits)) %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
     mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
@@ -216,6 +230,8 @@ for(i in 1:54) {
     temp <- gtrends(cat = category, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
+    mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+    mutate(hits = as.numeric(hits)) %>%
     pivot_wider(id_cols = date, names_from = geo,
                 values_from = hits) %>%
     mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
@@ -225,6 +241,8 @@ for(i in 1:54) {
     temp <- gtrends(cat = category, geo = c('US-NY-501'),
                             time = '2016-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
       pivot_wider(id_cols = date, names_from = geo,
                   values_from = hits) %>%
       rename(`US-NY-501-FINAL` = `US-NY-501`)
@@ -460,6 +478,65 @@ searches_norm3 <- searches_v9 %>%
   mutate(across(c(`alcohol`:`worry`, depression), ~ ./average_3)) %>%
   # renormalize everything to 100 %>%
   mutate(across(c(`alcohol`:`worry`, depression), ~ . * 100 / max(.)))
+
+```
+```{r}
+# Redoing average excluding the terms w/ more than 15% of zeroes
+
+# zero_percent_anchor <- anchor_index %>%
+#   group_by(dma) %>%
+#   select(dma, `honey`:`japan`) %>% 
+#   summarize(across(.cols = c(`honey`:`japan`), ~ sum(.==0)),
+#             weeks = n()) %>%
+#   mutate(across(.cols = c(`honey`:`japan`), ~ . * 100 / weeks))
+# 
+# zero_summary_anchor <- zero_percent_anchor %>%
+#   summarize(across(.cols = `honey`:`japan`, mean)) %>%
+#   pivot_longer(cols = `honey`:`japan`, names_to = "term", values_to= "zero_percent")
+
+anchor_index_2 <- anchor_index %>%
+  select(-elevator, -cereal, -waste, -recycling, -debit_card, -soft_drinks, -french_fries,
+         -grain, -currency) %>%
+  mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
+  rowwise() %>%
+  mutate(average = mean(c_across(`honey`:`japan`))) %>%
+  ungroup() %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(average_3 = rollmean(average, k = 3, fill = "extend"))
+
+searches_norm3_v3 <- left_join(searches_v10 %>% select(-average, -average_3), 
+                         anchor_index_2 %>% mutate(date = as_date(date)) %>% 
+                                                   select(date, dma, average, average_3), 
+                         by = c("dma", "date")) %>% 
+  mutate(across(c(`alcohol`:`worry`, depression), ~ ./average_3)) %>%
+  # renormalize everything to 100
+  mutate(across(c(`alcohol`:`worry`, depression), ~ . * 100 / max(.)))
+
+```
+
+```{r}
+# Merge in new search terms that we're interested in
+
+new_search <- cannabis_scaled %>%
+  left_join(., cigarette_scaled, by = c("dma", "date")) %>%
+  left_join(., drug_scaled, by = c("dma", "date")) %>% 
+  left_join(., e_cig_scaled, by = c("dma", "date")) %>% 
+  left_join(., exercise_scaled, by = c("dma", "date")) %>% 
+  left_join(., lonely_scaled, by = c("dma", "date")) %>% 
+  left_join(., sleep_scaled, by = c("dma", "date")) %>% 
+  left_join(., stress_scaled, by = c("dma", "date")) %>% 
+  left_join(., yoga_scaled, by = c("dma", "date"))
+
+searches_norm3_v4 <- searches_norm3_v3 %>%
+  select(-loneliness, -stress) %>%
+  left_join(., new_search, by = c("dma", "date")) %>%
+  mutate(across(`cigarette`:`yoga`, ~ ./average_3)) %>%
+  mutate(across(`cigarette`:`yoga`, ~ . * 100 / max(.)))
+
+searches_v11 <- searches_v10 %>%
+  select(-loneliness, -stress) %>%
+  left_join(., new_search, by = c("dma", "date"))
 
 ```
 
