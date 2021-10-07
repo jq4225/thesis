@@ -90,9 +90,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/09k76'
+search_term <- '/m/03x69g'
 
-cigarette <- tibble()
+mental_health <- tibble()
 
 ```
 
@@ -100,7 +100,7 @@ cigarette <- tibble()
 ```{r}
 # Run this
 
-for(i in 1:54) {
+for(i in 22:54) {
   
   if(i < 53) {
     # Exception case for when we need to search twice for NY
@@ -159,23 +159,23 @@ for(i in 1:54) {
   }
   
   if(i == 1) {
-    cigarette <- temp
+    mental_health <- temp
   }
   else {
-    cigarette <- cbind(cigarette, temp)
+    mental_health <- cbind(mental_health, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-cigarette_clean <- cigarette[, -which(duplicated(names(cigarette)))] %>%
+mental_health_clean <- mental_health[, -which(duplicated(names(mental_health)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`) %>% 
   pivot_longer(cols = `US-AK-743`:`US-NY-501`,
-               names_to = "dma", values_to = "cigarette")
+               names_to = "dma", values_to = "mental_health")
 
-saveRDS(cigarette_clean, file = "cigarette_scaled.rds")
+saveRDS(mental_health_clean, file = "mental_health_scaled.rds")
 ```
 
 ```{r}
@@ -538,5 +538,14 @@ searches_v11 <- searches_v10 %>%
   select(-loneliness, -stress) %>%
   left_join(., new_search, by = c("dma", "date"))
 
+# Joining in mental health searches
+
+searches_norm3_v5 <- searches_norm3_v4 %>%
+  left_join(., mental_health_clean, by = c("dma", "date")) %>%
+  mutate(mental_health =  mental_health /average_3) %>%
+  mutate(mental_health = mental_health * 100 / max(mental_health))
+
+searches_v12 <- searches_v11 %>%
+  left_join(., mental_health_clean, by = c("dma", "date"))
 ```
 
