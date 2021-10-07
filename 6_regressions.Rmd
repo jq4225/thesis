@@ -23,19 +23,19 @@ searches_postlockdown <- searches_norm3 %>%
 ```{r}
 # Percentage of zeroes
 
-zero_percent <- searches_norm3_v4 %>%
+zero_percent <- searches_norm3_v5 %>%
   group_by(dma) %>%
-  select(dma, `alcohol`:`worry`, depression, cannabis:yoga) %>% 
-  summarize(across(.cols = c(`alcohol`:`yoga`), ~ sum(.==0)),
+  select(dma, `alcohol`:`worry`, depression, cannabis:mental_health) %>% 
+  summarize(across(.cols = c(`alcohol`:`mental_health`), ~ sum(.==0)),
             weeks = n()) %>%
-  mutate(across(.cols = c(alcohol:yoga), ~ . * 100 / weeks)) %>%
+  mutate(across(.cols = c(alcohol:mental_health), ~ . * 100 / weeks)) %>%
   group_by(dma) %>%
-  mutate(mean = mean(alcohol:yoga))
+  mutate(mean = mean(alcohol:mental_health))
 
 zero_percent_summary <- zero_percent %>%
   ungroup() %>%
-  summarize(across(.cols = alcohol:yoga, ~ mean(., na.rm = TRUE))) %>%
-  pivot_longer(cols = alcohol:yoga, names_to = "term", values_to = "percent_zero")
+  summarize(across(.cols = alcohol:mental_health, ~ mean(., na.rm = TRUE))) %>%
+  pivot_longer(cols = alcohol:mental_health, names_to = "term", values_to = "percent_zero")
 
 less_than_15 <- zero_percent %>%
   filter(mean <= 15) %>%
