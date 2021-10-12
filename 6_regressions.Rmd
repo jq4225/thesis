@@ -79,9 +79,9 @@ test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator +
 test3 <-  felm(I(log(mental_health + 1)) ~  sip_first * year_indicator + 
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
-                 precip + temp|
+                 precip + temp + covid + lockdown|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v5)
+             data = searches_norm3_v6)
 
 test3 <-  felm(I(suicide) ~  sip_first * year_indicator + 
                deaths_per_100k + cases_per_100k +  
