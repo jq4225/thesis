@@ -90,9 +90,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/03x69g'
+search_term <- '/m/07l88z'
 
-mental_health <- tibble()
+lockdown <- tibble()
 
 ```
 
@@ -100,7 +100,7 @@ mental_health <- tibble()
 ```{r}
 # Run this
 
-for(i in 22:54) {
+for(i in 1:54) {
   
   if(i < 53) {
     # Exception case for when we need to search twice for NY
@@ -159,23 +159,23 @@ for(i in 22:54) {
   }
   
   if(i == 1) {
-    mental_health <- temp
+    lockdown <- temp
   }
   else {
-    mental_health <- cbind(mental_health, temp)
+    lockdown <- cbind(lockdown, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-mental_health_clean <- mental_health[, -which(duplicated(names(mental_health)))] %>%
+lockdown_clean <- lockdown[, -which(duplicated(names(lockdown)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`) %>% 
   pivot_longer(cols = `US-AK-743`:`US-NY-501`,
-               names_to = "dma", values_to = "mental_health")
+               names_to = "dma", values_to = "lockdown")
 
-saveRDS(mental_health_clean, file = "mental_health_scaled.rds")
+saveRDS(lockdown_clean, file = "lockdown_scaled.rds")
 ```
 
 ```{r}
@@ -547,5 +547,18 @@ searches_norm3_v5 <- searches_norm3_v4 %>%
 
 searches_v12 <- searches_v11 %>%
   left_join(., mental_health_clean, by = c("dma", "date"))
+
+searches_norm3_v6 <- searches_norm3_v5 %>%
+  left_join(., covid_clean, by = c("dma", "date")) %>%
+  mutate(covid =  covid /average_3) %>%
+  mutate(covid = covid * 100 / max(covid)) %>%
+  left_join(., lockdown_clean, by = c("dma", "date")) %>%
+  mutate(lockdown =  lockdown /average_3) %>%
+  mutate(lockdown = lockdown * 100 / max(lockdown))
+
+searches_v13 <- searches_v12 %>%
+  left_join(., covid_clean, by = c("dma", "date")) %>%
+  left_join(., lockdown_clean, by = c("dma", "date"))
 ```
+
 
