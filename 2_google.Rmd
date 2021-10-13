@@ -109,7 +109,7 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 2],
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
-                            time = '2016-01-01 2020-12-31', 
+                            time = '2015-12-25 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
        
        temp <- temp %>% 
@@ -124,7 +124,7 @@ for(i in 1:54) {
                                                  dma_codes[(i-1)*4 + 2],
                                                  dma_codes[(i-1)*4 + 3],
                                                  dma_codes[(i-1)*4 + 4]),
-                            time = '2016-01-01 2020-12-31', 
+                            time = '2015-12-25 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
         distinct() %>%
         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
@@ -138,7 +138,7 @@ for(i in 1:54) {
   
   else if(i == 53) {
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
-                            time = '2016-01-01 2020-12-31', 
+                            time = '2015-12-25 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
       mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
       mutate(hits = as.numeric(hits)) %>%
@@ -149,7 +149,7 @@ for(i in 1:54) {
   
   else{
     temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
-                            time = '2016-01-01 2020-12-31', 
+                            time = '2015-12-25 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time %>%
       mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
       mutate(hits = as.numeric(hits)) %>%
@@ -176,6 +176,17 @@ lockdown_clean <- lockdown[, -which(duplicated(names(lockdown)))] %>%
                names_to = "dma", values_to = "lockdown")
 
 saveRDS(lockdown_clean, file = "lockdown_scaled.rds")
+```
+
+
+```{r}
+# lagging quickly
+
+lockdown_clean_2 <- lockdown_clean %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(lockdown = lag(lockdown)) %>%
+  drop_na(lockdown)
 ```
 
 ```{r}
@@ -559,6 +570,29 @@ searches_norm3_v6 <- searches_norm3_v5 %>%
 searches_v13 <- searches_v12 %>%
   left_join(., covid_clean, by = c("dma", "date")) %>%
   left_join(., lockdown_clean, by = c("dma", "date"))
+
+searches_norm3_v7 <- searches_norm3_v6 %>%
+  left_join(., streaming_media_clean, by = c("dma", "date")) %>%
+  mutate(streaming_media =  streaming_media /average_3) %>%
+  mutate(streaming_media = streaming_media * 100 / max(streaming_media))
+
+searches_v14 <- searches_v13 %>%
+  left_join(., streaming_media_clean, by = c("dma", "date"))
+
+searches_norm3_v8 <- searches_norm3_v7 %>%
+  select(-covid, -lockdown) %>% 
+  left_join(., covid_clean_2, by = c("dma", "date")) %>%
+  mutate(covid =  covid /average_3) %>%
+  mutate(covid = covid * 100 / max(covid)) %>% 
+  left_join(., lockdown_clean_2, by = c("dma", "date")) %>%
+  mutate(lockdown =  lockdown /average_3) %>%
+  mutate(lockdown = lockdown * 100 / max(lockdown))
+
+searches_v15 <- searches_v14 %>%
+  select(-covid, -lockdown) %>% 
+  left_join(., covid_clean_2, by = c("dma", "date")) %>%
+  left_join(., lockdown_clean_2, by = c("dma", "date"))
+
 ```
 
 
