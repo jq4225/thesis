@@ -1080,5 +1080,16 @@ searches_norm3_v7 %>%
                                     max(searches_norm3_v6$busclose_first_counter, na.rm = TRUE), 
                                     by = 10)) + 
     geom_vline(xintercept = 0, linetype = "dashed")
+
+searches_norm3_v8 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(date, year_indicator) %>% 
+  summarize(average_3 = mean(average_3, na.rm = TRUE)) %>%
+  #mutate(average_3 = rollmean(average_3, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = date, y = average_3)) +
+    geom_line(aes(color = year_indicator)) + 
+    theme_classic() +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    labs(title = "average_3 vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown")
 ```
 
