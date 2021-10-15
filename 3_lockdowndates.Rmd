@@ -53,7 +53,7 @@ dma_codes <- read_csv('dma_codes.csv') %>%
   mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
   select(google_code, fips)
 
-goolsbee_interventions <- readRDS('clean_data/goolsbee_interventions.rds') %>%
+goolsbee_interventions <- readRDS('clean_data/county/goolsbee_interventions.rds') %>%
   mutate(across(c(`sipstart`:`busopen`), ~ ifelse(. == as_date("2021-01-01"),
                                                    as_date("2030-01-01"), .))) %>%
   mutate(across(c(`sipstart`:`busopen`), as_date))
@@ -120,12 +120,71 @@ merged3 <- left_join(merged2, dma_codes, by = c("goolsbee_interventions_fips" = 
          busclose_most_pop)
 ```
 
+```{r}
+# Recoding this for both lockdown ending and beginning
+
+# start with the merge from previous chunk
+
+merged2 <- merged %>%
+  as_tibble() %>%
+  mutate(date = as_date(date)) %>%
+  mutate(sip_start = ifelse(sipstart <= (date + days(6)),
+                      1, 0),
+         sip_end = ifelse(sipend <= date + days(6), 1, 0),
+         busclose = ifelse(busclose <= (date + days(6)),
+                           1, 0),
+         busopen = ifelse(busopen <= date + days(6), 1, 0)) %>%
+  select(date, goolsbee_interventions_fips, sip_start, sip_end, busclose, busopen) %>%
+  # merge in population data
+  left_join(., pop, by = c("goolsbee_interventions_fips" = "fips")) %>%
+  mutate(sip_pop = sip_start * estimate_sex_and_age_total_population,
+         no_sip_pop = sip_end * estimate_sex_and_age_total_population,
+         busclose_pop = busclose * estimate_sex_and_age_total_population,
+         busopen_pop = busopen * estimate_sex_and_age_total_population)
+
+merged3 <- left_join(merged2, dma_codes, by = c("goolsbee_interventions_fips" = "fips")) %>%
+  drop_na(google_code) %>%
+  group_by(date, google_code) %>% 
+  summarize(dmas = n(),
+            sip_sum = sum(sip_start),
+            no_sip_sum = sum(sip_end),
+            busclose_sum = sum(busclose),
+            busopen_sum = sum(busopen),
+            pop = sum(estimate_sex_and_age_total_population),
+            sip_pop = sum(sip_pop),
+            no_sip_pop = sum(no_sip_pop),
+            busclose_pop = sum(busclose_pop),
+            busopen_pop = sum(busopen_pop)) %>% 
+  mutate(sip_prop = sip_sum / dmas,
+         no_sip_prop = no_sip_sum/dmas,
+         busclose_prop = busclose_sum / dmas,
+         busopen_prop = busopen_sum/dmas,
+         sip_first = ifelse(sip_sum > 0, 1, 0),
+         no_sip_first = ifelse(no_sip_sum > 0, 1, 0),
+         busclose_first = ifelse(busclose_sum > 0, 1, 0),
+         busopen_first = ifelse(busopen_sum > 0, 1, 0),
+         sip_pop_pct = sip_pop/pop,
+         no_sip_pop_pct = no_sip_pop / pop,
+         busclose_pop_pct = busclose_pop/pop,
+         busopen_pop_pct = busopen_pop/pop) %>% 
+   mutate(sip_most_dma = ifelse(sip_prop >= 0.5, 1, 0),
+          no_sip_most_dma = ifelse(no_sip_prop >= 0.5, 1, 0),
+         busclose_most_dma = ifelse(busclose_prop >= 0.5, 1, 0),
+         busopen_most_dma = ifelse(busopen_prop >= 0.5, 1, 0),
+         sip_most_pop = ifelse(sip_pop_pct >= 0.5, 1, 0),
+         no_sip_most_pop = ifelse(no_sip_pop_pct >= 0.5, 1, 0),
+         busclose_most_pop = ifelse(busclose_pop_pct >= 0.5, 1, 0),
+         busopen_most_pop = ifelse(busopen_pop_pct >= 0.5, 1, 0)) %>% 
+  select(-dmas, -sip_sum, -no_sip_sum, -busclose_sum, -busopen_sum,
+         -sip_pop, -no_sip_pop, -busclose_pop, -busopen_pop)
+  
+```
 
 ```{r}
 # now let's make a slight modification to our lockdowns indicator by making it
 # for every year
 
-dma_interventions <- readRDS('clean_data/dma_interventions.rds') %>%
+dma_interventions <- readRDS('clean_data/dma_interventions_v3.rds') %>%
   mutate(year = year(date)) %>%
   group_by(year, google_code) %>%
   mutate(week = 1:n()) %>%
@@ -142,15 +201,131 @@ dma_interventions_2 <- dma_interventions %>%
   left_join(., dma_interventions_20, by = c("google_code", "week")) %>%
   group_by(google_code) %>%
   arrange(date) %>%
-  fill(sip_prop:busclose_most_pop, .direction = "down")
+  fill(sip_prop:busopen_most_pop, .direction = "down")
 
-# Add in DC data
+searches_norm3_v9 <- searches_norm3_v8 %>%
+  select(-week, -busclose_prop, -sip_prop, -sip_first, -busclose_first,
+         -sip_most_dma, -busclose_most_dma, -sip_pop_pct, -busclose_pop_pct,
+         -sip_pop_pct, -busclose_pop_pct, -sip_most_pop, -busclose_most_pop, -total_pop) %>% 
+  left_join(dma_interventions_2, by = c("dma" = "google_code", "date"))
 
-week_begin <- readRDS('week_begin.rds') %>%
+searches_v16 <- searches_v15 %>%
+  select(-week, -busclose_prop, -sip_prop, -sip_first, -busclose_first,
+         -sip_most_dma, -busclose_most_dma, -sip_pop_pct, -busclose_pop_pct,
+         -sip_pop_pct, -busclose_pop_pct, -sip_most_pop, -busclose_most_pop, -total_pop) %>% 
+  left_join(dma_interventions_2, by = c("dma" = "google_code", "date"))
+
+# Add in DC data -- nvm guess we've excluded it b/c no crosswalk idk
+
+dc <- readRDS('week_begin.rds') %>%
   as_tibble() %>%
-  mutate(date = as_date(date))
+  mutate(date = as_date(date)) %>% 
+  mutate(year = year(date)) %>%
+  group_by(year) %>%
+  mutate(week = 1:n()) %>%
+  ungroup() %>%
+  mutate(sip_first = ifelse(date >= as_date("2020-04-01") - days(6), 1, 0),
+         no_sip_first = ifelse(date >= as_date("2020-05-29") - days(6), 1, 0),
+         busclose_first = ifelse(date >= as_date("2020-03-29") - days(6), 1, 0),
+         busopen_first = ifelse(date >= as_date("2020-05-29") - days(6), 1, 0)) %>% 
+  mutate(sip_prop = sip_first,
+         no_sip_prop = no_sip_first,
+         busclose_prop = busclose_first,
+         busopen_prop = busopen_first,
+         sip_pop_pct = sip_first,
+         no_sip_pop_pct = no_sip_first,
+         sip_most_dma = sip_first,
+         no_sip_most_dma = no_sip_first,
+         busclose_most_dma = busclose_first,
+         busopen_most_dma = busopen_first,
+         sip_most_pop = sip_first,
+         no_sip_most_pop = no_sip_first,
+         busclose_most_pop = busclose_first,
+         busopen_most_pop = busopen_first)
+  
 ```
 
+```{r}
+# Let's include school closures
+
+school <- read_csv('data/policy/school.csv', col_types = cols()) %>% 
+  clean_names() %>% 
+  mutate(fips = as.character(fips)) %>% 
+  mutate(fips = str_pad(fips, width = 5, side = "left", pad = "0")) %>%
+  select(-date_partial_school_closed) %>% 
+  mutate(date_all_school_closed = as_date(date_all_school_closed),
+         earliest_date_school_closed = as_date(earliest_date_school_closed)) %>%
+  rename("school_close_all" = "date_all_school_closed",
+         "school_close_first" = "earliest_date_school_closed") %>%
+  mutate(school_close_all = ifelse(is.na(school_close_all), as_date("2030-01-01"),
+                                   school_close_all),
+         school_close_first = ifelse(is.na(school_close_first), as_date("2030-01-01"),
+                                     school_close_first)) %>%
+  mutate(school_close_all = as_date(school_close_all),
+         school_close_first = as_date(school_close_first))
+
+# Don't need to run again if you've already done it
+pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population) %>%
+  mutate(fips = str_sub(id, str_length(id) - 4, str_length(id))) %>%
+  select(-id)
+
+week_begin <- readRDS('week_begin.rds')
+
+fips <- tibble(school$fips)
+
+merged <- merge(week_begin, fips) %>%
+  clean_names() %>%
+  left_join(., school, by = c("school_fips" = "fips")) %>%
+  # ignore the time zone error i don't think it matters
+  mutate(school_first = ifelse(school_close_first <= date + days(6), 1, 0),
+         school_all = ifelse(school_close_all <= date + days(6), 1, 0)) %>%
+  left_join(., pop, by = c("school_fips" = "fips")) %>%
+  mutate(school_pop_first = school_first * estimate_sex_and_age_total_population,
+         school_pop_all = school_all * estimate_sex_and_age_total_population) %>% 
+  select(date, school_fips, school_first, school_all, estimate_sex_and_age_total_population,
+         school_pop_first, school_pop_all)
+
+merged2 <- left_join(merged, dma_codes, by = c("school_fips" = "fips")) %>%
+  drop_na(google_code) %>%
+  group_by(date, google_code) %>%
+  summarize(dmas = n(),
+         school_first = sum(school_first),
+         school_all = sum(school_all),
+         school_pop_first = sum(school_pop_first),
+         school_pop_all = sum(school_pop_all),
+         pop = sum(estimate_sex_and_age_total_population)) %>% 
+  mutate(school_first_first = ifelse(school_first > 0, 1, 0),
+         school_all_first = ifelse(school_all > 0, 1, 0),
+         school_first_pop_pct = school_pop_first / pop,
+         school_all_pop_pct = school_pop_all / pop,
+         school_first_prop = school_first / dmas,
+         school_all_prop = school_all / dmas) %>% 
+  mutate(school_first_most_pop = ifelse(school_first_pop_pct >= 0.5, 1, 0),
+         school_all_most_pop = ifelse(school_all_pop_pct >= 0.5, 1, 0),
+         school_first_most_dma = ifelse(school_first_prop >= 0.5, 1, 0),
+         school_all_most_dma = ifelse(school_all_prop >= 0.5, 1, 0)) %>% 
+  select(-dmas, -pop)
+
+merged3 <- merged2 %>%
+  mutate(year = year(date)) %>%
+  group_by(year, google_code) %>%
+  mutate(week = 1:n()) %>%
+  ungroup()
+
+school_20 <- merged3  %>%
+  filter(year == 2020) %>%
+  select(-date, -year)
+
+searches_norm3_v10 <- left_join(searches_norm3_v9, school_20, by = c("dma" = "google_code",
+                                                                     "week"))
+
+searches_v17 <- left_join(searches_v16, school_20, by = c("dma" = "google_code",
+                                                                     "week"))
+
+
+``` 
 
 ```{r}
 # State policy spreadsheets -- you need to add a state column to other things first
@@ -270,6 +445,13 @@ depression <- readRDS('depression_scaled.rds') %>%
 searches_v4 <- readRDS('searches_v4.rds') %>%
   select(-depression) %>%
   left_join(depression, by = c("date", "dma"))
+```
+
+
+```{r}
+
+# Recoding these to match start and end dates
+
 
 ```
 
