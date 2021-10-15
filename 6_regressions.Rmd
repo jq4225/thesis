@@ -23,25 +23,38 @@ searches_postlockdown <- searches_norm3 %>%
 ```{r}
 # Percentage of zeroes
 
-zero_percent <- searches_norm3_v5 %>%
+zero_percent <- searches_norm3_v8 %>%
   group_by(dma) %>%
-  select(dma, `alcohol`:`worry`, depression, cannabis:mental_health) %>% 
-  summarize(across(.cols = c(`alcohol`:`mental_health`), ~ sum(.==0)),
+  select(dma, `alcohol`:`worry`, depression, cannabis:streaming_media) %>% 
+  summarize(across(.cols = c(`alcohol`:`streaming_media`), ~ sum(.==0)),
             weeks = n()) %>%
-  mutate(across(.cols = c(alcohol:mental_health), ~ . * 100 / weeks)) %>%
+  mutate(across(.cols = c(alcohol:streaming_media), ~ . * 100 / weeks)) %>%
   group_by(dma) %>%
-  mutate(mean = mean(alcohol:mental_health))
+  mutate(mean = mean(alcohol:streaming_media))
+
+# Read in dma covid and merge
+
+dma_pop_zero_percent <- left_join(dma_pop, zero_percent, by = c("google_code" = "dma")) %>%
+  drop_na()
+
+dma_5 <- dma_pop_zero_percent %>% 
+  filter(mean <= 5) %>% 
+  select(google_code) %>%
+  distinct()
+
+dma_5 <- c(dma_5$google_code)
+
+missing_graph <- dma_pop_zero_percent %>% 
+  ggplot(mapping = aes(x = total_pop, y = mean)) + 
+    geom_point() + 
+    scale_x_continuous(trans='log10') + 
+    labs(x = "DMA Population (log scale)", y = "Mean Percent Zeroes") + 
+    theme_classic()
 
 zero_percent_summary <- zero_percent %>%
   ungroup() %>%
   summarize(across(.cols = alcohol:mental_health, ~ mean(., na.rm = TRUE))) %>%
   pivot_longer(cols = alcohol:mental_health, names_to = "term", values_to = "percent_zero")
-
-less_than_15 <- zero_percent %>%
-  filter(mean <= 15) %>%
-  select(dma)
-
-less_than_15 <- c(less_than_15$dma)
 
 # testing anchor index too 
 
@@ -63,10 +76,9 @@ zero_summary_anchor <- zero_percent_anchor %>%
 ```{r}
 # Run only regressions with less than 15 percent zeroes on average?
 
-searches_norm3_v3_15 <- searches_norm3_v3 %>%
-  filter(dma %in% less_than_15)
+searches_norm3_v8_5 <- searches_norm3_v8 %>%
+  filter(dma %in% dma_5)
 ```
-
 
 ```{r}
 # read in searches v4 or later
@@ -76,17 +88,37 @@ test <- felm(I(log(depression + 1)) ~  sip_first * year_indicator +
                unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
              data = searches_v9)
 
-test3 <-  felm(I(log(streaming_media + 1)) ~  sip_first * year_indicator + 
+test3 <-  felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_first * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + covid + lockdown|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v8)
+             data = searches_norm3_v9)
 
 test3 <-  felm(I(suicide) ~  sip_first * year_indicator + 
                deaths_per_100k + cases_per_100k +  
                unemploy_rate + economic_support_index|factor(dma):factor(year) + week|0|dma, 
              data = searches_norm3)
+```
+```{r}
+# With re-scaling, depression
+
+depression_sip <-  felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_first * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v9)
+
+depression_busclose <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_first * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v9)
 ```
 
 
