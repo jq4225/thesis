@@ -1017,7 +1017,7 @@ searches_norm3_v6 %>%
                                     by = 10)) + 
     geom_vline(xintercept = 0, linetype = "dashed")
 
-searches_norm3_v6 %>%
+games <- searches_norm3_v8 %>%
   mutate(year_indicator = as.character(year_indicator)) %>% 
   group_by(busclose_first_counter, year_indicator) %>%
   arrange(date) %>%
@@ -1029,7 +1029,7 @@ searches_norm3_v6 %>%
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
     labs(title = "games vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown") +
     scale_x_continuous(breaks = seq(-10, 
-                                    max(searches_norm3_v6$busclose_first_counter, na.rm = TRUE), 
+                                    max(searches_norm3_v8$busclose_first_counter, na.rm = TRUE), 
                                     by = 10)) + 
     geom_vline(xintercept = 0, linetype = "dashed")
 
@@ -1081,15 +1081,42 @@ searches_norm3_v7 %>%
                                     by = 10)) + 
     geom_vline(xintercept = 0, linetype = "dashed")
 
+# Anchor terms
+
 searches_norm3_v8 %>%
-  mutate(year_indicator = as.character(year_indicator)) %>% 
-  group_by(date, year_indicator) %>% 
+  mutate(year_indicator = as.character(year_indicator),
+         date = as_date(date)) %>% 
+  group_by(date) %>% 
   summarize(average_3 = mean(average_3, na.rm = TRUE)) %>%
   #mutate(average_3 = rollmean(average_3, k = 3, fill = "extend")) %>%
   ggplot(mapping = aes(x = date, y = average_3)) +
-    geom_line(aes(color = year_indicator)) + 
+    geom_line() + 
     theme_classic() +
-    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
-    labs(title = "average_3 vs. Business Closure", y = "SVI", x = "Weeks vs. Lockdown")
+    scale_x_date(breaks = "6 months", date_labels = "%m/%y") +
+    labs(title = "Anchor Term Average (3-week rolling)", y = "SVI", x = "Date")
+
+searches_norm3_v8 %>%
+  mutate(year_indicator = as.character(year_indicator),
+         date = as_date(date),
+         average_5 = rollmean(average, k = 5, fill = "extend")) %>% 
+  group_by(date) %>% 
+  summarize(average_5 = mean(average_5, na.rm = TRUE)) %>%
+  #mutate(average_3 = rollmean(average_3, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = date, y = average_5)) +
+    geom_line() + 
+    theme_classic() +
+    scale_x_date(breaks = "6 months", date_labels = "%m/%y") +
+    labs(title = "Date", y = "SVI", x = "Weeks vs. Lockdown")
+
+anchor_index %>% 
+  mutate(date = as_date(date)) %>% 
+  group_by(date) %>% 
+  summarize(rice = mean(rice, na.rm = TRUE)) %>% 
+  ggplot(mapping = aes(x = date, y = rice)) + 
+    geom_line() + 
+    theme_classic() + 
+    scale_x_date(breaks = "6 months", date_labels = "%m/%y") + 
+    labs(title = "rice", x = "Date", y = "SVI")
+
 ```
 
