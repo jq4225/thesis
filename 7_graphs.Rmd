@@ -1211,5 +1211,41 @@ crying_filter <- searches_norm3_v10_5 %>%
     scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
     geom_vline(xintercept = 13, linetype = "dashed") + 
     theme_classic()
+
+
+```
+```{r}
+# read in dma_5 and filter for it
+
+tired <- searches_norm3_v11 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(tired = mean(tired)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(tired = rollmean(tired, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = tired)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "tired", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+tired_filter <- searches_norm3_v11_5 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(tired = mean(tired)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(tired = rollmean(tired, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = tired)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "tired (excl. low-volume regions)", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+  
 ```
 

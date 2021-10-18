@@ -10,26 +10,13 @@ library(texreg)
 library(lfe)
 library(janitor)
 library(lubridate)
-library(fuzzyjoin)
 library(openintro)
+library(readxl)
+
 ```
 
 ```{r}
 # Read in the household pulse file
-
-container <- function(col1, col2) {
-  if (col2 %in% col1) {
-    return(TRUE)
-  }
-  
-  else if (col1 %in% col2) {
-    return(TRUE)
-  }
-  
-  else {
-    return(FALSE)
-  }
-}
 
 hps <- read_csv(
 'data/verification/Indicators_of_Anxiety_or_Depression_Based_on_Reported_Frequency_of_Symptoms_During_Last_7_Days.csv', col_types = cols()) %>% 
@@ -61,11 +48,52 @@ hps_merged_norm <- expand_grid(hps_state, state_searches_norm) %>%
   rename('state_code' = 'state') %>%
   rename('state' = 'state_2')
 
+hps_merged <- expand_grid(hps_state, state_searches_v1) %>%
+  mutate(state_3 = str_sub(state, start = 4, end = 5)) %>%
+  filter(state_3 == state_2, 
+         date + days(6) >= start_date,
+         date <= end_date) %>%
+  select(-state_3) %>%
+  rename('state_code' = 'state') %>%
+  rename('state' = 'state_2')
+
+hps_merged_2 <- hps_merged %>% 
+  group_by(start_date, end_date, state, hps_depression, hps_anxiety) %>% 
+  summarize(across(anxiety:average_3, mean))
+
+hps_merged_norm_v2 <- hps_merged_norm_v1 %>% 
+  group_by(start_date, end_date, state, hps_depression, hps_anxiety) %>% 
+  summarize(across(anxiety:average_3, mean))  
+
+
   
 ```
 ```{r}
-test <- felm(log(depression+1) ~ log(hps_depression+1)|state|0|state, data = hps_merged_norm)
+test <- felm(log(depression+1) ~ log(hps_depression+1)|state|0|state, data = hps_merged_norm_v2)
 
-test2 <- felm(log(anxiety + 1) ~ log(hps_anxiety + 1)|state|0|state, data = hps_merged_norm)
+test2 <- felm(log(depression + 1) ~ log(hps_depression + 1)|state|0|state, data = hps_merged_2)
+```
+```{r}
+# alc 
+
+alc <- read_excel('data/verification/state_alcsales_December2020.xlsx', sheet = "Data") %>%
+  clean_names() %>% 
+  select(-gallons, -ethanol, -population, -per_capita3yr, -pct_change) %>% 
+  pivot_wider(names_from = 'beverage', values_from = 'per_capita') %>% 
+  rename('spirits' = `1`,
+         'wine' = `2`,
+         'beer' = `3`,
+         'all_alc' = `4`)
+
+# read in alcohol norm
+
+alc_2 <- left_join(alc, alcohol_norm, by = c("year", "month", "fips"))
+
+```
+
+```{r}
+# Test some regressions
+
+test <- felm(log(all_alc) ~ log(alcohol)|state|0|state, data = alc_2)
 ```
 
