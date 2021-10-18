@@ -1120,3 +1120,96 @@ anchor_index %>%
 
 ```
 
+```{r}
+searches_norm3_v10 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(depression = mean(depression)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(depression = rollmean(depression, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = depression)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Depression", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+searches_norm3_v10_5 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(depression = mean(depression)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(depression = rollmean(depression, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = depression)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Depression (excl. low-volume regions)", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+anxiety <- searches_norm3_v10 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(anxiety = rollmean(anxiety, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = anxiety)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "anxiety", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+anxiety_filter <- searches_norm3_v10_5 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(anxiety = mean(anxiety)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(anxiety = rollmean(anxiety, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = anxiety)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "anxiety (excl. low-volume regions)", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+```
+```{r}
+crying <- searches_norm3_v10 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(crying = mean(crying)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(crying = rollmean(crying, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = crying)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "crying", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+crying_filter <- searches_norm3_v10_5 %>%
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(crying = mean(crying)) %>%
+  ungroup() %>%
+  group_by(year_indicator) %>%
+  mutate(crying = rollmean(crying, k = 3, fill = "extend")) %>%
+  ggplot(mapping = aes(x = week, y = crying)) + geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "crying (excl. low-volume regions)", 
+         subtitle = "Dashed line indicates approx. lockdown start date") + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+```
+
