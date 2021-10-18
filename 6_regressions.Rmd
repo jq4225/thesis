@@ -23,26 +23,26 @@ searches_postlockdown <- searches_norm3 %>%
 ```{r}
 # Percentage of zeroes
 
-zero_percent <- searches_norm3_v8 %>%
+zero_percent <- searches_norm3_v11 %>%
   group_by(dma) %>%
-  select(dma, `alcohol`:`worry`, depression, cannabis:streaming_media) %>% 
-  summarize(across(.cols = c(`alcohol`:`streaming_media`), ~ sum(.==0)),
+  select(dma, `alcohol`:`TV`, cannabis:streaming_media, alone:sad) %>% 
+  summarize(across(.cols = c(`alcohol`:sad), ~ sum(.==0)),
             weeks = n()) %>%
-  mutate(across(.cols = c(alcohol:streaming_media), ~ . * 100 / weeks)) %>%
+  mutate(across(.cols = c(alcohol:sad), ~ . * 100 / weeks)) %>%
   group_by(dma) %>%
-  mutate(mean = mean(alcohol:streaming_media))
+  mutate(mean = mean(alcohol:sad))
 
 # Read in dma covid and merge
 
 dma_pop_zero_percent <- left_join(dma_pop, zero_percent, by = c("google_code" = "dma")) %>%
   drop_na()
 
-dma_5 <- dma_pop_zero_percent %>% 
+dma_5 <- zero_percent %>% 
   filter(mean <= 5) %>% 
-  select(google_code) %>%
+  select(dma) %>%
   distinct()
 
-dma_5 <- c(dma_5$google_code)
+dma_5 <- c(dma_5$dma)
 
 missing_graph <- dma_pop_zero_percent %>% 
   ggplot(mapping = aes(x = total_pop, y = mean)) + 
@@ -53,8 +53,8 @@ missing_graph <- dma_pop_zero_percent %>%
 
 zero_percent_summary <- zero_percent %>%
   ungroup() %>%
-  summarize(across(.cols = alcohol:mental_health, ~ mean(., na.rm = TRUE))) %>%
-  pivot_longer(cols = alcohol:mental_health, names_to = "term", values_to = "percent_zero")
+  summarize(across(.cols = alcohol:lonely, ~ mean(., na.rm = TRUE))) %>%
+  pivot_longer(cols = alcohol:lonely, names_to = "term", values_to = "percent_zero")
 
 # testing anchor index too 
 
@@ -76,7 +76,7 @@ zero_summary_anchor <- zero_percent_anchor %>%
 ```{r}
 # Run only regressions with less than 15 percent zeroes on average?
 
-searches_norm3_v8_5 <- searches_norm3_v8 %>%
+searches_norm3_v11_5 <- searches_norm3_v11 %>%
   filter(dma %in% dma_5)
 ```
 
@@ -104,21 +104,171 @@ test3 <-  felm(I(suicide) ~  sip_first * year_indicator +
 ```{r}
 # With re-scaling, depression
 
-depression_sip <-  felm(I(log(depression + 1)) ~  
-                 sip_first * year_indicator + no_sip_first * year_indicator +
+dep_sip_scaled <-  felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + covid + lockdown|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v9)
+             data = searches_norm3_v10)
 
-depression_busclose <- felm(I(log(depression + 1)) ~  
-                 busclose_first * year_indicator + busopen_first * year_indicator +
+dep_sip_noscale <- felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + covid + lockdown|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v9)
+             data = searches_v17)
+
+dep_bus_scaled <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+dep_bus_noscale <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+```
+
+
+```{r}
+
+# Let's check school closures just for fun
+
+dep_school_scaled <- felm(I(log(depression + 1)) ~  
+                 school_all_first * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+dep_sip_scaled <-  felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10_5)
+```
+
+
+```{r}
+anx_sip_scaled <-  felm(I(log(anxiety + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+anx_sip_noscale <- felm(I(log(anxiety + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+anx_bus_scaled <- felm(I(log(anxiety + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+anx_bus_noscale <- felm(I(log(anxiety + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+htmlreg(l = list(anx_sip_scaled, anx_bus_scaled, anx_sip_noscale, anx_bus_noscale), 
+        digits = 4, include.ci = FALSE, file = "anxiety.doc")
+```
+
+
+```{r}
+lonely_sip_scaled <-  felm(I(log(lonely + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+lonely_sip_noscale <- felm(I(log(lonely + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+lonely_bus_scaled <- felm(I(log(lonely + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+lonely_bus_noscale <- felm(I(log(lonely + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+htmlreg(l = list(lonely_sip_scaled, lonely_bus_scaled, lonely_sip_noscale, lonely_bus_noscale), 
+        digits = 4, include.ci = FALSE, file = "lonely.doc")
+```
+```{r}
+lonely_sip_scaled <-  felm(I(log(lonely + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+lonely_sip_noscale <- felm(I(log(lonely + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+lonely_bus_scaled <- felm(I(log(lonely + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v10)
+
+lonely_bus_noscale <- felm(I(log(lonely + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v17)
+
+htmlreg(l = list(lonely_sip_scaled, lonely_bus_scaled, lonely_sip_noscale, lonely_bus_noscale), 
+        digits = 4, include.ci = FALSE, file = "lonely.doc")
 ```
 
 
