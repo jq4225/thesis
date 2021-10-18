@@ -1,0 +1,134 @@
+---
+title: "6_regressions_final"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lfe)
+library(texreg)
+```
+
+In order: do business closures (all), business closures(filtered), SIP (all), SIP (closures)
+```{r}
+# depression
+
+depression_sip_all <- felm(I(log(depression + 1 )) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator + 
+               cases_per_100k +
+                 unemploy_rate + debt_contract_relief + income_support + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+depression_sip_part <- felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + covid + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+depression_bus_all <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + lockdown|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+depression_bus_part <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 log(unemploy_rate+1) + factor(debt_contract_relief) + factor(income_support) + 
+                 log(precip+1) + temp + 
+                 log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+htmlreg(l = list(depression_bus_all, depression_bus_part, depression_sip_all, depression_sip_part),
+        digits = 4, include.ci = FALSE, file = "depression.doc")
+```
+
+
+```{r}
+
+# With logs
+
+depression_sip_all <- felm(I(log(depression + 1 )) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid + 1) + log(lockdown + 1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+depression_sip_part <- felm(I(log(depression + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+depression_bus_all <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+depression_bus_part <- felm(I(log(depression + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + 
+                 log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+htmlreg(l = list(depression_bus_all, depression_bus_part, depression_sip_all, depression_sip_part),
+        digits = 4, include.ci = FALSE, file = "depression.doc")
+```
+```{r}
+# depression
+
+anxiety_sip_all <- felm(I(log(anxiety + 1 )) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid + 1) + log(lockdown + 1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+anxiety_sip_part <- felm(I(log(anxiety + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+anxiety_bus_all <- felm(I(log(anxiety + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+anxiety_bus_part <- felm(I(log(anxiety + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + 
+                 log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+htmlreg(l = list(anxiety_bus_all, anxiety_bus_part, anxiety_sip_all, anxiety_sip_part),
+        digits = 4, include.ci = FALSE, file = "anxiety.doc")
+```
+
