@@ -90,9 +90,9 @@ dma_codes <- sort(dma_codes)
 ```{r}
 # And start reading in data here -- this is for individual search terms
 # Sadness here
-search_term <- '/m/07l88z'
+search_term <- 'sad'
 
-lockdown <- tibble()
+sad <- tibble()
 
 ```
 
@@ -159,23 +159,23 @@ for(i in 1:54) {
   }
   
   if(i == 1) {
-    lockdown <- temp
+    sad <- temp
   }
   else {
-    lockdown <- cbind(lockdown, temp)
+    sad <- cbind(sad, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-lockdown_clean <- lockdown[, -which(duplicated(names(lockdown)))] %>%
+sad_clean <- sad[, -which(duplicated(names(sad)))] %>%
   select(-`US-NY-501`) %>%
   rename(`US-NY-501` = `US-NY-501-FINAL`) %>% 
   pivot_longer(cols = `US-AK-743`:`US-NY-501`,
-               names_to = "dma", values_to = "lockdown")
+               names_to = "dma", values_to = "sad")
 
-saveRDS(lockdown_clean, file = "lockdown_scaled.rds")
+saveRDS(sad_clean, file = "sad_scaled.rds")
 ```
 
 
@@ -457,7 +457,7 @@ for(j in 44:length(anchor_list)) {
   
   print(j)
   
-  Sys.sleep(30)
+  Sys.sleep(10)
 
 }
 
@@ -594,5 +594,278 @@ searches_v15 <- searches_v14 %>%
   left_join(., lockdown_clean_2, by = c("dma", "date"))
 
 ```
+```{r}
+# second batch of huge search joins
 
+searches_norm3_v11 <- searches_norm3_v10 %>%
+  left_join(., alone_clean, by = c("dma", "date")) %>%
+  mutate(alone = alone/average_3) %>%
+  mutate(alone = alone * 100 / max(alone)) %>%
+  select(-depression) %>% 
+  left_join(., depression_clean, by = c("dma", "date")) %>%
+  mutate(depression = depression/average_3) %>%
+  mutate(depression = depression * 100 / max(depression)) %>% 
+  left_join(., insomnia_clean, by = c("dma", "date")) %>%
+  mutate(insomnia = insomnia/average_3) %>%
+  mutate(insomnia = insomnia * 100 / max(insomnia)) %>% 
+  left_join(., nervous_clean, by = c("dma", "date")) %>%
+  mutate(nervous = nervous/average_3) %>%
+  mutate(nervous = nervous * 100 / max(nervous)) %>% 
+  select(-panic) %>%
+  left_join(., panic_clean, by = c("dma", "date")) %>%
+  mutate(panic = panic/average_3) %>%
+  mutate(panic = panic * 100 / max(panic)) %>% 
+  select(-stress) %>%
+  left_join(., stress_clean, by = c("dma", "date")) %>%
+  mutate(stress = stress/average_3) %>%
+  mutate(stress = stress * 100 / max(stress)) %>% 
+  left_join(., tired_clean, by = c("dma", "date")) %>%
+  mutate(tired = tired/average_3) %>%
+  mutate(tired = tired * 100 / max(tired)) %>% 
+  select(-worry) %>%
+  left_join(., worry_clean, by = c("dma", "date")) %>%
+  mutate(worry = worry/average_3) %>%
+  mutate(worry = worry * 100 / max(worry)) %>% 
+  select(-yoga) %>%
+  left_join(., yoga_clean, by = c("dma", "date")) %>%
+  mutate(yoga = yoga/average_3) %>%
+  mutate(yoga = yoga * 100 / max(yoga)) %>%
+  select(-sadness) %>%
+  left_join(., sad_clean, by = c("dma", "date")) %>%
+  mutate(sad = sad/average_3) %>%
+  mutate(sad = sad * 100 / max(sad))
+
+searches_v18 <- searches_v17 %>%
+  select(-depression, -panic, -worry, -yoga, -sadness, -stress) %>%
+  left_join(., alone_clean, by = c("dma", "date")) %>%
+  left_join(., depression_clean, by = c("dma", "date")) %>%
+  left_join(., insomnia_clean, by = c("dma", "date")) %>%
+  left_join(., nervous_clean, by = c("dma", "date")) %>%
+  left_join(., panic_clean, by = c("dma", "date")) %>%
+  left_join(., stress_clean, by = c("dma", "date")) %>%
+  left_join(., tired_clean, by = c("dma", "date")) %>%
+  left_join(., worry_clean, by = c("dma", "date")) %>%
+  left_join(., yoga_clean, by = c("dma", "date")) %>%
+  left_join(., sad_clean, by = c("dma", "date"))
+```
+```{r}
+# for state codes 
+state_codes <- read_rds('state_codes.rds')
+
+state_codes <- c(state_codes$sub_code)
+```
+
+```{r}
+search_term <- "/m/0k_9"
+
+anxiety <- tibble()
+
+search_term <- "depression"
+
+depression <- tibble()
+  
+  
+```
+
+```{r}
+# State changes
+
+for(i in 1:14) {
+  
+  if(i < 13) {
+    # Exception case for when we need to search twice for NY
+    if(i != 8) {
+       temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2020-04-19 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time
+       
+       temp <- temp %>% 
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
+                                    values_from = hits) %>%
+                        mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+    }
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2020-04-19 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+        distinct() %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+   
+  }
+  
+  else if(i == 13) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1], 
+                                                   state_codes[(i-1)*4 + 2], 
+                                                   state_codes[(i-1)*4 + 3]),
+                            time = '2020-04-19 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+      mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+  }
+  
+  else{
+    temp <- gtrends(keyword = search_term, geo = c('US-NY'),
+                            time = '2020-04-19 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-FINAL` = `US-NY`)
+  }
+  
+  if(i == 1) {
+    anxiety <- temp
+  }
+  else {
+    anxiety <- cbind(anxiety, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+anxiety_clean <- anxiety[, -which(duplicated(names(anxiety)))] %>%
+  select(-`US-NY`) %>%
+  rename(`US-NY` = `US-NY-FINAL`) %>% 
+  pivot_longer(cols = `US-AL`:`US-NY`,
+               names_to = "state", values_to = "anxiety")
+
+saveRDS(anxiety_clean, file = "anxiety_state.rds")
+```
+
+
+```{r}
+
+anchor <- read_excel('anchor_index.xlsx')
+
+anchor_list <- c(anchor$Code)
+
+# State anchor bank
+
+for(j in 1:length(anchor_list)) {
+  
+  keyword <- tibble()
+  
+  for(i in 1:14) {
+  
+    if(i < 13) {
+      # Exception case for when we need to search twice for NY
+      if(i != 8) {
+         temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time
+         
+         temp <- temp %>% 
+           mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+           mutate(hits = as.numeric(hits)) %>%
+           pivot_wider(id_cols = date, names_from = geo,
+                                      values_from = hits) %>%
+            mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+      }
+      else {
+        temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+          distinct() %>%
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+          pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+          mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+      }
+     
+    }
+    
+    else if(i == 13) {
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                        state_codes[(i-1)*4 + 2], 
+                                                   state_codes[(i-1)*4 + 3]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+    
+    else {
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY'),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                    values_from = hits) %>%
+        rename(`US-NY-FINAL` = `US-NY`)
+    }
+    
+    if(i == 1) {
+      keyword <- temp
+    }
+    else {
+      keyword <- cbind(keyword, temp)
+    }
+    Sys.sleep(3)
+    
+    # print(i)
+  }
+
+  keyword_clean <- keyword[, -which(duplicated(names(keyword)))] %>%
+    select(-`US-NY`) %>%
+    rename(`US-NY` = `US-NY-FINAL`) %>%
+    pivot_longer(cols = `US-AL`:`US-NY`,
+                 names_to = "state", values_to = anchor[[j,2]])
+  
+  if(j == 1) {
+    anchor_index <- keyword_clean
+  }
+  
+  else {
+    anchor_index <- left_join(anchor_index, keyword_clean, by = c("state", "date"))
+  }
+  
+  print(j)
+  
+  Sys.sleep(10)
+
+}
+
+
+anchor_index_2 <- anchor_index %>%
+  select(-elevator, -cereal, -waste, -recycling, -debit_card, -soft_drinks, -french_fries,
+         -grain, -currency) %>%
+  mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
+  rowwise() %>%
+  mutate(average = mean(c_across(`honey`:`japan`))) %>%
+  ungroup() %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  mutate(average_3 = rollmean(average, k = 3, fill = "extend"))
+
+saveRDS(anchor_index_2, file = "anchor_index_state.rds")
+```
 
