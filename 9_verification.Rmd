@@ -5,28 +5,67 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-library(tidvyerse)
+library(tidyverse)
 library(texreg)
 library(lfe)
 library(janitor)
 library(lubridate)
+library(fuzzyjoin)
+library(openintro)
 ```
 
 ```{r}
 # Read in the household pulse file
 
+container <- function(col1, col2) {
+  if (col2 %in% col1) {
+    return(TRUE)
+  }
+  
+  else if (col1 %in% col2) {
+    return(TRUE)
+  }
+  
+  else {
+    return(FALSE)
+  }
+}
+
 hps <- read_csv(
 'data/verification/Indicators_of_Anxiety_or_Depression_Based_on_Reported_Frequency_of_Symptoms_During_Last_7_Days.csv', col_types = cols()) %>% 
   clean_names() %>% 
-  select(-confidence_interval, -quartile_range, -low_ci, -high_ci) %>% 
-  mutate(time_period_start_date = as_date(time_period_start_date),
-         time_period_end_date = as_date(time_period_end_date)) %>% 
+  select(-confidence_interval, -quartile_range, -low_ci, -high_ci, -phase, -time_period,
+         -time_period_label) %>% 
+  mutate(time_period_start_date = mdy(time_period_start_date),
+         time_period_end_date = mdy(time_period_end_date)) %>%  
   rename('start_date' = 'time_period_start_date',
-         'end_date' = 'time_period_end_date') 
+         'end_date' = 'time_period_end_date') %>% 
+  pivot_wider(names_from = indicator, values_from = value) %>%
+  clean_names() %>% 
+  rename('hps_depression' = 'symptoms_of_depressive_disorder',
+         'hps_anxiety' = 'symptoms_of_anxiety_disorder',
+         'hps_either' = 'symptoms_of_anxiety_disorder_or_depressive_disorder')
 
-# Make a list-col of all the dates between and including the start and end,
-# then left join the google searches by whether they match up?
+hps_state <- hps %>%
+  filter(state != "United States") %>%
+  select(-subgroup, -group) %>%
+  mutate(state_2 = state2abbr(state)) %>%
+  select(-state)
+
+hps_merged_norm <- expand_grid(hps_state, state_searches_norm) %>%
+  mutate(state_3 = str_sub(state, start = 4, end = 5)) %>%
+  filter(state_3 == state_2, 
+         date + days(6) >= start_date,
+         date <= end_date) %>%
+  select(-state_3) %>%
+  rename('state_code' = 'state') %>%
+  rename('state' = 'state_2')
+
   
-  
+```
+```{r}
+test <- felm(log(depression+1) ~ log(hps_depression+1)|state|0|state, data = hps_merged_norm)
+
+test2 <- felm(log(anxiety + 1) ~ log(hps_anxiety + 1)|state|0|state, data = hps_merged_norm)
 ```
 

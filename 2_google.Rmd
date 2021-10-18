@@ -752,14 +752,16 @@ saveRDS(anxiety_clean, file = "anxiety_state.rds")
 
 
 ```{r}
-
 anchor <- read_excel('anchor_index.xlsx')
 
 anchor_list <- c(anchor$Code)
+```
 
+
+```{r}
 # State anchor bank
 
-for(j in 1:length(anchor_list)) {
+for(j in 16:length(anchor_list)) {
   
   keyword <- tibble()
   
@@ -856,16 +858,32 @@ for(j in 1:length(anchor_list)) {
 
 
 anchor_index_2 <- anchor_index %>%
+  clean_names() %>% 
   select(-elevator, -cereal, -waste, -recycling, -debit_card, -soft_drinks, -french_fries,
          -grain, -currency) %>%
   mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
   rowwise() %>%
   mutate(average = mean(c_across(`honey`:`japan`))) %>%
   ungroup() %>%
-  group_by(dma) %>%
+  group_by(state) %>%
   arrange(date) %>%
   mutate(average_3 = rollmean(average, k = 3, fill = "extend"))
 
 saveRDS(anchor_index_2, file = "anchor_index_state.rds")
+```
+
+
+```{r}
+
+state_searches <- anxiety_clean %>%
+  left_join(.,depression_clean, by = c("state", "date")) %>%
+  left_join(., anchor_index_2 %>% select(state, date, average, average_3), 
+            by = c("state", "date"))
+
+state_searches_norm <- state_searches %>%
+  mutate(depression = depression / average_3, 
+         anxiety = anxiety / average_3) %>% 
+  mutate(depression = depression * 100 / max(depression),
+         anxiety = anxiety * 100 / max(anxiety))
 ```
 
