@@ -1,0 +1,32 @@
+---
+title: "9_verification"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidvyerse)
+library(texreg)
+library(lfe)
+library(janitor)
+library(lubridate)
+```
+
+```{r}
+# Read in the household pulse file
+
+hps <- read_csv(
+'data/verification/Indicators_of_Anxiety_or_Depression_Based_on_Reported_Frequency_of_Symptoms_During_Last_7_Days.csv', col_types = cols()) %>% 
+  clean_names() %>% 
+  select(-confidence_interval, -quartile_range, -low_ci, -high_ci) %>% 
+  mutate(time_period_start_date = as_date(time_period_start_date),
+         time_period_end_date = as_date(time_period_end_date)) %>% 
+  rename('start_date' = 'time_period_start_date',
+         'end_date' = 'time_period_end_date') 
+
+# Make a list-col of all the dates between and including the start and end,
+# then left join the google searches by whether they match up?
+  
+  
+```
+
