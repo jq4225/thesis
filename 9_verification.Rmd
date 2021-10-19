@@ -90,10 +90,52 @@ alc <- read_excel('data/verification/state_alcsales_December2020.xlsx', sheet = 
 alc_2 <- left_join(alc, alcohol_norm, by = c("year", "month", "fips"))
 
 ```
+```{r}
+# LOOK AT THIS ... GRAPH
+
+eq <- function(x,y) {
+  m <- lm(y ~ x)
+  as.character(
+    as.expression(
+      substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
+                list(a = format(coef(m)[1], digits = 4),
+                b = format(coef(m)[2], digits = 4),
+                r2 = format(summary(m)$r.squared, digits = 3)))
+    )
+  )
+}
+
+alcohol_norm_graph <- alc_2 %>%
+  ggplot(mapping = aes(x = log(all_alc+1), y = log(alcohol_norm+1))) + 
+    geom_point() +
+    theme_classic() + 
+    labs(x = "Log Per-capita monthly alcohol consumption (gal)",
+         y = "Log Adjusted Alcohol SVI (normalized vs. anchor)") + 
+    geom_smooth(method='lm')
+
+alcohol_graph <- alc_2 %>%
+   ggplot(mapping = aes(x = log(all_alc + 1), y = log(alcohol + 1))) + 
+    geom_point() +
+    theme_classic() + 
+    labs(x = "Log Per-capita monthly alcohol consumption (gal)",
+         y = "Log Alcohol SVI (un-normalized)") + 
+    geom_smooth(method='lm')
+```
 
 ```{r}
 # Test some regressions
 
-test <- felm(log(all_alc) ~ log(alcohol)|state|0|state, data = alc_2)
+test <- felm(alcohol_norm ~ all_alc|state|0|state, data = alc_2)
+
+test2 <- felm(alcohol ~ all_alc|state|0|state, data = alc_2)
+
+test3 <- felm(log(alcohol_norm) ~ log(all_alc)|state|0|state, data = alc_2)
+
+test4 <- felm(log(alcohol) ~ log(all_alc)|state|0|state, data = alc_2)
+
+```
+
+```{r}
+# Tobacco?
 ```
 
