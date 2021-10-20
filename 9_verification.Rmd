@@ -252,5 +252,50 @@ test4 <- felm(log(alcohol) ~ log(all_alc)|state|0|state, data = alc_2)
 
 ```{r}
 # Tobacco?
+
+tax_rev <- read_excel('data/verification/selected-monthly-sales-tax-collections-data.xlsx') %>%
+  clean_names() %>%
+  filter(tax_type == "Tobacco") %>% 
+  select(-collection_month, -tax_type) %>%
+  rename('state' = 'name',
+         'month' = 'numeric_month') %>% 
+  mutate(state = state2abbr(state)) %>%
+  mutate(date = as_date(paste(year, month, '01', sep = "-")))
+
+cig_tax <- read_csv('data/verification/Table_6694.csv') %>% 
+  clean_names() %>% 
+  filter(year %in% c(2019, 2020, 2021)) %>% 
+  select(-data_source, -topic_description, -measure_description,
+         -provision_group_description, -provision, -citation, -enacted_date,
+         -effective_date, -comments) %>%
+  mutate(state_2 = state2abbr(location_description)) %>% 
+  select(-location_description) %>%
+  mutate(start_date = 
+           ifelse(quarter == 1, as_date(paste(year, "01-01", sep = "-")),
+                  ifelse(quarter == 2, as_date(paste(year, "04-01", sep = "-")),
+                         ifelse(quarter == 3, as_date(paste(year, "07-01")),
+                                as_date(paste(year, "10-01", sep = "-"))))),
+         end_date = 
+           ifelse(quarter == 1, as_date(paste(year, "03-31", sep = "-")),
+                           ifelse(quarter == 2, as_date(paste(year, "06-30", sep = "-")),
+                                  ifelse(quarter == 3, as_date(paste(year, "09-30", sep = "-")),
+                                         as_date(paste(year, "12-31", sep = "-")))))) %>% 
+  mutate(start_date = as_date(start_date),
+         end_date = as_date(end_date)) %>% 
+  select(-quarter, -year)
+
+cigs_combined <- expand_grid(tax_rev, cig_tax) %>% 
+  filter(state == state_2,
+         date >= start_date,
+         date <= end_date) %>%
+  select(-state_2, -start_date, -end_date) %>% 
+  mutate(amount = as.numeric(amount)) %>% 
+  mutate(packs_mil = amount/(value * 1000000))
+
+# combine in the search data
+
+smoking_state <- readRDS('smoking_state.rds')
+  
+  
 ```
 
