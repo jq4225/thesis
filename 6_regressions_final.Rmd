@@ -131,4 +131,41 @@ anxiety_bus_part <- felm(I(log(anxiety + 1)) ~
 htmlreg(l = list(anxiety_bus_all, anxiety_bus_part, anxiety_sip_all, anxiety_sip_part),
         digits = 4, include.ci = FALSE, file = "anxiety.doc")
 ```
+```{r}
+panic_sip_all <- felm(I(log(panic + 1 )) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid + 1) + log(lockdown + 1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+panic_sip_part <- felm(I(log(panic + 1)) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+panic_bus_all <- felm(I(log(panic + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11)
+
+panic_bus_part <- felm(I(log(panic + 1)) ~  
+                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+               cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
+                 precip + temp + 
+                 log(covid+1) + log(lockdown+1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+
+htmlreg(l = list(panic_bus_all, panic_bus_part, panic_sip_all, panic_sip_part),
+        digits = 4, include.ci = FALSE, file = "panic.doc")
+```
 
