@@ -12,6 +12,7 @@ library(janitor)
 library(lubridate)
 library(openintro)
 library(readxl)
+library(ggpubr)
 
 ```
 
@@ -59,20 +60,133 @@ hps_merged <- expand_grid(hps_state, state_searches_v1) %>%
 
 hps_merged_2 <- hps_merged %>% 
   group_by(start_date, end_date, state, hps_depression, hps_anxiety) %>% 
-  summarize(across(anxiety:average_3, mean))
+  summarize(across(anxiety:average_3, mean)) %>%
+  select(-average, -average_3)
 
 hps_merged_norm_v2 <- hps_merged_norm_v1 %>% 
   group_by(start_date, end_date, state, hps_depression, hps_anxiety) %>% 
-  summarize(across(anxiety:average_3, mean))  
+  summarize(across(anxiety:average_3, mean)) %>%
+  rename('anxiety_norm' = 'anxiety',
+         'depression_norm' = 'depression')
+
+hps_all_v1 <- left_join(hps_merged_norm_v2, hps_merged_2)
 
 
   
 ```
-```{r}
-test <- felm(log(depression+1) ~ log(hps_depression+1)|state|0|state, data = hps_merged_norm_v2)
 
-test2 <- felm(log(depression + 1) ~ log(hps_depression + 1)|state|0|state, data = hps_merged_2)
+```{r}
+depression_norm <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = hps_depression, y = depression_norm)) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Depression (HPS)",
+         y = "Depression SVI (normalized)") + 
+    geom_smooth(method = 'lm')
+
+depression <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = hps_depression, y = depression)) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Depression (HPS)",
+         y = "Depression SVI (un-normalized)") + 
+    geom_smooth(method = 'lm')
+
+depression_norm_log <- hps_all_v1 %>%
+  ggplot(mapping = aes(x = log(hps_depression), y = log(depression_norm+1))) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "Log % People Reporting Depression (HPS)",
+         y = "Log Depression SVI (normalized)") + 
+    geom_smooth(method = 'lm')
+
+depression_log <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = log(hps_depression), y = log(depression+1))) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "Log % People Reporting Depression (HPS)",
+         y = "Log Depression SVI (un-normalized)") + 
+    geom_smooth(method = 'lm')
+
+depression_total <- ggarrange(depression_norm, depression, depression_norm_log, depression_log, 
+          labels = c("Normalized", "Un-Normalized", "Log Normalized", 
+                     "Log Un-Normalized"), nrow = 1)
+
+ggsave(depression_total, file = "depression_total.png", width = 10, height = 3,
+       units = "in")
+
 ```
+
+```{r}
+
+test <- felm(depression_norm ~ hps_depression|state|0|state, data = hps_all_v1)
+
+test2 <- felm(depression ~ hps_depression|state|0|state, data = hps_all_v1)
+
+test3 <- felm(log(depression_norm+1) ~ log(hps_depression+1)|state|0|state, data = hps_all_v1)
+
+test4 <- felm(log(depression + 1) ~ log(hps_depression + 1)|state|0|state, data = hps_all_v1)
+
+htmlreg(l = list(test, test2, test3, test4), include.ci = FALSE, digits = 4, file = "depression_verif.doc")
+```
+```{r}
+anxiety_norm <- hps_all_v1 %>% 
+  filter(state == "NY") %>% 
+  ggplot(mapping = aes(x = hps_anxiety, y = anxiety_norm)) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Anxiety (HPS)",
+         y = "Anxiety SVI (normalized)") + 
+    geom_smooth(method = 'lm')
+
+anxiety <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = hps_anxiety, y = anxiety)) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Anxiety (HPS)",
+         y = "Anxiety SVI (Un-normalized)") + 
+    geom_smooth(method = 'lm')
+
+anxiety_norm_log <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = log(hps_anxiety), y = log(anxiety_norm+1))) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Anxiety (HPS)",
+         y = "Anxiety SVI (normalized)") + 
+    geom_smooth(method = 'lm')
+
+anxiety_log <- hps_all_v1 %>% 
+  ggplot(mapping = aes(x = log(hps_anxiety), y = log(anxiety+1))) + 
+    geom_point() + 
+    theme_classic() + 
+    labs(x = "% People Reporting Anxiety (HPS)",
+         y = "Anxiety SVI (un-normalized)") + 
+    geom_smooth(method = 'lm')
+
+anxiety_total <- ggarrange(anxiety_norm, anxiety, anxiety_norm_log, anxiety_log, 
+          labels = c("Normalized", "Un-Normalized", "Log Normalized", 
+                     "Log Un-Normalized"), nrow = 1)
+
+ggsave(anxiety_total, file = "anxiety_total_2.png", width = 10, height = 3,
+       units = "in")
+
+```
+
+```{r}
+
+test <- felm(anxiety_norm ~ hps_anxiety|state|0|state, data = hps_all_v1)
+
+test2 <- felm(anxiety ~ hps_anxiety|state|0|state, data = hps_all_v1)
+
+test3 <- felm(log(anxiety_norm+1) ~ log(hps_anxiety+1)|state|0|state, data = hps_all_v1)
+
+test4 <- felm(log(anxiety + 1) ~ log(hps_anxiety + 1)|state|0|state, data = hps_all_v1)
+
+htmlreg(l = list(test, test2, test3, test4), include.ci = FALSE, digits = 4, file = "anxiety_verif.doc")
+
+```
+
+
 ```{r}
 # alc 
 
@@ -130,6 +244,7 @@ test <- felm(alcohol_norm ~ all_alc|state|0|state, data = alc_2)
 test2 <- felm(alcohol ~ all_alc|state|0|state, data = alc_2)
 
 test3 <- felm(log(alcohol_norm) ~ log(all_alc)|state|0|state, data = alc_2)
+
 
 test4 <- felm(log(alcohol) ~ log(all_alc)|state|0|state, data = alc_2)
 

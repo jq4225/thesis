@@ -1089,6 +1089,116 @@ for(i in 1:14) {
   }
   
   if(i == 1) {
+    alcohol <- temp
+  }
+  else {
+    alcohol <- cbind(alcohol, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+alcohol_clean <- alcohol[, -which(duplicated(names(alcohol)))] %>%
+  select(-`US-NY`) %>%
+  rename(`US-NY` = `US-NY-FINAL`) %>% 
+  pivot_longer(cols = `US-AL`:`US-NY`,
+               names_to = "state", values_to = "alcohol") %>% 
+  mutate(year = year(date),
+         month = month(date)) %>%
+  select(-date) %>%
+  group_by(month, year, state) %>%
+  summarize(alcohol = mean(alcohol)) %>% 
+  mutate(state = str_sub(state, start = 4, end = 5)) %>%
+  left_join(., state_fips, by = c("state" = "postal_code"))  %>% 
+  drop_na(fips) %>%
+  mutate(fips = as.character(fips)) %>% 
+  mutate(fips = str_pad(fips, width = 2, side = "left", pad = "0"))
+# this doesn't include DC but alc data doesn't have it anw
+
+saveRDS(alcohol_clean, file = "alcohol_state.rds")
+```
+```{r}
+# Normalizing alcohol searches against this
+
+alcohol_norm <- left_join(alcohol_clean, anchor_index_2, by = c("month", "year", "state", "fips")) %>%
+  ungroup() %>% 
+  mutate(alcohol_norm = alcohol/average) %>%
+  mutate(alcohol_norm = alcohol_norm * 100 / max(alcohol_norm))
+```
+
+```{r}
+search_term <- "/m/02vxs3q"
+
+smoking <- tibble()
+```
+
+```{r}
+
+# New searches for smoking
+
+
+for(i in 1:14) {
+  
+  if(i < 13) {
+    # Exception case for when we need to search twice for NY
+    if(i != 8) {
+       temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2019-01-01 2021-07-31', 
+                         onlyInterest = TRUE)$interest_over_time
+       
+       temp <- temp %>% 
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
+                                    values_from = hits) %>%
+                        mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+    }
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2019-01-01 2021-07-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+        distinct() %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+   
+  }
+  
+  else if(i == 13) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1], 
+                                                   state_codes[(i-1)*4 + 2], 
+                                                   state_codes[(i-1)*4 + 3]),
+                            time = '2019-01-01 2021-07-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+      mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+  }
+  
+  else{
+    temp <- gtrends(keyword = search_term, geo = c('US-NY'),
+                            time = '2019-01-01 2021-07-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-FINAL` = `US-NY`)
+  }
+  
+  if(i == 1) {
     smoking <- temp
   }
   else {
@@ -1117,12 +1227,5 @@ smoking_clean <- smoking[, -which(duplicated(names(smoking)))] %>%
 # this doesn't include DC but alc data doesn't have it anw
 
 saveRDS(smoking_clean, file = "smoking_state.rds")
-```
-```{r}
-# Normalizing alcohol searches against this
-
-alcohol_norm <- left_join(alcohol_clean, anchor_index_2, by = c("month", "year", "state", "fips")) %>%
-  mutate(alcohol_norm = alcohol/average) %>%
-  mutate(alcohol_norm = alcohol_norm * 100 / max(alcohol_norm))
 ```
 
