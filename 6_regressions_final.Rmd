@@ -168,4 +168,21 @@ panic_bus_part <- felm(I(log(panic + 1)) ~
 htmlreg(l = list(panic_bus_all, panic_bus_part, panic_sip_all, panic_sip_part),
         digits = 4, include.ci = FALSE, file = "panic.doc")
 ```
+```{r}
+depression_sip_part <- felm(I(log(depression + 1 )) ~  
+                 sip_first * year_indicator + no_sip_most_pop * year_indicator + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + 
+                   factor(income_support)  + 
+                 precip + temp + log(covid + 1) * year_indicator + 
+                   log(lockdown + 1) * year_indicator|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v11_5)
+```
+
+```{r}
+htmlreg(l = list(anxiety_sip_all, crying_sip_all, depression_sip_all, lonely_sip_all, panic_sip_all, worry_sip_all, mental_health_sip_all), include.ci = FALSE, digits = 4, file = "mental_health_prelim.doc")
+
+htmlreg(l = list(anxiety_sip_part, crying_sip_part, depression_sip_part, lonely_sip_part, panic_sip_part, worry_sip_part, mental_health_sip_part), include.ci = FALSE, digits = 4, file = "mental_health_prelim_5.doc")
+```
 
