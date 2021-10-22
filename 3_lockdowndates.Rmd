@@ -455,3 +455,57 @@ searches_v4 <- readRDS('searches_v4.rds') %>%
 
 ```
 
+```{r}
+# Let's do state telehealth laws?
+
+telehealth <- read_excel('data/policy/COVID-19 US state policy database 9_27_2021.xlsx',
+                         sheet = "state_policy") %>%
+  clean_names() %>% 
+  select(postcode, fips, med1135w, acaenrol, prevtlhl, tlhlaud, tlhlmed, alcrest, alcdeliv)
+
+telehealth_2 <- telehealth %>% 
+  mutate(across(c(acaenrol, tlhlaud:alcdeliv), as.numeric)) %>% 
+  mutate(across(c(acaenrol, tlhlaud:alcdeliv), ~ ifelse(. == 0, 47484, .))) %>% 
+  mutate(across(c(acaenrol, tlhlaud:alcdeliv), ~ as.Date(., origin = "1899-12-30"))) %>% 
+  mutate(fips = str_pad(fips, width = 2, side = "left", pad = "0")) %>% 
+  mutate(takeout_indicator = ifelse(alcrest == as_date("2030-01-01"), 0, 1),
+         delivery_indicator = ifelse(alcdeliv == as_date("2030-01-01"), 0, 1))
+```
+
+```{r}
+# Convert to weekly
+
+# read in week_begin again and do the expand grid
+
+telehealth_weekly <- expand_grid(telehealth_2, week_begin) %>% 
+  mutate(across(c(med1135w:acaenrol, tlhlaud:alcdeliv), ~ ifelse(date >= ., 1, 0)))
+```
+```{r}
+# Read in my custom payment parity handcoded data
+
+pp <- read_excel('data/policy/payment_parity.xlsx') %>% 
+  clean_names %>% 
+  mutate(pre_covid_pp = pre_covid + pre_covid_medicaid_only,
+         covid_pp = during_covid + during_covid_medicaid_only) %>% 
+  mutate(pre_covid_pp = as.factor(pre_covid_pp),
+         covid_pp = as.factor(covid_pp)) %>% 
+  mutate(state = state2abbr(state))
+```
+
+
+```{r}
+# Let's merge!
+
+searches_norm3_v12 <- left_join(searches_norm3_v11, telehealth_weekly %>% select(-fips), 
+                                by = c("date", "state" = "postcode")) %>%
+  left_join(., pp, by = "state")
+
+searches_norm3_v12_5 <- left_join(searches_norm3_v11_5, telehealth_weekly %>% select(-fips), 
+                                by = c("date", "state" = "postcode")) %>%
+  left_join(., pp, by = "state")
+
+searches_v19 <-  left_join(searches_v18, telehealth_weekly %>% select(-fips), 
+                                by = c("date", "state" = "postcode")) %>%
+  left_join(., pp, by = "state")
+```
+
