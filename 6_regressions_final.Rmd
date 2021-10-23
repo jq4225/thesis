@@ -185,4 +185,18 @@ htmlreg(l = list(anxiety_bus_all, crying_bus_all, depression_bus_all, lonely_bus
 
 htmlreg(l = list(anxiety_bus_part, crying_bus_part, depression_bus_part, lonely_bus_part, panic_bus_part, worry_bus_part, mental_health_bus_part), include.ci = FALSE, digits = 4, file = "mental_health_bus_prelim_5.doc")
 ```
+```{r}
+# Let's try some other stuff
+
+depression_bus_part <- felm(I(log(depression + 1 )) ~  
+                 busclose_first * year_indicator * factor(covid_pp) + 
+                busopen_most_pop * year_indicator * factor(covid_pp) + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + 
+                   factor(income_support)  + 
+                 precip + temp + log(covid + 1) * factor(year_indicator) + 
+                   log(lockdown + 1) * factor(year_indicator)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_v19)
+```
 

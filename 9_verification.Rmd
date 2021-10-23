@@ -299,3 +299,65 @@ smoking_state <- readRDS('smoking_state.rds')
   
 ```
 
+```{r}
+# Graphing HPS data vs. time-series search data
+
+hps_all_v1 %>% 
+  group_by(start_date) %>% 
+  summarize(across(c(hps_depression:depression_norm, anxiety:depression), 
+                   mean)) %>% 
+  ggplot(mapping = aes(x = start_date)) + 
+    geom_line(aes(y = hps_depression, color = "Household Pulse")) + 
+    geom_line(aes(y = depression_norm, color = "Normalized GTrends")) + 
+    geom_line(aes(y = depression/2.5, color = "Un-normalized GTrends (re-scaled)")) + 
+    theme_classic() + 
+    theme(legend.position = "top") +
+    labs(x = "Date", y = "HPS % reporting symptoms & Google SVI",
+         title = "Depression") + 
+    scale_color_manual(name = c("", "", ""),
+                       values = c("Household Pulse" = "blue",
+                                  "Normalized GTrends" = "red",
+                                  "Un-normalized GTrends (re-scaled)" = "green")) + 
+    scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
+
+hps_all_v1 %>% 
+  group_by(start_date) %>% 
+  summarize(across(c(hps_depression:depression_norm, anxiety:depression), 
+                   mean)) %>% 
+  ggplot(mapping = aes(x = start_date)) + 
+    geom_line(aes(y = hps_anxiety, color = "Household Pulse")) + 
+    geom_line(aes(y = anxiety_norm, color = "Normalized GTrends")) + 
+    geom_line(aes(y = anxiety/2.4, color = "Un-normalized GTrends (re-scaled)")) + 
+    theme_classic() + 
+    theme(legend.position = "top") + 
+    labs(x = "Date", y = "HPS % reporting symptoms & Google SVI",
+         title = "Anxiety") + 
+    scale_color_manual(name = c("", "", ""),
+                       values = c("Household Pulse" = "blue",
+                                  "Normalized GTrends" = "red",
+                                  "Un-normalized GTrends (re-scaled)" = "green")) + 
+    scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
+
+alcohol_final %>% 
+  group_by(year, month) %>% 
+  summarize(all_alc = mean(all_alc),
+            alcohol = mean(alcohol),
+            alcohol_norm = mean(alcohol_norm)) %>% 
+  mutate(date = mdy(paste(month, "01", year, sep = "-"))) %>% 
+  ggplot(aes(x = date)) + 
+    geom_line(aes(y = all_alc, color = "Alcohol Consumption")) + 
+    geom_line(aes(y = alcohol / max(alcohol) * 0.35, 
+                  color = "Normalized GTrends (rescaled)")) + 
+    geom_line(aes(y = alcohol_norm / max(alcohol_norm) * 0.35, 
+                  color = "Un-normalized GTrends (rescaled)")) + 
+    theme_classic() + 
+    labs(x = "Date", y = "Gallons per Capita", title = "Alcohol") + 
+    theme(legend.position = "top") + 
+  scale_color_manual(name = c("", "", ""),
+                       values = c("Alcohol Consumption" = "blue",
+                                  "Normalized GTrends (rescaled)" = "red",
+                                  "Un-normalized GTrends (rescaled)" = "green"))
+    
+
+```
+
