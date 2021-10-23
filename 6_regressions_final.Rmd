@@ -197,6 +197,6 @@ depression_bus_part <- felm(I(log(depression + 1 )) ~
                  precip + temp + log(covid + 1) * factor(year_indicator) + 
                    log(lockdown + 1) * factor(year_indicator)|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_v19)
+             data = searches_norm3_v12_5)
 ```
 

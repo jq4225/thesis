@@ -110,3 +110,76 @@ lockdown_linear %>%
    theme(legend.position = "top")
 ```
 
+```{r}
+# Modifying above to include school closures
+
+lockdowns <- 
+read_excel('data/policy/Copy-of-Copy-of-Local-Policy-Responses-to-COVID-19.fin_ (1).xlsx',
+           sheet = 'Local Policies') %>%
+  # Get rid of city-specific policies
+  filter(is.na(cityname)) %>%
+  select(stfips, countyfips, stsipstart, stsipend, localsipstart, localsipend,
+         dummysipstart, dummysipend, stbusclose, localbusclose, stbusopen, 
+         localbusopen, dummybusclose, dummybusopen) %>%
+  # Pick the earliest starts and the latest ends
+  mutate(sipstart = ifelse(dummysipstart == 1, as_date(localsipstart), as_date(stsipstart)),
+         sipend = ifelse(dummysipend == 1, as_date(localsipend), as_date(stsipend)),
+         busclose = ifelse(dummybusclose == 1, as_date(localbusclose), as_date(stbusclose)),
+         busopen = ifelse(dummybusopen == 1, as_date(localbusopen), as_date(stbusopen))) %>%
+  select(stfips, countyfips, sipstart, sipend, busclose, busopen,
+         dummysipstart, dummysipend, dummybusclose, dummybusopen) %>%
+  mutate(across(c('sipstart', 'sipend', 'busclose', 'busopen'), as_date)) %>%
+  mutate(stfips = str_pad(stfips, width = 2, side = "left", pad = "0"),
+         countyfips = str_pad(countyfips, width = 3, side = "left", pad = "0")) %>% 
+  mutate(fips = str_c(stfips, countyfips, sep = ""))
+
+school <- read_csv('data/policy/school.csv', col_types = cols()) %>% 
+  clean_names() %>% 
+  mutate(fips = as.character(fips)) %>% 
+  mutate(fips = str_pad(fips, width = 5, side = "left", pad = "0")) %>%
+  select(-date_partial_school_closed) %>% 
+  mutate(date_all_school_closed = as_date(date_all_school_closed),
+         earliest_date_school_closed = as_date(earliest_date_school_closed)) %>%
+  rename("school_close_all" = "date_all_school_closed",
+         "school_close_first" = "earliest_date_school_closed") %>%
+  mutate(school_close_all = ifelse(is.na(school_close_all), as_date("2030-01-01"),
+                                   school_close_all),
+         school_close_first = ifelse(is.na(school_close_first), as_date("2030-01-01"),
+                                     school_close_first)) %>%
+  mutate(school_close_all = as_date(school_close_all),
+         school_close_first = as_date(school_close_first))
+
+lockdowns_2 <- left_join(lockdowns, school, by = "fips") %>% 
+  mutate(across(c(sipstart:busopen, school_close_all:school_close_first),
+                ~ ifelse(is.na(.), as_date("2030-01-01"), .))) %>% 
+  mutate(across(c(sipstart:busopen, school_close_all:school_close_first),
+                as_date))
+
+lockdown_linear <- tibble(date = seq(as_date('2020-03-01'), as_date('2020-07-31'), by = 'days'),
+                          sip_number = 0, busclose_number = 0, school_number = 0)
+
+for (i in 1:nrow(lockdowns_2)) {
+  lockdown_linear <- lockdown_linear %>%
+    mutate(sip_number = ifelse(lockdowns_2[[i,3]] <= as_date(date) & 
+                                 lockdowns_2[[i,4]] >= as_date(date), sip_number + 1,
+                               sip_number),
+           busclose_number = ifelse(lockdowns_2[[i,5]] <= as_date(date) &
+                                      lockdowns_2[[i,6]] >= as_date(date), 
+                                    busclose_number + 1, busclose_number),
+           school_number = ifelse(lockdowns_2[[i,12]] <= as_date(date), school_number + 1,
+                                  school_number))
+}
+
+npi_time <- lockdown_linear %>%
+  pivot_longer(cols = `sip_number`:`school_number`, 
+               names_to = "type",
+               values_to = "counties") %>%
+  ggplot(aes(x = date, y = counties, color = type)) + geom_line() + 
+    labs(x = "Month", y = "Number of Counties Under NPI") + 
+    scale_color_discrete(name = "NPI Type", labels = c("Business Closure", "Stay-at-home Order",
+                                                       "School Closure (all in county)")) + 
+    scale_y_continuous(breaks = seq(0, 3000, by = 500)) +
+    theme_classic2() +
+   theme(legend.position = "top")
+```
+
