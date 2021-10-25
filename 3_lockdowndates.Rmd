@@ -372,9 +372,9 @@ searches_norm3_v13
 school <- read_excel('data/policy/covid-school-data.xlsx') %>% 
   clean_names() %>% 
   select(district_nces,
-         physical_state, open_date, teaching_method)
+         physical_state, open_date, teaching_method, enrollment)
 
-crosswalkteahi <- read_excel('data/policy/sdlist-20.xls', skip = 2) %>% 
+crosswalk <- read_excel('data/policy/sdlist-20.xls', skip = 2) %>% 
   clean_names() %>% 
   mutate(district_nces = str_c(state_fips, district_id_number, sep = ""),
          county_fips = str_c(state_fips, county_fips, sep = "")) %>% 
@@ -397,23 +397,55 @@ school_2 <- left_join(school, crosswalk, by = "district_nces") %>%
   left_join(dma_codes, by = c("county_fips" = "fips")) %>% 
   drop_na(google_code)
 
-reopening <- school_2 %>% 
-  group_by(google_code) %>% 
-  count(teaching_method) %>% 
-  pivot_wider(names_from = teaching_method,
-              values_from = n) %>% 
-  clean_names() %>% 
-  mutate(across(hybrid:other, ~ replace_na(., 0))) %>% 
-  mutate(districts = hybrid + online_only + on_premises + other)
+# read in week_begin
 
-dates <- school_2 %>% 
-  select(google_code, open_date) %>% 
-  mutate(open_date = mdy(open_date)) %>% 
+week_begin <- week_begin %>%
+  mutate(online_only = 0, on_premises = 0, hybrid = 0, other = 0)
+
+school_weekly <- expand_grid(week_begin, school_2) %>% 
+  select(-district_nces) %>% 
+  mutate(enrollment = as.numeric(enrollment),
+         open_date = mdy(open_date)) %>% 
+  drop_na(enrollment) %>% 
+  mutate(online_only = ifelse(teaching_method == "Online Only"  & open_date <= date,
+                              online_only + enrollment, online_only),
+         on_premises = ifelse(teaching_method == "On Premises" & open_date <= date,
+                               on_premises + enrollment, on_premises),
+         hybrid = ifelse(teaching_method == "Hybrid" & open_date <= date,
+                          hybrid + enrollment, hybrid),
+         other = ifelse(teaching_method == "Other" & open_date <= date,
+                        other + enrollment, other)) %>% 
+  group_by(date, google_code) %>% 
+  summarize(across(online_only:other, sum)) %>% 
+  mutate(enrollment = online_only + on_premises + hybrid + other) %>% 
+  mutate(across(online_only:other, ~ ifelse(enrollment != 0, ./enrollment, .))) %>% 
+  select(-enrollment)
+
+school_weekly_20 <- school_weekly %>% 
+  filter(year(date) == 2020) %>% 
   group_by(google_code) %>% 
-  summarize(min = min(open_date),
-            max = max(open_date),
-            average = mean(open_date),
-            sd = sd(open_date))
+  mutate(week = 1:n())
+  
+
+searches_norm3_v14 <- searches_norm3_v13 %>%
+  left_join(school_weekly_20, by = c("dma" = "google_code", "week")) %>% 
+  rename('school_first' = 'school_close') %>% 
+  select(-date.y) %>% 
+  rename('date' = 'date.x') %>% 
+  group_by(dma) %>% 
+  arrange(week) %>% 
+  fill(c(school_first:other), .direction = "down") %>% 
+  ungroup()
+
+searches_v21 <- searches_v20 %>%
+  left_join(school_weekly_20, by = c("dma" = "google_code", "week")) %>% 
+  rename('school_first' = 'school_close') %>% 
+  select(-date.y) %>% 
+  rename('date' = 'date.x') %>% 
+  group_by(dma) %>% 
+  arrange(week) %>% 
+  fill(c(school_first:other), .direction = "down") %>% 
+  ungroup()
   
 
 ```

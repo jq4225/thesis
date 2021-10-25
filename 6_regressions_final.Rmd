@@ -169,15 +169,18 @@ htmlreg(l = list(panic_bus_all, panic_bus_part, panic_sip_all, panic_sip_part),
         digits = 4, include.ci = FALSE, file = "panic.doc")
 ```
 ```{r}
-worry_bus_part <- felm(I(log(worry + 1 )) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator + 
+mental_health_bus_part <- felm(I(log(mental_health + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                school_first * year_indicator + online_only * year_indicator + 
+                  hybrid * year_indicator + on_premises * year_indicator + 
                  cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + 
                    factor(income_support)  + 
                  precip + temp + log(covid + 1) + 
                    log(lockdown + 1)|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v12_5)
+             data = searches_norm3_v14_5)
 ```
 
 ```{r}
@@ -189,14 +192,16 @@ htmlreg(l = list(anxiety_bus_part, crying_bus_part, depression_bus_part, lonely_
 # Let's try some other stuff
 
 depression_bus_part <- felm(I(log(depression + 1 )) ~  
-                 busclose_first * year_indicator * factor(covid_pp) + 
-                busopen_most_pop * year_indicator * factor(covid_pp) + 
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                school_first * year_indicator + online_only * year_indicator + 
+                  hybrid * year_indicator + on_premises * year_indicator + 
                  cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + 
                    factor(income_support)  + 
-                 precip + temp + log(covid + 1) * factor(year_indicator) + 
-                   log(lockdown + 1) * factor(year_indicator)|
+                 precip + temp + log(covid + 1) + 
+                   log(lockdown + 1)|
                  factor(dma):factor(year) + factor(week)|0|dma, 
-             data = searches_norm3_v12_5)
+             data = searches_norm3_v14_5)
 ```
 
