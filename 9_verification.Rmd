@@ -303,6 +303,10 @@ smoking_state <- readRDS('smoking_state.rds')
 # Graphing HPS data vs. time-series search data
 
 hps_all_v1 %>% 
+  group_by(state) %>% 
+  arrange(start_date) %>% 
+  mutate(across(c(anxiety_norm:depression_norm, anxiety:depression), ~ lag(., n = 4))) %>% 
+  ungroup() %>% 
   group_by(start_date) %>% 
   summarize(across(c(hps_depression:depression_norm, anxiety:depression), 
                    mean)) %>% 
@@ -313,15 +317,21 @@ hps_all_v1 %>%
     theme_classic() + 
     theme(legend.position = "top") +
     labs(x = "Date", y = "HPS % reporting symptoms & Google SVI",
-         title = "Depression") + 
+         title = "Depression - 1 month lagged GTrends vs. HPS") + 
     scale_color_manual(name = c("", "", ""),
                        values = c("Household Pulse" = "blue",
                                   "Normalized GTrends" = "red",
                                   "Un-normalized GTrends (re-scaled)" = "green")) + 
     scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
 
+# lagged
+
 hps_all_v1 %>% 
-  group_by(start_date) %>% 
+  group_by(state) %>% 
+  arrange(start_date) %>% 
+  mutate(across(c(anxiety_norm:depression_norm, anxiety:depression), ~ lag(., k = 2))) %>% 
+  ungroup() %>% 
+  group_by(start_date) %>%
   summarize(across(c(hps_depression:depression_norm, anxiety:depression), 
                    mean)) %>% 
   ggplot(mapping = aes(x = start_date)) + 

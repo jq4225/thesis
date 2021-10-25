@@ -248,21 +248,31 @@ dc <- readRDS('week_begin.rds') %>%
 ```{r}
 # Let's include school closures
 
-school <- read_csv('data/policy/school.csv', col_types = cols()) %>% 
+# school <- read_csv('data/policy/school.csv', col_types = cols()) %>% 
+#   clean_names() %>% 
+#   mutate(fips = as.character(fips)) %>% 
+#   mutate(fips = str_pad(fips, width = 5, side = "left", pad = "0")) %>%
+#   select(-date_partial_school_closed) %>% 
+#   mutate(date_all_school_closed = as_date(date_all_school_closed),
+#          earliest_date_school_closed = as_date(earliest_date_school_closed)) %>%
+#   rename("school_close_all" = "date_all_school_closed",
+#          "school_close_first" = "earliest_date_school_closed") %>%
+#   mutate(school_close_all = ifelse(is.na(school_close_all), as_date("2030-01-01"),
+#                                    school_close_all),
+#          school_close_first = ifelse(is.na(school_close_first), as_date("2030-01-01"),
+#                                      school_close_first)) %>%
+#   mutate(school_close_all = as_date(school_close_all),
+#          school_close_first = as_date(school_close_first))
+
+# Use newer data
+
+school <- read_csv('data/policy/interventions.csv') %>% 
   clean_names() %>% 
-  mutate(fips = as.character(fips)) %>% 
-  mutate(fips = str_pad(fips, width = 5, side = "left", pad = "0")) %>%
-  select(-date_partial_school_closed) %>% 
-  mutate(date_all_school_closed = as_date(date_all_school_closed),
-         earliest_date_school_closed = as_date(earliest_date_school_closed)) %>%
-  rename("school_close_all" = "date_all_school_closed",
-         "school_close_first" = "earliest_date_school_closed") %>%
-  mutate(school_close_all = ifelse(is.na(school_close_all), as_date("2030-01-01"),
-                                   school_close_all),
-         school_close_first = ifelse(is.na(school_close_first), as_date("2030-01-01"),
-                                     school_close_first)) %>%
-  mutate(school_close_all = as_date(school_close_all),
-         school_close_first = as_date(school_close_first))
+  select(fips, public_schools) %>% 
+  drop_na() %>% 
+  mutate(public_schools = as.Date(public_schools, origin = "01-01-01")) %>% 
+  mutate(public_schools = as_date(public_schools)) %>% 
+  rename('school_close' = 'public_schools')
 
 # Don't need to run again if you've already done it
 pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
@@ -275,38 +285,63 @@ week_begin <- readRDS('week_begin.rds')
 
 fips <- tibble(school$fips)
 
-merged <- merge(week_begin, fips) %>%
-  clean_names() %>%
-  left_join(., school, by = c("school_fips" = "fips")) %>%
-  # ignore the time zone error i don't think it matters
-  mutate(school_first = ifelse(school_close_first <= date + days(6), 1, 0),
-         school_all = ifelse(school_close_all <= date + days(6), 1, 0)) %>%
-  left_join(., pop, by = c("school_fips" = "fips")) %>%
-  mutate(school_pop_first = school_first * estimate_sex_and_age_total_population,
-         school_pop_all = school_all * estimate_sex_and_age_total_population) %>% 
-  select(date, school_fips, school_first, school_all, estimate_sex_and_age_total_population,
-         school_pop_first, school_pop_all)
+# merged <- merge(week_begin, fips) %>%
+#   clean_names() %>%
+#   left_join(., school, by = c("school_fips" = "fips")) %>%
+#   # ignore the time zone error i don't think it matters
+#   mutate(school_first = ifelse(school_close_first <= date + days(6), 1, 0),
+#          school_all = ifelse(school_close_all <= date + days(6), 1, 0)) %>%
+#   left_join(., pop, by = c("school_fips" = "fips")) %>%
+#   mutate(school_pop_first = school_first * estimate_sex_and_age_total_population,
+#          school_pop_all = school_all * estimate_sex_and_age_total_population) %>% 
+#   select(date, school_fips, school_first, school_all, estimate_sex_and_age_total_population,
+#          school_pop_first, school_pop_all)
 
-merged2 <- left_join(merged, dma_codes, by = c("school_fips" = "fips")) %>%
-  drop_na(google_code) %>%
-  group_by(date, google_code) %>%
+merged <- merge(week_begin, fips) %>% 
+  clean_names() %>% 
+  left_join(., school, by = c("school_fips" = "fips")) %>% 
+  mutate(school_close = ifelse(school_close <= date + days(6), 1, 0)) %>% 
+  left_join(., pop, by = c("school_fips" = "fips")) %>% 
+  mutate(school_pop = school_close * estimate_sex_and_age_total_population) %>% 
+  drop_na(estimate_sex_and_age_total_population) %>% 
+  select(date, school_fips, school_close, school_pop, 
+         estimate_sex_and_age_total_population)
+  
+
+merged2 <- left_join(merged, dma_codes, by = c("school_fips" = "fips")) %>% 
+  drop_na(google_code) %>% 
+  group_by(date, google_code) %>% 
   summarize(dmas = n(),
-         school_first = sum(school_first),
-         school_all = sum(school_all),
-         school_pop_first = sum(school_pop_first),
-         school_pop_all = sum(school_pop_all),
-         pop = sum(estimate_sex_and_age_total_population)) %>% 
-  mutate(school_first_first = ifelse(school_first > 0, 1, 0),
-         school_all_first = ifelse(school_all > 0, 1, 0),
-         school_first_pop_pct = school_pop_first / pop,
-         school_all_pop_pct = school_pop_all / pop,
-         school_first_prop = school_first / dmas,
-         school_all_prop = school_all / dmas) %>% 
-  mutate(school_first_most_pop = ifelse(school_first_pop_pct >= 0.5, 1, 0),
-         school_all_most_pop = ifelse(school_all_pop_pct >= 0.5, 1, 0),
-         school_first_most_dma = ifelse(school_first_prop >= 0.5, 1, 0),
-         school_all_most_dma = ifelse(school_all_prop >= 0.5, 1, 0)) %>% 
-  select(-dmas, -pop)
+            school = sum(school_close),
+            school_pop = sum(school_pop), 
+            pop = sum(estimate_sex_and_age_total_population)) %>% 
+  mutate(school_close = ifelse(school > 0, 1, 0),
+         school_pop_pct = school_pop/pop,
+         school_prop = school/dmas) %>% 
+  mutate(school_most_pop = ifelse(school_pop_pct >= 0.5, 1, 0),
+         school_most_dma = ifelse(school_prop >= 0.5, 1, 0)) %>% 
+  select(-dmas, -school, -school_pop, -pop)
+
+# merged2 <- left_join(merged, dma_codes, by = c("school_fips" = "fips")) %>%
+#   drop_na(google_code) %>%
+#   group_by(date, google_code) %>%
+#   summarize(dmas = n(),
+#          school_first = sum(school_first),
+#          school_all = sum(school_all),
+#          school_pop_first = sum(school_pop_first),
+#          school_pop_all = sum(school_pop_all),
+#          pop = sum(estimate_sex_and_age_total_population)) %>% 
+#   mutate(school_first_first = ifelse(school_first > 0, 1, 0),
+#          school_all_first = ifelse(school_all > 0, 1, 0),
+#          school_first_pop_pct = school_pop_first / pop,
+#          school_all_pop_pct = school_pop_all / pop,
+#          school_first_prop = school_first / dmas,
+#          school_all_prop = school_all / dmas) %>% 
+#   mutate(school_first_most_pop = ifelse(school_first_pop_pct >= 0.5, 1, 0),
+#          school_all_most_pop = ifelse(school_all_pop_pct >= 0.5, 1, 0),
+#          school_first_most_dma = ifelse(school_first_prop >= 0.5, 1, 0),
+#          school_all_most_dma = ifelse(school_all_prop >= 0.5, 1, 0)) %>% 
+#   select(-dmas, -pop)
 
 merged3 <- merged2 %>%
   mutate(year = year(date)) %>%
@@ -318,14 +353,71 @@ school_20 <- merged3  %>%
   filter(year == 2020) %>%
   select(-date, -year)
 
-searches_norm3_v10 <- left_join(searches_norm3_v9, school_20, by = c("dma" = "google_code",
-                                                                     "week"))
+searches_norm3_v13 <- left_join(searches_norm3_v12, school_20, by = c("dma" = "google_code",
+                                                                     "week")) %>% 
+  select(-c(school_first:school_all_most_dma))
 
-searches_v17 <- left_join(searches_v16, school_20, by = c("dma" = "google_code",
-                                                                     "week"))
+searches_v20 <- left_join(searches_v19, school_20, by = c("dma" = "google_code",
+                                                                     "week")) %>% 
+  select(-c(school_first:school_all_most_dma))
+
+searches_norm3_v13
 
 
 ``` 
+
+```{r}
+# School closures v2 from MCH data
+
+school <- read_excel('data/policy/covid-school-data.xlsx') %>% 
+  clean_names() %>% 
+  select(district_nces,
+         physical_state, open_date, teaching_method)
+
+crosswalkteahi <- read_excel('data/policy/sdlist-20.xls', skip = 2) %>% 
+  clean_names() %>% 
+  mutate(district_nces = str_c(state_fips, district_id_number, sep = ""),
+         county_fips = str_c(state_fips, county_fips, sep = "")) %>% 
+  select(-district_id_number, -school_district_name, -county_names)
+
+# Read in dma 
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+school_2 <- left_join(school, crosswalk, by = "district_nces") %>% 
+  drop_na(county_fips, open_date) %>% 
+  filter(teaching_method != "Pending",
+         teaching_method != "Unknown") %>% 
+  select(-physical_state) %>% 
+  left_join(dma_codes, by = c("county_fips" = "fips")) %>% 
+  drop_na(google_code)
+
+reopening <- school_2 %>% 
+  group_by(google_code) %>% 
+  count(teaching_method) %>% 
+  pivot_wider(names_from = teaching_method,
+              values_from = n) %>% 
+  clean_names() %>% 
+  mutate(across(hybrid:other, ~ replace_na(., 0))) %>% 
+  mutate(districts = hybrid + online_only + on_premises + other)
+
+dates <- school_2 %>% 
+  select(google_code, open_date) %>% 
+  mutate(open_date = mdy(open_date)) %>% 
+  group_by(google_code) %>% 
+  summarize(min = min(open_date),
+            max = max(open_date),
+            average = mean(open_date),
+            sd = sd(open_date))
+  
+
+```
+
 
 ```{r}
 # State policy spreadsheets -- you need to add a state column to other things first
