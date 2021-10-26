@@ -1026,7 +1026,7 @@ state_fips <- read_excel('statefips.xlsx') %>%
 ```
 
 ```{r}
-# New searches for smoking
+# New searches for alc
 
 for(i in 1:14) {
   
@@ -1037,7 +1037,7 @@ for(i in 1:14) {
                                                  state_codes[(i-1)*4 + 2],
                                                  state_codes[(i-1)*4 + 3],
                                                  state_codes[(i-1)*4 + 4]),
-                            time = '2017-01-01 2020-12-31', 
+                            time = '2019-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
        
        temp <- temp %>% 
@@ -1227,5 +1227,125 @@ smoking_clean <- smoking[, -which(duplicated(names(smoking)))] %>%
 # this doesn't include DC but alc data doesn't have it anw
 
 saveRDS(smoking_clean, file = "smoking_state.rds")
+```
+
+```{r}
+# State anchor bank for smoking
+
+for(j in 1:length(anchor_list)) {
+  
+  keyword <- tibble()
+  
+  for(i in 1:14) {
+  
+    if(i < 13) {
+      # Exception case for when we need to search twice for NY
+      if(i != 8) {
+         temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2019-01-01 2021-07-31', 
+                           onlyInterest = TRUE)$interest_over_time
+         
+         temp <- temp %>% 
+           mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+           mutate(hits = as.numeric(hits)) %>%
+           pivot_wider(id_cols = date, names_from = geo,
+                                      values_from = hits) %>%
+            mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+      }
+      else {
+        temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2019-01-01 2021-07-31', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+          distinct() %>%
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+          pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+          mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+      }
+     
+    }
+    
+    else if(i == 13) {
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                        state_codes[(i-1)*4 + 2], 
+                                                   state_codes[(i-1)*4 + 3]),
+                              time = '2019-01-01 2021-07-31', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+    
+    else {
+      temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY'),
+                              time = '2019-01-01 2021-07-311', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                    values_from = hits) %>%
+        rename(`US-NY-FINAL` = `US-NY`)
+    }
+    
+    if(i == 1) {
+      keyword <- temp
+    }
+    else {
+      keyword <- cbind(keyword, temp)
+    }
+    Sys.sleep(3)
+    
+    # print(i)
+  }
+
+  keyword_clean <- keyword[, -which(duplicated(names(keyword)))] %>%
+    select(-`US-NY`) %>%
+    rename(`US-NY` = `US-NY-FINAL`) %>%
+    pivot_longer(cols = `US-AL`:`US-NY`,
+                 names_to = "state", values_to = anchor[[j,2]])
+  
+  if(j == 1) {
+    anchor_index <- keyword_clean
+  }
+  
+  else {
+    anchor_index <- left_join(anchor_index, keyword_clean, by = c("state", "date"))
+  }
+  
+  print(j)
+  
+  Sys.sleep(5)
+
+}
+
+
+anchor_index_2 <- anchor_index %>%
+  clean_names() %>% 
+  select(-elevator, -cereal, -waste, -recycling, -debit_card, -soft_drinks, -french_fries,
+         -grain, -currency) %>%
+  mutate(across(c(`honey`:`japan`), ~ . * 100 /max(.))) %>%
+  rowwise() %>%
+  mutate(average = mean(c_across(`honey`:`japan`))) %>%
+  ungroup() %>%
+  mutate(month = month(date),
+         year = year(date)) %>% 
+  group_by(state, month, year) %>%
+  summarize(average = mean(average)) %>%
+  mutate(state = str_sub(state, start = 4, end = 5)) %>%
+  left_join(., state_fips, by = c("state" = "postal_code"))  %>% 
+  drop_na(fips) %>%
+  mutate(fips = as.character(fips)) %>% 
+  mutate(fips = str_pad(fips, width = 2, side = "left", pad = "0"))
+
+saveRDS(anchor_index_2, file = "anchor_index_state_smoking.rds")
 ```
 
