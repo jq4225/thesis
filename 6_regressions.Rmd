@@ -21,9 +21,17 @@ searches_postlockdown <- searches_norm3 %>%
 ```
 
 ```{r}
+
+# Summary stats
+
+summary_stats <- searches_norm3_v14 %>%
+  select(`alcohol`:`TV`, cannabis:streaming_media, alone:sad) %>% 
+  summarize(across(alcohol:sad, list(mean = mean, sd = sd))) %>% 
+  pivot_longer(cols = alcohol_mean: sad_sd, names_to = "term", values_to = "value")
+
 # Percentage of zeroes
 
-zero_percent <- searches_norm3_v11 %>%
+zero_percent <- searches_norm3_v14 %>%
   group_by(dma) %>%
   select(dma, `alcohol`:`TV`, cannabis:streaming_media, alone:sad) %>% 
   summarize(across(.cols = c(`alcohol`:sad), ~ sum(.==0)),
@@ -31,6 +39,11 @@ zero_percent <- searches_norm3_v11 %>%
   mutate(across(.cols = c(alcohol:sad), ~ . * 100 / weeks)) %>%
   group_by(dma) %>%
   mutate(mean = mean(alcohol:sad))
+
+zero_percent %>% 
+  ungroup() %>% 
+  summarize(across(alcohol:sad, list(mean = ~ mean(.), sd = sd))) %>% 
+  pivot_longer(cols = alcohol_mean:sad_sd, names_to = "term", values_to = "value")
 
 # Read in dma covid and merge
 
@@ -53,8 +66,8 @@ missing_graph <- dma_pop_zero_percent %>%
 
 zero_percent_summary <- zero_percent %>%
   ungroup() %>%
-  summarize(across(.cols = alcohol:lonely, ~ mean(., na.rm = TRUE))) %>%
-  pivot_longer(cols = alcohol:lonely, names_to = "term", values_to = "percent_zero")
+  summarize(across(.cols = alcohol:sad, ~ mean(., na.rm = TRUE))) %>%
+  pivot_longer(cols = alcohol:sad, names_to = "term", values_to = "percent_zero")
 
 # testing anchor index too 
 

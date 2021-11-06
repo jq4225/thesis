@@ -1249,3 +1249,76 @@ tired_filter <- searches_norm3_v11_5 %>%
   
 ```
 
+```{r}
+# Let's do some pre-trends graphing
+
+part1 <- searches_norm3_v14 %>% 
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(all_mean = mean(c(depression, crying, lonely, sad,
+                               stress, suicide, tired))) %>% 
+  ungroup() %>% 
+  group_by(year_indicator) %>% 
+  arrange(week) %>% 
+  mutate(roll_mean = rollmean(all_mean, k = 3, fill = "extend")) %>% 
+  ggplot(mapping = aes(x = week, y = roll_mean)) + 
+    geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Average Depression-related SVI") +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+part2 <- searches_norm3_v14 %>% 
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(all_mean = mean(c(anxiety, nervous, panic,
+                               stress, worry))) %>% 
+  ungroup() %>% 
+  group_by(year_indicator) %>% 
+  arrange(week) %>% 
+  mutate(roll_mean = rollmean(all_mean, k = 3, fill = "extend")) %>% 
+  ggplot(mapping = aes(x = week, y = roll_mean)) + 
+    geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Average Anxiety SVI") +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+part3 <- searches_norm3_v14 %>% 
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(all_mean = mean(c(exercise, therapy, yoga))) %>% 
+  ungroup() %>% 
+  group_by(year_indicator) %>% 
+  arrange(week) %>% 
+  mutate(roll_mean = rollmean(all_mean, k = 3, fill = "extend")) %>% 
+  ggplot(mapping = aes(x = week, y = roll_mean)) + 
+    geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Average Coping SVI") +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+part4 <- searches_norm3_v14 %>% 
+  mutate(year_indicator = as.character(year_indicator)) %>% 
+  group_by(week, year_indicator) %>%
+  summarize(all_mean = mean(c(alcohol, alcoholism, cannabis, cigarette,
+                              e_cig, substance_abuse, smoking))) %>% 
+  ungroup() %>% 
+  group_by(year_indicator) %>% 
+  arrange(week) %>% 
+  mutate(roll_mean = rollmean(all_mean, k = 3, fill = "extend")) %>% 
+  ggplot(mapping = aes(x = week, y = roll_mean)) + 
+    geom_line(aes(color = year_indicator)) + 
+    labs(x = "Week of Year", y = "SVI", title = "Average Substance Use SVI") +
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) +
+    scale_x_continuous(breaks = seq(from = 0, to = 53, by = 10)) + 
+    geom_vline(xintercept = 13, linetype = "dashed") + 
+    theme_classic()
+
+combined <- ggarrange(plotlist = list(part1, part2, part3, part4))
+```
+

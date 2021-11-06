@@ -31,7 +31,7 @@ depression_sip_part <- felm(I(log(depression + 1)) ~
              data = searches_norm3_v11_5)
 
 depression_bus_all <- felm(I(log(depression + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + log(covid+1) + lockdown|
@@ -39,7 +39,7 @@ depression_bus_all <- felm(I(log(depression + 1)) ~
              data = searches_norm3_v11)
 
 depression_bus_part <- felm(I(log(depression + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  log(unemploy_rate+1) + factor(debt_contract_relief) + factor(income_support) + 
                  log(precip+1) + temp + 
@@ -73,7 +73,7 @@ depression_sip_part <- felm(I(log(depression + 1)) ~
              data = searches_norm3_v11_5)
 
 depression_bus_all <- felm(I(log(depression + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + log(covid+1) + log(lockdown+1)|
@@ -81,7 +81,7 @@ depression_bus_all <- felm(I(log(depression + 1)) ~
              data = searches_norm3_v11)
 
 depression_bus_part <- felm(I(log(depression + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + 
@@ -112,7 +112,7 @@ anxiety_sip_part <- felm(I(log(anxiety + 1)) ~
              data = searches_norm3_v11_5)
 
 anxiety_bus_all <- felm(I(log(anxiety + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + log(covid+1) + log(lockdown+1)|
@@ -120,7 +120,7 @@ anxiety_bus_all <- felm(I(log(anxiety + 1)) ~
              data = searches_norm3_v11)
 
 anxiety_bus_part <- felm(I(log(anxiety + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + 
@@ -149,7 +149,7 @@ panic_sip_part <- felm(I(log(panic + 1)) ~
              data = searches_norm3_v11_5)
 
 panic_bus_all <- felm(I(log(panic + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + log(covid+1) + log(lockdown+1)|
@@ -157,7 +157,7 @@ panic_bus_all <- felm(I(log(panic + 1)) ~
              data = searches_norm3_v11)
 
 panic_bus_part <- felm(I(log(panic + 1)) ~  
-                 busclose_first * year_indicator + busopen_most_pop * year_indicator +
+                 sip_first * year_indicator + busopen_most_pop * year_indicator +
                cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + factor(income_support) + 
                  precip + temp + 
@@ -170,7 +170,7 @@ htmlreg(l = list(panic_bus_all, panic_bus_part, panic_sip_all, panic_sip_part),
 ```
 ```{r}
 mental_health_bus_part <- felm(I(log(mental_health + 1 )) ~  
-                 busclose_first * year_indicator + 
+                 sip_first * year_indicator + 
                 busopen_most_pop * year_indicator + 
                 school_first * year_indicator + online_only * year_indicator + 
                   hybrid * year_indicator + on_premises * year_indicator + 
@@ -191,10 +191,10 @@ htmlreg(l = list(anxiety_bus_part, crying_bus_part, depression_bus_part, lonely_
 ```{r}
 # Let's try some other stuff
 
-depression_bus_part <- felm(I(log(depression + 1 )) ~  
-                 busclose_first * year_indicator + 
+yoga_bus_part <- felm(I(log(yoga + 1 )) ~  
+                 sip_first * year_indicator + 
                 busopen_most_pop * year_indicator + 
-                school_first * year_indicator + online_only * year_indicator + 
+                school_pop_pct * year_indicator + online_only * year_indicator + 
                   hybrid * year_indicator + on_premises * year_indicator + 
                  cases_per_100k +
                  unemploy_rate + factor(debt_contract_relief) + 
@@ -203,5 +203,180 @@ depression_bus_part <- felm(I(log(depression + 1 )) ~
                    log(lockdown + 1)|
                  factor(dma):factor(year) + factor(week)|0|dma, 
              data = searches_norm3_v14_5)
+
+htmlreg(l = list(crying_bus_part, depression_bus_part,
+                 lonely_bus_part, sad_bus_part, suicide_bus_part, tired_bus_part),
+        include.ci = FALSE, digits = 4, file = "depression_prelim.doc")
+
+htmlreg(l = list(anxiety_bus_part, nervous_bus_part, 
+                 stress_bus_part, worry_bus_part, panic_bus_part),
+        include.ci = FALSE, digits = 4, file = "anxiety_prelim.doc")
+
+
+htmlreg(l = list(alcohol_bus_part, alcoholism_bus_part, 
+                 cannabis_bus_part, cigarette_bus_part, drug_bus_part,
+                 e_cig_bus_part, smoking_bus_part, substance_abuse_bus_part),
+        include.ci = FALSE, digits = 4, file = "substance_prelim.doc")
+
+htmlreg(l = list(exercise_bus_part, therapy_bus_part, 
+                 yoga_bus_part),
+        include.ci = FALSE, digits = 4, file = "coping_prelim.doc")
+```
+```{r}
+# school only
+yoga_bus_part <- felm(I(log(yoga + 1 )) ~  
+                school_pop_pct * year_indicator + online_only * year_indicator + 
+                  hybrid * year_indicator + other * year_indicator + 
+                 cases_per_100k +
+                 unemploy_rate + factor(debt_contract_relief) + 
+                   factor(income_support)  + 
+                 precip + temp + log(covid + 1) + 
+                   log(lockdown + 1)|
+                 factor(dma):factor(year) + factor(week)|0|dma, 
+             data = searches_norm3_v14_5)
+```
+
+
+```{r}
+# Replicating Brodeur et al
+
+# weights = na.omit(searches_norm3_v14_5$pop),
+#                   data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE)
+
+anxiety_1 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
+                  data = searches_norm3_v14_5)
+
+anxiety_2 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+
+anxiety_3 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate|factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+
+anxiety_4 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+
+anxiety_5 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen _most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+
+anxiety_6 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+anxiety_7 <- felm(I(log(anxiety + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        data = searches_norm3_v14_5)
+
+htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4, 
+                 anxiety_5, anxiety_6, anxiety_7), include.ci = FALSE,
+        digits = 4, file = "anxiety_multi.doc")
+
+
+
+# depression_orig <- felm(I(log(depression + 1)) ~ 
+#                         sip_first * year_indicator + 
+#                         cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
+#                         data = searches_v21_5)
+
+
+```
+
+```{r}
+# Running again w/ population weights
+
+# weights = na.omit(searches_norm3_v14_5$pop),
+#                   data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE)
+
+
+depression_1 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
+                  weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+depression_2 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+depression_3 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate|factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+depression_4 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+depression_5 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+depression_6 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+depression_7 <- felm(I(log(depression + 1)) ~ 
+                        busclose_first * year_indicator + 
+                        busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma):factor(year)|0|dma,
+                        weights = na.omit(searches_norm3_v14_5$pop),
+                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+
+htmlreg(l = list(depression_1, depression_2, depression_3, depression_4, 
+                 depression_5, depression_6, depression_7), include.ci = FALSE,
+        digits = 4, file = "depression_multi_weighted.doc")
 ```
 

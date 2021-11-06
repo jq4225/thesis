@@ -1,0 +1,311 @@
+---
+title: "10-states"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(openintro)
+library(lubridate)
+```
+
+```{r}
+# read in the HPS all data
+
+hps <- read_rds('clean_data/search/hps_all_v1.rds')
+
+hps_dates <- hps %>% 
+  ungroup() %>% 
+  select(start_date, end_date) %>% 
+  distinct() %>%
+  mutate(days = as.numeric(end_date - start_date))
+```
+
+```{r}
+# Lockdown data read in from CGRT -- and COVID stuff too
+
+lockdowns <- read_csv('data/policy/OxCGRT_latest.csv', col_types = cols()) %>% 
+  clean_names() %>%
+  filter(country_code == "USA",
+         jurisdiction == "STATE_TOTAL") %>% 
+  select(-country_name, -country_code, -jurisdiction, -confirmed_cases, -confirmed_deaths,
+         -c8_international_travel_controls,
+         -e4_international_support, -e3_fiscal_measures, -stringency_legacy_index,
+         -stringency_legacy_index_for_display, -stringency_index_for_display,
+         -economic_support_index_for_display, -h8_protection_of_elderly_people,
+         -h8_flag, -m1_wildcard, -containment_health_index_for_display,
+         -government_response_index_for_display,
+         -h4_emergency_investment_in_healthcare, -h5_investment_in_vaccines) %>% 
+  mutate(date = ymd(date)) %>%
+  mutate(state_code = state2abbr(region_name)) %>% 
+  select(-region_code, -region_name)
+
+lockdowns_weekly <- expand_grid(lockdowns, hps_dates) %>% 
+  filter(date >= start_date, date <= end_date) %>% 
+  group_by(start_date, end_date, state_code) %>% 
+  summarize(across(c1_school_closing:economic_support_index, ~ median(., na.rm = TRUE))) %>% 
+  mutate(across(c1_school_closing:h7_flag, round))
+
+```
+
+```{r}
+# New COVID cases
+
+covid <- read_csv('data/state_data/us-states.csv', col_types = cols()) %>% 
+  mutate(state = state2abbr(state)) %>% 
+  mutate(date = as_date(date))
+
+hps_dates_2 <- hps_dates %>%
+  mutate(new_start_date = start_date - days(5),
+         new_end_date = end_date - days(5))
+  
+covid_weekly <- expand_grid(hps_dates_2, covid) %>% 
+  filter(date <= new_end_date,
+         date >= new_start_date) %>% 
+  drop_na(state) %>% 
+  group_by(state, fips, start_date, end_date, days) %>% 
+  summarize(cases = sum(cases),
+            deaths = sum(deaths))
+
+state_dem <- read_csv('data/state_data/R12917460_SL040.csv', col_types = cols()) %>% 
+  slice(2:n()) %>% 
+  clean_names() %>% 
+  select(state_fips_code, total_population_56, population_density_per_sq_mile,
+         total_population_white_alone, population_25_years_and_over,
+         population_25_years_and_over_bachelors_degree_or_better,
+         civilian_population_in_labor_force_16_years_and_over,
+         median_household_income_in_2019_inflation_adjusted_dollars,
+         gini_index, total, total_no_health_insurance_coverage) %>% 
+  rename('fips' = 'state_fips_code',
+         'pop' = 'total_population_56',
+         'pop_den' = 'population_density_per_sq_mile',
+         'white_pop' = 'total_population_white_alone',
+         "bach_degree" = 'population_25_years_and_over_bachelors_degree_or_better',
+         'labor_force' = 'civilian_population_in_labor_force_16_years_and_over',
+         'median_income' = 'median_household_income_in_2019_inflation_adjusted_dollars',
+         'gini' = 'gini_index') %>%
+  mutate(uninsured_pct = as.numeric(total_no_health_insurance_coverage)/as.numeric(total),
+         white_pct = as.numeric(white_pop)/as.numeric(pop),
+         bach_pct = as.numeric(bach_degree)/as.numeric(population_25_years_and_over)) %>% 
+  select(-white_pop, bach_degree, -population_25_years_and_over, -total,
+         -total_no_health_insurance_coverage) %>%
+  mutate(across(pop:median_income, as.numeric))
+
+pop <- state_dem %>% select(fips, pop)
+
+covid_per_capita <- covid_weekly %>%
+  left_join(pop, by = "fips") %>% 
+  drop_na(pop) %>% 
+  mutate(cases_per_100k_5day = cases * 100000 / (pop * days/5),
+         deaths_per_100k_5day = deaths * 100000 / (pop * days/5)) %>% 
+  select(-cases, -deaths)
+
+hps_2 <- left_join(hps, covid_per_capita, by = c("state", "start_date",
+                                                 "end_date")) %>%
+  left_join(state_dem %>% select(-pop), by = "fips")
+  
+
+```
+
+```{r}
+# UI claims
+
+ui <- read_csv('data/state_data/UI Claims - State - Weekly.csv', 
+               col_types = cols()) %>% 
+  clean_names() %>% 
+  mutate(ui_end_date = mdy(paste(month, day_endofweek, year, sep = "-")),
+         statefips = as.character(str_pad(statefips, width = 2, side = "left", pad = "0"))) %>% 
+  select(ui_end_date, statefips, initclaims_count_regular:contclaims_count_combined) %>%
+  mutate(ui_start_date = ui_end_date - days(7))
+
+ui_weekly <- expand_grid(ui, hps_dates_2) %>%
+  filter((ui_start_date <= new_end_date & ui_start_date >= new_start_date) | 
+           (ui_end_date <= new_end_date & ui_end_date >= new_start_date)) %>% 
+  group_by(start_date, end_date, statefips, days) %>% 
+  summarize(weeks = n(),
+            initclaims_count_regular = sum(initclaims_count_regular),
+            contclaims_count_regular = sum(contclaims_count_regular),
+            initclaims_count_pua = sum(as.numeric(initclaims_count_pua)),
+            contclaims_count_pua = sum(as.numeric(contclaims_count_pua)),
+            initclaims_count_combined = sum(initclaims_count_combined),
+            contclaims_count_combined = sum(as.numeric(contclaims_count_combined))) %>% 
+  mutate(across(contclaims_count_regular:contclaims_count_combined,
+                ~ ./weeks))
+
+hps_3 <- left_join(hps_2, ui_weekly, by = c("fips" = "statefips", "start_date", "end_date",
+                                            "days")) %>% 
+  mutate(across(contclaims_count_regular:contclaims_count_combined,
+                ~ ./labor_force)) %>% 
+  rename('initclaims_regular' = 'initclaims_count_regular',
+         'contclaims_regular' = 'contclaims_count_regular',
+         'initclaims_pua' = 'initclaims_count_pua',
+         'contclaims_pua' = 'contclaims_count_pua',
+         'initclaims_combined' = 'initclaims_count_combined',
+         'contclaims_combined' = 'contclaims_count_combined')
+
+# Adding in lockdowns sadly makes this no longer relevant :(
+
+hps_4 <- left_join(hps_3, lockdowns_weekly, by = c("start_date", "end_date", 
+                                                   "state" = "state_code")) %>% 
+  group_by(fips) %>% 
+  arrange(start_date) %>% 
+  mutate(period = 1:n())
+
+```
+```{r}
+# Bring in covid and lockdown searches -- from the search file covid_lockdown_statesearches
+
+searches_weekly <- expand_grid(hps_dates, covid_lockdown_statesearches %>% 
+                                 rename('state_2' = 'state')) %>% 
+  mutate(state_2 = str_sub(state_2, start = 4)) %>% 
+  filter(date + days(6) >= start_date,
+         date <= end_date) %>% 
+  select(-days, -date) %>% 
+  group_by(start_date, end_date, state_2) %>% 
+  summarize(across(lockdown:covid, ~ mean(., na.rm = TRUE)))
+
+hps_5 <- left_join(hps_4, searches_weekly, by = c("start_date", "end_date",
+                                                  "state" = "state_2")) %>% 
+  mutate(lockdown_norm = lockdown / average_3,
+         covid_norm = covid / average_3) %>% 
+  mutate(across(lockdown_norm:covid_norm, ~ . * 100 / max(.))) %>% 
+  mutate(year = year(end_date))
+```
+
+
+```{r}
+#curiosity - actually, just the panel regressions on a broader set of data
+
+depression_1 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) + factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                 log(covid_norm+1) + log(lockdown_norm+1)
+             |period + factor(state):factor(year)|0|state,
+             data = hps_all_v5)
+
+depression_2 <- felm(log(depression_norm + 1) ~ 
+                       factor(c2_workplace_closing) + factor(c1_school_closing) + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               economic_support_index + log(covid_norm+1) + log(lockdown_norm+1)
+             |period + factor(state):factor(year)|0|state,
+             data = hps_all_v5)
+
+anxiety_1 <- felm(log(hps_anxiety) ~ 
+                       factor(c2_workplace_closing) + factor(c1_school_closing) + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               economic_support_index + log(covid_norm+1) + log(lockdown_norm+1)
+             |period + factor(state):factor(year)|0|state,
+             data = hps_5)
+
+anxiety_2 <- felm(log(anxiety_norm + 1) ~ 
+                       factor(c2_workplace_closing) + factor(c1_school_closing) + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               economic_support_index + log(covid_norm+1) + log(lockdown_norm+1)
+             |period + factor(state):factor(year)|0|state,
+             data = hps_5)
+
+htmlreg(l = list(depression_1, depression_2, anxiety_1, anxiety_2),
+        include.ci = FALSE, digits = 4, file = "hps_v1.doc")
+```
+
+
+```{r}
+# Join in therapy data
+# Therapy stuff
+
+healthcare <- read_csv('data/state_data/Mental_Health_Care_in_the_Last_4_Weeks.csv',
+                       col_types = cols()) %>% 
+  clean_names() %>% 
+  filter(state != "United States") %>% 
+  select(-group, -phase, -time_period, -time_period_label, -low_ci, -high_ci, -confidence_interval,
+         -quartile_range, -suppression_flag) %>% 
+  pivot_wider(names_from = indicator, values_from = value) %>% 
+  clean_names() %>% 
+  rename("medication" = "took_prescription_medication_for_mental_health_last_4_weeks",
+         "counseling" = "received_counseling_or_therapy_last_4_weeks",
+         "medication_or_counseling" = 
+           "took_prescription_medication_for_mental_health_and_or_received_counseling_or_therapy_last_4_weeks",
+         "no_counseling" = "needed_counseling_or_therapy_but_did_not_get_it_last_4_weeks") %>% 
+  select(-subgroup) %>% 
+  mutate(state = state2abbr(state),
+         across(time_period_start_date:time_period_end_date, mdy))
+
+hps_6 <- left_join(hps_all_v3, healthcare, by = c("state", "start_date" = "time_period_start_date",
+                                                  "end_date" = "time_period_end_date"))
+
+# Join in google search data
+
+therapy_weekly <- expand_grid(hps_dates, therapy_clean %>% 
+                                 rename('state_2' = 'state')) %>% 
+  mutate(state_2 = str_sub(state_2, start = 4)) %>% 
+  filter(date + days(6) >= start_date,
+         date <= end_date) %>% 
+  select(-days, -date) %>% 
+  group_by(start_date, end_date, state_2) %>% 
+  summarize(across(therapy, ~ mean(., na.rm = TRUE)))
+
+hps_7 <- left_join(hps_6, therapy_weekly, by =c("state" = "state_2",
+                                                "start_date", "end_date")) %>% 
+  mutate(therapy_norm = therapy / average_3) %>% 
+  mutate(therapy_norm = therapy_norm * 100/ max(therapy_norm))
+  
+```
+
+```{r}
+# Join in the either column -- from the verification file
+
+hps_all_v5 <- hps_all_v4 %>% 
+  left_join(hps_state %>% select(start_date, state_2, hps_either), by = c("state" = "state_2",
+                                                                          "start_date")) %>%
+  mutate(share_no_counseling = no_counseling / (counseling + medication_or_counseling),
+         share_counseling = counseling / (counseling + medication_or_counseling),
+         share_medication = medication / (counseling + medication_or_counseling),
+         share_medication_or_counseling = medication_or_counseling / 
+           (counseling + medication_or_counseling))
+```
+
+```{r}
+#Exploratory stuff on care seeking
+
+no_counseling_1 <- felm(log(share_no_counseling) ~ hps_either + cases_per_100k_5day + 
+                       initclaims_combined + contclaims_combined + factor(e1_income_support) + 
+                       factor(e2_debt_contract_relief) + 
+                       factor(c2_workplace_closing) + 
+                       log(therapy_norm +1) + 
+                       log(covid+1) + log(lockdown +1)|factor(state):factor(year)
+                     |0|state, data = hps_all_v5)
+
+counseling_1 <- felm(log(share_counseling) ~ hps_either + cases_per_100k_5day + 
+                       initclaims_combined + contclaims_combined + factor(e1_income_support) + 
+                       factor(e2_debt_contract_relief) + 
+                       factor(c2_workplace_closing) + 
+                       log(therapy_norm +1) +
+                       log(covid+1) + log(lockdown +1)|factor(state):factor(year)
+                     |0|state, data = hps_all_v5)
+
+medication_1 <- felm(log(share_medication) ~ hps_either + cases_per_100k_5day + 
+                       initclaims_combined + contclaims_combined + factor(e1_income_support) + 
+                       factor(e2_debt_contract_relief) + 
+                       factor(c2_workplace_closing) + 
+                       log(therapy_norm +1) +
+                       log(covid+1) + log(lockdown +1)|factor(state):factor(year)
+                     |0|state, data = hps_all_v5)
+
+both_1 <- felm(log(share_medication_or_counseling) ~ hps_either + cases_per_100k_5day + 
+                       initclaims_combined + contclaims_combined + factor(e1_income_support) + 
+                       factor(e2_debt_contract_relief) + 
+                       factor(c2_workplace_closing) + 
+                       log(therapy_norm +1) +
+                       log(covid+1) + log(lockdown +1)|factor(state):factor(year)
+                     |0|state, data = hps_all_v5)
+
+htmlreg(l = list(no_counseling_1, counseling_1, medication_1, both_1),
+        include.ci = FALSE, digits = 4, file = "counseling_test1.doc")
+```
+

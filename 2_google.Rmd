@@ -663,6 +663,17 @@ anxiety <- tibble()
 search_term <- "depression"
 
 depression <- tibble()
+
+search_term <- "lockdown"
+
+lockdown <- tibble()
+
+search_term <- "/g/11j2cc_qll"
+
+search_term <- "/m/03c1dkx"
+
+therapy <- tibble()
+
   
   
 ```
@@ -731,25 +742,117 @@ for(i in 1:14) {
   }
   
   if(i == 1) {
-    anxiety <- temp
+    therapy <- temp
   }
   else {
-    anxiety <- cbind(anxiety, temp)
+    therapy <- cbind(therapy, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-anxiety_clean <- anxiety[, -which(duplicated(names(anxiety)))] %>%
+therapy_clean <- therapy[, -which(duplicated(names(therapy)))] %>%
   select(-`US-NY`) %>%
   rename(`US-NY` = `US-NY-FINAL`) %>% 
   pivot_longer(cols = `US-AL`:`US-NY`,
-               names_to = "state", values_to = "anxiety")
+               names_to = "state", values_to = "therapy")
 
-saveRDS(anxiety_clean, file = "anxiety_state.rds")
+saveRDS(therapy_clean, file = "therapy_state.rds")
 ```
 
+```{r}
+# for the covid/lockdown searches - combine and then lag by a week
+
+for(i in 1:14) {
+  
+  if(i < 13) {
+    # Exception case for when we need to search twice for NY
+    if(i != 8) {
+       temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2020-04-12 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time
+       
+       temp <- temp %>% 
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
+                                    values_from = hits) %>%
+                        mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+    }
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                 state_codes[(i-1)*4 + 2],
+                                                 state_codes[(i-1)*4 + 3],
+                                                 state_codes[(i-1)*4 + 4]),
+                            time = '2020-04-12 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+        distinct() %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+   
+  }
+  
+  else if(i == 13) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY', state_codes[(i-1)*4 + 1], 
+                                                   state_codes[(i-1)*4 + 2], 
+                                                   state_codes[(i-1)*4 + 3]),
+                            time = '2020-04-12 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+      mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+  }
+  
+  else{
+    temp <- gtrends(keyword = search_term, geo = c('US-NY'),
+                            time = '2020-04-12 2021-09-27', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-FINAL` = `US-NY`)
+  }
+  
+  if(i == 1) {
+    covid <- temp
+  }
+  else {
+    covid <- cbind(covid, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+covid_clean <- covid[, -which(duplicated(names(covid)))] %>%
+  select(-`US-NY`) %>%
+  rename(`US-NY` = `US-NY-FINAL`) %>% 
+  pivot_longer(cols = `US-AL`:`US-NY`,
+               names_to = "state", values_to = "covid")
+
+saveRDS(covid_clean, file = "covid_state.rds")
+```
+
+```{r}
+#l lag the other searches
+
+lockdown_clean_2 <- left_join(lockdown_clean, covid_clean, by = c("date", "state")) %>%
+  group_by(state) %>%
+  arrange(date) %>%
+  mutate(lockdown = lag(lockdown), covid = lag(covid)) %>%
+  drop_na(lockdown)
+```
 
 ```{r}
 anchor <- read_excel('anchor_index.xlsx')
@@ -1232,7 +1335,7 @@ saveRDS(smoking_clean, file = "smoking_state.rds")
 ```{r}
 # State anchor bank for smoking
 
-for(j in 1:length(anchor_list)) {
+for(j in 4:length(anchor_list)) {
   
   keyword <- tibble()
   
@@ -1287,7 +1390,7 @@ for(j in 1:length(anchor_list)) {
     
     else {
       temp <- gtrends(keyword = anchor_list[j], geo = c('US-NY'),
-                              time = '2019-01-01 2021-07-311', 
+                              time = '2019-01-01 2021-07-31', 
                            onlyInterest = TRUE)$interest_over_time %>%
         mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
         mutate(hits = as.numeric(hits)) %>%
@@ -1347,5 +1450,35 @@ anchor_index_2 <- anchor_index %>%
   mutate(fips = str_pad(fips, width = 2, side = "left", pad = "0"))
 
 saveRDS(anchor_index_2, file = "anchor_index_state_smoking.rds")
+```
+
+```{r}
+# Merge all these together
+
+# read in cig sales and smoking state
+
+cig_sales <- cig_sales %>% 
+  mutate(month = as.numeric(month))
+
+# Read in population data for per capita work
+
+pop <- read_csv('data/state_data/R12941084_SL040.csv') %>% 
+  clean_names() %>% 
+  select(geo_fips, se_a00001_001) %>% 
+  rename('total_pop' = 'se_a00001_001')
+
+smoking <- left_join(smoking_state, cig_sales, by = c("fips" = "fips_state",
+                                                      "state",
+                                             "month", "year")) %>% 
+  drop_na(packs_mil) %>% 
+  filter(packs_mil >= 0) %>% 
+  select(-date) %>% 
+  left_join(anchor_index_2, by = c("state", "month", "year", "fips")) %>% 
+  mutate(smoking_norm = smoking /average) %>% 
+  mutate(smoking_norm = smoking_norm * 100 / max(smoking_norm)) %>% 
+  left_join(pop, by = c("fips" = "geo_fips")) %>% 
+  mutate(packs_per_capita = packs_mil * 1000000 / total_pop)
+
+
 ```
 
