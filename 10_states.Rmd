@@ -176,6 +176,34 @@ hps_5 <- left_join(hps_4, searches_weekly, by = c("start_date", "end_date",
 
 
 ```{r}
+# Bringing in additional anxiety/depression searches -- these are the _state_terms.rds files
+
+anxiety_depression <- left_join(anxiety_terms_state, depression_terms_state, by = c("state", "date"))
+
+searches_weekly <- expand_grid(hps_dates, anxiety_depression %>% 
+                                 rename('state_2' = 'state')) %>% 
+  mutate(state_2 = str_sub(state_2, start = 4)) %>% 
+  filter(date + days(6) >= start_date,
+         date <= end_date) %>% 
+  select(-days, -date) %>% 
+  group_by(start_date, end_date, state_2) %>% 
+  summarize(across(nervous:suicide, ~ mean(., na.rm = TRUE)))
+
+hps_all_v6 <- left_join(hps_all_v5, searches_weekly, by = c("start_date", "end_date",
+                                                  "state" = "state_2")) %>% 
+  mutate(nervous_norm = nervous / average_3,
+         stress_norm = stress / average_3,
+         panic_norm = panic / average_3,
+         worry_norm = worry / average_3,
+         crying_norm = crying / average_3,
+         lonely_norm = lonely / average_3,
+         sad_norm = sad / average_3,
+         suicide_norm = suicide / average_3) %>% 
+  mutate(across(nervous_norm:suicide_norm, ~ . * 100 / max(.))) %>% 
+  mutate(year = year(end_date))
+```
+
+```{r}
 #curiosity - actually, just the panel regressions on a broader set of data
 
 depression_1 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) + factor(c1_school_closing) +
@@ -212,6 +240,12 @@ anxiety_2 <- felm(log(anxiety_norm + 1) ~
 
 htmlreg(l = list(depression_1, depression_2, anxiety_1, anxiety_2),
         include.ci = FALSE, digits = 4, file = "hps_v1.doc")
+```
+
+```{r}
+# Graphing comparisons for a bunch of terms together?
+
+
 ```
 
 

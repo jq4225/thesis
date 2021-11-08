@@ -313,36 +313,36 @@ htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4,
 # Running again w/ population weights
 
 # weights = na.omit(searches_norm3_v14_5$pop),
-#                   data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE)
+#                   data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE)
 
 
 depression_1 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
                         cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
-                  weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                  weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 depression_2 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
                         busopen_most_pop * year_indicator + 
                         cases_per_100k|factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 depression_3 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
                         busopen_most_pop * year_indicator + 
                         cases_per_100k + unemploy_rate|factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 depression_4 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
                         busopen_most_pop * year_indicator + 
                         cases_per_100k + unemploy_rate + temp + precip
                        |factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 depression_5 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
@@ -350,8 +350,8 @@ depression_5 <- felm(I(log(depression + 1)) ~
                         cases_per_100k + unemploy_rate + temp + precip + 
                        log(lockdown + 1) + log(covid + 1)
                        |factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 depression_6 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
@@ -360,8 +360,8 @@ depression_6 <- felm(I(log(depression + 1)) ~
                        log(lockdown + 1) + log(covid + 1) + 
                        factor(income_support) + factor(debt_contract_relief)
                        |factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 depression_7 <- felm(I(log(depression + 1)) ~ 
                         busclose_first * year_indicator + 
                         busopen_most_pop * year_indicator + 
@@ -372,11 +372,30 @@ depression_7 <- felm(I(log(depression + 1)) ~
                        log(lockdown + 1) + log(covid + 1) + 
                        factor(income_support) + factor(debt_contract_relief)
                        |factor(week) + factor(dma):factor(year)|0|dma,
-                        weights = na.omit(searches_norm3_v14_5$pop),
-                  data = searches_norm3_v14_5 %>% filter(is.na(pop) == FALSE))
+                        weights = na.omit(searches_norm3_v15_5$pop),
+                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
 
 htmlreg(l = list(depression_1, depression_2, depression_3, depression_4, 
                  depression_5, depression_6, depression_7), include.ci = FALSE,
         digits = 4, file = "depression_multi_weighted.doc")
+```
+
+```{r}
+# Let's REWEIGHTTTT
+
+searches_norm3_v15 <- searches_norm3_v14 %>%
+        group_by(dma, year) %>%
+        mutate(average_3_ann = mean(average_3, na.rm = TRUE)) %>% 
+        ungroup() %>% 
+        mutate(average_3_ratio = average_3 / average_3_ann) %>% 
+        mutate(across(c(alcohol:TV, cannabis:streaming_media,
+                        alone:sad), ~ . * average_3 / average_3_ratio)) %>% 
+         mutate(across(c(alcohol:TV, cannabis:streaming_media,
+                        alone:sad), ~ . * 100 / max(.)))
+
+# read in dma_5
+searches_norm3_v15_5 <- searches_norm3_v15 %>%
+        filter(dma %in% dma_5)
+
 ```
 

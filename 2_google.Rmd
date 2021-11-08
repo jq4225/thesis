@@ -19,6 +19,10 @@ dma_codes <- read_csv('dma_codes.csv', col_types = cols()) %>%
 dma_codes <- pull(dma_codes, google_code)
 
 dma_codes <- sort(dma_codes)
+
+state_codes <- read_rds('state_codes.rds')
+
+state_codes <- c(state_codes$sub_code)
 ```
 
 Search terms: (don't use anymore -- look at the google doc)
@@ -674,6 +678,8 @@ search_term <- "/m/03c1dkx"
 
 therapy <- tibble()
 
+
+
   
   
 ```
@@ -759,6 +765,116 @@ therapy_clean <- therapy[, -which(duplicated(names(therapy)))] %>%
                names_to = "state", values_to = "therapy")
 
 saveRDS(therapy_clean, file = "therapy_state.rds")
+```
+
+
+```{r}
+# Looped version for multiple terms
+
+search_term <- c("nervous", "stress", "worry", "panic")
+
+search_meaning <- search_term
+
+# search_term <- c('/m/0463cq4', 'lonely', 'sad', '/m/06z5s')
+# 
+# search_meaning <- c('crying', 'lonely', 'sad', 'suicide')
+
+for(j in 1:length(search_term)) {
+  for(i in 1:14) {
+  
+    if(i < 13) {
+      # Exception case for when we need to search twice for NY
+      if(i != 8) {
+         temp <- gtrends(keyword = search_term[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time
+         
+         temp <- temp %>% 
+            mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+            mutate(hits = as.numeric(hits)) %>%
+           pivot_wider(id_cols = date, names_from = geo,
+                                      values_from = hits) %>%
+                          mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY`))
+      }
+      else {
+        temp <- gtrends(keyword = search_term[j], geo = c('US-NY', state_codes[(i-1)*4 + 1],
+                                                   state_codes[(i-1)*4 + 2],
+                                                   state_codes[(i-1)*4 + 3],
+                                                   state_codes[(i-1)*4 + 4]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+          distinct() %>%
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+          pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+          mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+      }
+     
+    }
+    
+    else if(i == 13) {
+      temp <- gtrends(keyword = search_term[j], geo = c('US-NY', state_codes[(i-1)*4 + 1], 
+                                                     state_codes[(i-1)*4 + 2], 
+                                                     state_codes[(i-1)*4 + 3]),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY`))
+    }
+    
+    else{
+      temp <- gtrends(keyword = search_term[j], geo = c('US-NY'),
+                              time = '2020-04-19 2021-09-27', 
+                           onlyInterest = TRUE)$interest_over_time %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                    values_from = hits) %>%
+        rename(`US-NY-FINAL` = `US-NY`)
+    }
+    
+    if(i == 1) {
+      total <- temp
+    }
+    else {
+      total <- cbind(total, temp)
+    }
+    Sys.sleep(3)
+    
+  }
+  
+  total_clean <- total[, -which(duplicated(names(total)))] %>%
+    select(-`US-NY`) %>%
+    rename(`US-NY` = `US-NY-FINAL`) %>% 
+    pivot_longer(cols = `US-AL`:`US-NY`,
+                 names_to = "state", values_to = paste(search_meaning[j]))
+  
+  if(j == 1) {
+      total_total <- total_clean
+  }
+  else {
+      total_total <- left_join(total_total, total_clean, by = c("date", "state"))
+  }
+
+  if(j == length(search_term)) {
+    saveRDS(total_total, file = "anxiety_terms_state.rds")
+    
+  }
+  print(j)
+  Sys.sleep(1)
+  
+}
+
+
+
+
 ```
 
 ```{r}
