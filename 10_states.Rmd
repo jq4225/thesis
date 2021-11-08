@@ -191,6 +191,7 @@ searches_weekly <- expand_grid(hps_dates, anxiety_depression %>%
 
 hps_all_v6 <- left_join(hps_all_v5, searches_weekly, by = c("start_date", "end_date",
                                                   "state" = "state_2")) %>% 
+  ungroup() %>% 
   mutate(nervous_norm = nervous / average_3,
          stress_norm = stress / average_3,
          panic_norm = panic / average_3,
