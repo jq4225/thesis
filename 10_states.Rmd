@@ -344,3 +344,483 @@ htmlreg(l = list(no_counseling_1, counseling_1, medication_1, both_1),
         include.ci = FALSE, digits = 4, file = "counseling_test1.doc")
 ```
 
+```{r}
+# processing big HPS file
+
+hps_1 <- read_csv('data/state_data/pulse_puf_most_recent.csv', col_types = cols())
+
+hps_2 <- hps_1 %>%
+  select(week_x, est_st, tbirth_year, egender, rhispanic, rrace, eeduc, wrkloss, 
+         expctloss, hlthstatus, anxious, worry, interest, down) %>% 
+  mutate(
+    across(c(wrkloss, expctloss, hlthstatus, anxious, worry, interest, down), 
+           ~ ifelse(. == -99 | . == -88, NA, .)))
+
+
+hps_3 <- read_csv('data/state_data/phase2_pulse_puf_most_recent.csv', col_types = cols())
+
+hps_full_part2 <- hps_full_part2 %>%
+   select(week_x, est_st, tbirth_year, egender, rhispanic, rrace, eeduc, wrkloss, 
+         expctloss, hlthstatus, anxious, worry, interest, down, prescript, mh_svcs, mh_notget) %>% 
+  mutate(across(c(wrkloss:mh_notget), 
+           ~ ifelse(. == -99 | . == -88, NA, .)))
+
+hps_combined <- bind_rows(hps_full_part1, hps_full_part2)
+
+hps_combined_2 <- hps_combined %>% 
+  mutate(across(prescript:mh_notget, ~ ifelse(. == 1, 0, ifelse(. == 2, 1, .))))
+```
+
+
+```{r}
+# hps_race <- hps_combined_2 %>%
+#   mutate(across(prescript:mh_notget, ~ ifelse(is.na(.), 0, .))) %>% 
+#   rowwise() %>% 
+#   mutate(depression = ifelse(sum(interest, down, na.rm = TRUE) >= 3 
+#                              & is.na(interest) == FALSE & is.na(down) == FALSE, 1, 0),
+#          anxiety = ifelse(sum(anxious, worry, na.rm = TRUE) >= 3 &
+#                             is.na(anxious) == FALSE & is.na(worry) == FALSE, 1, 0),
+#          depression_num = ifelse(is.na(interest) == FALSE & is.na(down) == FALSE,
+#                                  1, 0),
+#          anxiety_num = ifelse(is.na(anxious) == FALSE & is.na(worry) == FALSE,
+#                               1, 0),
+#          prescript_num = ifelse(is.na(prescript) == FALSE, 1, 0),
+#          mh_svcs_num = ifelse(is.na(mh_svcs) == FALSE, 1, 0),
+#          mh_notget_num = ifelse(is.na(mh_notget) == FALSE, 1, 0)) %>%
+#   ungroup() %>% 
+#   group_by(week_x, est_st, rrace) %>% 
+#   summarize(across(c(prescript:mh_notget, depression:mh_notget_num), sum))
+# 
+# hps_race_2 <- hps_race %>%
+#   mutate(depression_pct = depression / depression_num,
+#          anxiety_pct = anxiety / anxiety_num) %>% 
+#   rowwise() %>% 
+#   mutate(mental_health_all = sum(prescript:mh_notget)) %>% 
+#   ungroup() %>% 
+#   mutate(prescript_pct = prescript / prescript_num,
+#          mh_svcs_pct = mh_svcs / mh_svcs_num,
+#          mh_notget_pct = mh_notget / mh_notget_num)
+
+# This data just isn't good enough - try the tables!
+```
+
+```{r}
+# DOWNLOAD ALL THE TABLES
+
+hps_1 <- "https://www2.census.gov/programs-surveys/demo/tables/hhp/"
+
+year <- c("2020", "2021")
+
+therapy <- "/health4_week"
+
+anxiety <- "/health2b_week"
+  
+depression <- "/health2a_week"
+
+ending <- ".xlsx"
+
+depression_urls <- c()
+
+depression_filenames <- c()
+
+for (i in 1:39) {
+  if (i <= 21) {
+    depression_urls[i] = paste(hps_1, year[1], "/wk", as.character(i), 
+                            depression, as.character(i), ending, sep = "")
+    depression_filenames[i] = paste("depression", "_week", as.character(i), ending, sep = "")
+  }
+  
+  else {
+    depression_urls[i] =  paste(hps_1, year[2], "/wk", as.character(i), 
+                            depression, as.character(i), ending, sep = "")
+    depression_filenames[i] = paste("depression", "_week", as.character(i), ending, sep = "")
+  }
+  
+}
+
+#https://www2.census.gov/programs-surveys/demo/tables/hhp/2021/wk25/health2a_week25.xlsx
+
+
+for (i in 1:length(depression_urls)){
+  download.file(depression_urls[i], 
+                destfile = paste0("data/state_data/hps/",depression_filenames[i]))
+}
+
+# For therapy
+
+therapy_urls <- c()
+
+therapy_filenames <- c()
+
+for (i in 13:39) {
+  if (i <= 21) {
+    therapy_urls[i-12] = paste(hps_1, year[1], "/wk", as.character(i), 
+                            therapy, as.character(i), ending, sep = "")
+    therapy_filenames[i-12] = paste("therapy", "_week", as.character(i), ending, sep = "")
+  }
+  
+  else {
+    therapy_urls[i-12] =  paste(hps_1, year[2], "/wk", as.character(i), 
+                            therapy, as.character(i), ending, sep = "")
+    therapy_filenames[i-12] = paste("therapy", "_week", as.character(i), ending, sep = "")
+  }
+  
+}
+
+for (i in 1:length(therapy_urls)){
+  download.file(therapy_urls[i], 
+                destfile = paste0("data/state_data/hps/",therapy_filenames[i]))
+}
+
+```
+
+```{r}
+# Let's try processing thedata -- note that we accidentally flipped the names oops
+
+test <- read_excel('data/state_data/hps/depression/anxiety_week1.xlsx',
+                   sheet = 52) %>% 
+  clean_names()
+  
+state_name <- str_sub(colnames(test)[1], 97)
+
+test2 <- test %>%
+  mutate(state = state_name) %>% 
+  filter(.[[1]] == "White alone, not Hispanic") %>% 
+  mutate(across(x2:x11, ~ ifelse(. == "-", 0, .))) %>% 
+  mutate(interest = as.numeric(x4) + as.numeric(x5),
+         interest_total = as.numeric(x2) + as.numeric(x3) + as.numeric(x4) + as.numeric(x5),
+         down = as.numeric(x9) + as.numeric(x10),
+         down_total = as.numeric(x7) + as.numeric(x8) + as.numeric(x9) + as.numeric(x10))
+  # mutate week name equals i
+```
+
+```{r}
+depression_filenames <- list.files(path = "data/state_data/hps/depression")
+
+depression_income <- tibble()
+
+depression_terms <- c("18 - 29", "30 - 39", "40 - 49", "50 - 59", "60 - 69",
+                   "70 - 79", "White alone, not Hispanic", "Black alone, not Hispanic",
+                   "Less than $25,000", "$25,000 - $34,999", "$35,000 - $49,999",
+                   "$50,000 - $74,999", "$75,000 - $99,999", "$100,000 - $149,999",
+                   	"$150,000 - $199,999")
+
+depression_names <- c("18to29", "30to39", "40to49", "50to59", "60to69", "70to79",
+                   "white", "black", "less25k", "25to35k", "35to50k", 
+                   "50to75k", "75to100k", "100to150k", "150to200k")
+
+depression_total <- tibble()
+
+for (k in 1:length(depression_terms)) {
+  for (i in 1:length(depression_filenames)) {
+    for (j in 2:52) {
+      test <- suppressMessages(
+        read_excel(paste("data/state_data/hps/depression/", depression_filenames[i], sep = ""),
+                     sheet = j)) %>% 
+        clean_names()
+      
+      
+      state_name <- str_sub(colnames(test)[1], 97)
+      
+      # Pull the week name
+      
+      week_name <- str_sub(depression_filenames[i], start = 13, 
+                           end = str_length(depression_filenames[i]) - 5)
+      
+      # pull the state name in a more organized way idk
+      
+      test2 <- test %>%
+        mutate(state = state_name) %>% 
+        filter(.[[1]] == depression_terms[k]) %>% 
+        mutate(across(x2:x11, ~ ifelse(. == "-", 0, .))) %>% 
+        mutate(interest = as.numeric(x4) + as.numeric(x5),
+               interest_total = as.numeric(x2) + as.numeric(x3) + as.numeric(x4) + as.numeric(x5),
+               down = as.numeric(x9) + as.numeric(x10),
+               down_total = as.numeric(x7) + as.numeric(x8) + as.numeric(x9) + as.numeric(x10)) %>% 
+        mutate(week = as.numeric(week_name)) %>% 
+        select(state, week, down, interest, down_total, interest_total)
+      
+      if(i == 1 & j == 2) {
+        depression_income <- test2
+      }
+      
+      else {
+        depression_income <- bind_rows(depression_income, test2)
+      }
+    }
+  }
+  
+  interest_name <- paste("interest", depression_names[k], sep = "_")
+
+  down_name <- paste("down", depression_names[k], sep = "_") 
+    
+  depression_income_2 <- depression_income %>%
+      mutate(state = state2abbr(state)) %>% 
+      mutate(interest_pct = interest/interest_total,
+             down_pct = down/down_total) %>% 
+      select(state, week, interest_pct, down_pct) %>% 
+      rename(!!interest_name := "interest_pct",
+           !!down_name := "down_pct")
+  
+  if(k == 1) {
+    depression_total <- depression_income_2
+  }
+  
+  else {
+    depression_total <- left_join(depression_total, depression_income_2, by = c("week", "state"))
+  }
+}
+```
+
+```{r}
+depression_filenames <- list.files(path = "data/state_data/hps/depression")
+
+depression_income <- tibble()
+
+for (i in 1:length(depression_filenames)) {
+  for (j in 2:52) {
+    test <- suppressMessages(
+      read_excel(paste("data/state_data/hps/depression/", depression_filenames[i], sep = ""),
+                   sheet = j)) %>% 
+      clean_names()
+    
+    # This is fine even tho it ends up misspelling names
+    
+    state_name <- str_sub(colnames(test)[1], 97)
+    
+    # Pull the week name
+    
+    week_name <- str_sub(depression_filenames[i], start = 13, 
+                         end = str_length(depression_filenames[i]) - 5)
+    
+    test2 <- test %>%
+      mutate(state = state_name) %>% 
+      filter(.[[1]] == 
+      "$150,000 - $199,999" # "Black alone, not Hispanic
+             ) %>% 
+      mutate(across(x2:x11, ~ ifelse(. == "-", 0, .))) %>% 
+      mutate(interest = as.numeric(x4) + as.numeric(x5),
+             interest_total = as.numeric(x2) + as.numeric(x3) + as.numeric(x4) + as.numeric(x5),
+             down = as.numeric(x9) + as.numeric(x10),
+             down_total = as.numeric(x7) + as.numeric(x8) + as.numeric(x9) + as.numeric(x10)) %>% 
+      mutate(week = as.numeric(week_name)) %>% 
+      select(state, week, interest, interest_total, down, down_total)
+    
+    if(i == 1 & j == 2) {
+      depression_income <- test2
+    }
+    
+    else {
+      depression_income <- bind_rows(depression_income, test2)
+    }
+  }
+  
+}
+
+depression_income_2 <- depression_income %>%
+  mutate(state = state2abbr(state)) %>% 
+  mutate(down_pct = down/down_total,
+         interest_pct = interest/interest_total) %>% 
+  select(state, week, down_pct, interest_pct)
+```
+
+```{r}
+anxiety_filenames <- list.files(path = "data/state_data/hps/anxiety")
+
+anxiety_income <- tibble()
+
+anxiety_terms <- c("18 - 29", "30 - 39", "40 - 49", "50 - 59", "60 - 69",
+                   "70 - 79", "White alone, not Hispanic", "Black alone, not Hispanic",
+                   "Less than $25,000", "$25,000 - $34,999", "$35,000 - $49,999",
+                   "$50,000 - $74,999", "$75,000 - $99,999", "$100,000 - $149,999",
+                   	"$150,000 - $199,999")
+
+anxiety_names <- c("18to29", "30to39", "40to49", "50to59", "60to69", "70to79",
+                   "white", "black", "less25k", "25to35k", "35to50k", 
+                   "50to75k", "75to100k", "100to150k", "150to200k")
+
+anxiety_total <- tibble()
+
+for (k in 1:length(anxiety_terms)) {
+  for (i in 1:length(anxiety_filenames)) {
+    for (j in 2:52) {
+      test <- suppressMessages(
+        read_excel(paste("data/state_data/hps/anxiety/", anxiety_filenames[i], sep = ""),
+                     sheet = j)) %>% 
+        clean_names()
+      
+      
+      state_name <- str_sub(colnames(test)[1], 94)
+      
+      # Pull the week name
+      
+      week_name <- str_sub(anxiety_filenames[i], start = 16, 
+                           end = str_length(anxiety_filenames[i]) - 5)
+      
+      # pull the state name in a more organized way idk
+      
+      test2 <- test %>%
+        mutate(state = state_name) %>% 
+        filter(.[[1]] == anxiety_terms[k]) %>% 
+        mutate(across(x2:x11, ~ ifelse(. == "-", 0, .))) %>% 
+        mutate(anxiety = as.numeric(x4) + as.numeric(x5),
+               anxiety_total = as.numeric(x2) + as.numeric(x3) + as.numeric(x4) + as.numeric(x5),
+               worry = as.numeric(x9) + as.numeric(x10),
+               worry_total = as.numeric(x7) + as.numeric(x8) + as.numeric(x9) + as.numeric(x10)) %>% 
+        mutate(week = as.numeric(week_name)) %>% 
+        select(state, week, anxiety, anxiety_total, worry, worry_total)
+      
+      if(i == 1 & j == 2) {
+        anxiety_income <- test2
+      }
+      
+      else {
+        anxiety_income <- bind_rows(anxiety_income, test2)
+      }
+    }
+  }
+  
+  anxiety_name <- paste("anxiety", anxiety_names[k], sep = "_")
+
+  worry_name <- paste("worry", anxiety_names[k], sep = "_")
+    
+  anxiety_income_2 <- anxiety_income %>%
+      mutate(state = state2abbr(state)) %>% 
+      mutate(anxiety_pct = anxiety/anxiety_total,
+             worry_pct = worry/worry_total) %>% 
+      select(state, week, anxiety_pct, worry_pct) %>% 
+      rename(!!anxiety_name := "anxiety_pct",
+           !!worry_name := "worry_pct")
+  
+  if(k == 1) {
+    anxiety_total <- anxiety_income_2
+  }
+  
+  else {
+    anxiety_total <- left_join(anxiety_total, anxiety_income_2, by = c("week", "state"))
+  }
+}
+
+```
+
+```{r}
+# Doing this for therapy
+
+therapy_filenames <- list.files(path = "data/state_data/hps/therapy")
+
+therapy_income <- tibble()
+
+therapy_terms <- c("18 - 29", "30 - 39", "40 - 49", "50 - 59", "60 - 69",
+                   "70 - 79", "White alone, not Hispanic", "Black alone, not Hispanic",
+                   "Less than $25,000", "$25,000 - $34,999", "$35,000 - $49,999",
+                   "$50,000 - $74,999", "$75,000 - $99,999", "$100,000 - $149,999",
+                   	"$150,000 - $199,999")
+
+therapy_names <- c("18to29", "30to39", "40to49", "50to59", "60to69", "70to79",
+                   "white", "black", "less25k", "25to35k", "35to50k", 
+                   "50to75k", "75to100k", "100to150k", "150to200k")
+
+therapy_total <- tibble()
+
+for (k in 1:length(therapy_terms)) {
+  for (i in 1:length(therapy_filenames)) {
+    for (j in 2:52) {
+      test <- suppressMessages(
+        read_excel(paste("data/state_data/hps/therapy/", therapy_filenames[i], sep = ""),
+                     sheet = j)) %>% 
+        clean_names()
+      
+      
+      state_name <- str_sub(colnames(test)[1], 87)
+      
+      # Pull the week name
+      
+      week_name <- str_sub(therapy_filenames[i], start = 13, 
+                           end = str_length(therapy_filenames[i]) - 5)
+      
+      # pull the state name in a more organized way idk
+      
+      test2 <- test %>%
+        mutate(state = state_name) %>% 
+        filter(.[[1]] == therapy_terms[k]) %>% 
+        mutate(across(x2:x11, ~ ifelse(. == "-", 0, .))) %>% 
+        mutate(counseling = as.numeric(x3),
+               counseling_total = as.numeric(x3) + as.numeric(x4),
+               no_counseling = as.numeric(x6),
+               no_counseling_total = 
+                 as.numeric(x6) + as.numeric(x7),
+               medication = as.numeric(x9),
+               medication_total = as.numeric(x9) + as.numeric(x10)) %>% 
+        mutate(week = as.numeric(week_name)) %>% 
+        select(state, week, counseling:medication_total)
+      
+      if(i == 1 & j == 2) {
+        therapy_income <- test2
+      }
+      
+      else {
+        therapy_income <- bind_rows(therapy_income, test2)
+      }
+    }
+  }
+  
+  counseling_name <- paste("counseling", therapy_names[k], sep = "_")
+  
+  no_counseling_name <- paste("no_counseling", therapy_names[k], sep = "_")
+
+  medication_name <- paste("medication", therapy_names[k], sep = "_")
+    
+  therapy_income_2 <- therapy_income %>%
+      mutate(state = state2abbr(state)) %>% 
+      mutate(counseling_pct = counseling/counseling_total,
+             medication_pct = medication/medication_total,
+             no_counseling_pct = no_counseling/no_counseling_total) %>% 
+      select(state, week, counseling_pct:no_counseling_pct) %>% 
+      rename(!!counseling_name := "counseling_pct",
+           !!no_counseling_name := "no_counseling_pct",
+           !!medication_name := "medication_pct")
+  
+  if(k == 1) {
+    therapy_total <- therapy_income_2
+  }
+  
+  else {
+    therapy_total <- left_join(therapy_total, therapy_income_2, by = c("week", "state"))
+  }
+}
+```
+
+
+```{r}
+# Make an average depression thing
+
+anxiety_total_2 <- anxiety_total %>%
+  rowwise() %>% 
+  mutate(anxiety_agg_18to29 = mean(anxiety_18to29, worry_18to29, na.rm = TRUE),
+         anxiety_agg_30to39 = mean(anxiety_30to39, worry_30to39, na.rm = TRUE),
+         anxiety_agg_40to49 = mean(anxiety_40to49, worry_40to49, na.rm = TRUE),
+         anxiety_agg_50to59 = mean(anxiety_50to59, worry_50to59, na.rm = TRUE),
+         anxiety_agg_60to69 = mean(anxiety_60to69, worry_60to69, na.rm = TRUE),
+         anxiety_agg_70to79 = mean(anxiety_70to79, worry_70to79, na.rm = TRUE),
+         anxiety_agg_black = mean(anxiety_black, worry_black, na.rm = TRUE),
+         anxiety_agg_white = mean(anxiety_white, worry_white, na.rm = TRUE),
+         anxiety_agg_less25k = mean(anxiety_less25k, worry_less25k, na.rm = TRUE),
+         anxiety_agg_25to35k = mean(anxiety_25to35k, worry_25to35k, na.rm = TRUE),
+         anxiety_agg_35to50k = mean(anxiety_35to50k, worry_35to50k, na.rm = TRUE),
+         anxiety_agg_50to75k = mean(anxiety_50to75k, worry_50to75k, na.rm = TRUE),
+         anxiety_agg_75to100k = mean(anxiety_75to100k, worry_75to100k, na.rm = TRUE),
+         anxiety_agg_100to150k = mean(anxiety_100to150k, worry_100to150k, na.rm = TRUE),
+         anxiety_agg_150to200k = mean(anxiety_150to200k, worry_150to200k, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  select(state, week, anxiety_agg_18to29:anxiety_agg_150to200k)
+```
+
+```{r}
+# Join things in a coherent way?
+
+hps_all_v8 <- left_join(hps_all_v7, depression_hps_est, by = c("state", "period" = "week")) %>% 
+  left_join(., anxiety_hps_est, by = c("state", "period" = "week"))
+
+hps_all_v9 <- left_join(hps_all_v8, therapy_total, by = c("state", "period" = "week"))
+```
+
