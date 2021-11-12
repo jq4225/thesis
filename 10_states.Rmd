@@ -303,6 +303,14 @@ hps_all_v5 <- hps_all_v4 %>%
          share_medication = medication / (counseling + medication_or_counseling),
          share_medication_or_counseling = medication_or_counseling / 
            (counseling + medication_or_counseling))
+
+# redoing quickly for other parts
+hps_all_v10 <- hps_all_v9 %>% 
+  mutate(share_no_counseling = no_counseling / (counseling + medication_or_counseling),
+         share_counseling = counseling / (counseling + medication_or_counseling),
+         share_medication = medication / (counseling + medication_or_counseling),
+         share_medication_or_counseling = medication_or_counseling / 
+           (counseling + medication_or_counseling))
 ```
 
 ```{r}
