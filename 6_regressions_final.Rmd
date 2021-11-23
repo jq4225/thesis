@@ -2758,6 +2758,118 @@ htmlreg(l = list(anxiety_agg_1, anxiety_agg_2, anxiety_agg_3, anxiety_agg_4, anx
 ```{r}
 # Therapy and coping mechs
 
+exercise_bus <- felm(I(log(exercise + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
 
+sleep_bus <- felm(I(log(sleep + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+therapy_bus <- felm(I(log(therapy + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+yoga_bus <- felm(I(log(yoga + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+
+htmlreg(l = list(exercise_bus, sleep_bus, therapy_bus, yoga_bus),
+        include.ci = FALSE, digits = 4, file = "bus.doc")
+```
+
+
+```{r}
+exercise_sip <- felm(I(log(exercise + 1 )) ~  
+                 sip_first * year_indicator + 
+                no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+sleep_sip <- felm(I(log(sleep + 1 )) ~  
+                 sip_first * year_indicator + 
+                no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+therapy_sip <- felm(I(log(therapy + 1)) ~ 
+                                  sip_first * year_indicator + 
+                                     no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+yoga_sip <- felm(I(log(yoga + 1)) ~ 
+                                     sip_first * year_indicator + 
+                                     no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+            weights = na.omit(searches_norm3_v18_5$pop),
+                  data = searches_norm3_v18_5 %>% filter(is.na(pop) == FALSE))
+
+htmlreg(l = list(exercise_sip, sleep_sip, therapy_sip, yoga_sip),
+        include.ci = FALSE, digits = 4, file = "sip.doc")
 ```
 
