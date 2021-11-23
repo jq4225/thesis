@@ -678,6 +678,10 @@ search_term <- "/m/03c1dkx"
 
 therapy <- tibble()
 
+search_term <- "tired"
+
+tired <- tibble()
+
 
 
   
@@ -748,23 +752,23 @@ for(i in 1:14) {
   }
   
   if(i == 1) {
-    therapy <- temp
+    tired <- temp
   }
   else {
-    therapy <- cbind(therapy, temp)
+    tired <- cbind(tired, temp)
   }
   Sys.sleep(3)
   
   print(i)
 }
 
-therapy_clean <- therapy[, -which(duplicated(names(therapy)))] %>%
+tired_clean <- tired[, -which(duplicated(names(tired)))] %>%
   select(-`US-NY`) %>%
   rename(`US-NY` = `US-NY-FINAL`) %>% 
   pivot_longer(cols = `US-AL`:`US-NY`,
-               names_to = "state", values_to = "therapy")
+               names_to = "state", values_to = "tired")
 
-saveRDS(therapy_clean, file = "therapy_state.rds")
+saveRDS(tired_clean, file = "tired_state.rds")
 ```
 
 

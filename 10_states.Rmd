@@ -204,6 +204,28 @@ hps_all_v6 <- left_join(hps_all_v5, searches_weekly, by = c("start_date", "end_d
   mutate(year = year(end_date))
 ```
 
+
+```{r}
+# Bringing in tiredness stuff 
+
+searches_weekly <- expand_grid(hps_dates, tired_clean %>% 
+                                 rename('state_2' = 'state')) %>% 
+  mutate(state_2 = str_sub(state_2, start = 4)) %>% 
+  filter(date + days(6) >= start_date,
+         date <= end_date) %>% 
+  select(-days, -date) %>% 
+  group_by(start_date, end_date, state_2) %>% 
+  summarize(across(tired, ~ mean(., na.rm = TRUE)))
+
+hps_all_v11 <- left_join(hps_all_v10, searches_weekly, by = c("start_date", "end_date",
+                                                  "state" = "state_2")) %>% 
+  ungroup() %>% 
+  mutate(tired_norm = tired / average_3) %>% 
+  mutate(across(tired_norm, ~ . * 100 / max(.))) %>% 
+  mutate(year = year(end_date))
+
+```
+
 ```{r}
 #curiosity - actually, just the panel regressions on a broader set of data
 

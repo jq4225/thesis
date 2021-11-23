@@ -222,4 +222,46 @@ covid_dma <- left_join(covid_county, dma_codes, by = "fips") %>%
   select(-new_cases, -new_deaths)
 ```
 
+```{r}
+# Let's cleannnnn
+
+demo <- read_csv('data/county_stats/social_explorer_data.csv') %>%
+  rename("pop_den" = "SE_A00002_002",
+         "pop" = "SE_A01001_001",
+         "black"= "SE_A03001_003",
+         "white" = "SE_A03001_002",
+         "over_25" = "SE_B12001_001",
+         "bachelors" = "SE_B12001_004",
+         "median_income" = "SE_A14006_001",
+         "gini" = "SE_A14028_001",
+         "noninsti" = "SE_A20001_001",
+         "uninsured" = "SE_A20001_002") %>% 
+  clean_names() %>% 
+  select(geo_fips, pop_den, pop, black, white, over_25, bachelors, median_income, 
+         gini, noninsti, uninsured) %>% 
+  mutate(white_pct = white / pop,
+         black_pct = black / pop,
+         bachelor_pct = bachelors/over_25,
+         uninsured_pct = uninsured/noninsti) %>% 
+  select(geo_fips, pop_den, white_pct, black_pct, bachelor_pct, uninsured_pct, median_income,
+         pop, gini)
+
+# match with DMA
+  
+demo_dma <- left_join(demo, dma_codes, by = c("geo_fips" = "fips")) %>% 
+  drop_na(google_code) %>% 
+  group_by(google_code) %>% 
+  summarize(across(c(pop_den:median_income, gini), ~ weighted.mean(., pop))) %>% 
+  left_join(elections, by = "google_code")
+
+searches_norm3_v18 <- left_join(searches_norm3_v17, demo_dma, by = c("dma" = "google_code"))
+
+searches_norm3_v18_5 <- searches_norm3_v18 %>%
+  filter(dma %in% dma_5)
+
+searches_v22 <- left_join(searches_v21, demo_dma, by = c("dma" = "google_code"))
+
+searches_v22_5 <- searches_v22 %>%
+   filter(dma %in% dma_5)
+```
 

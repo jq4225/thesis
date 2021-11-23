@@ -642,6 +642,7 @@ htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5), include
 
 
 ```
+
 ```{r}
 # Some more exploratory stuff for HPS and depression
 
@@ -649,7 +650,7 @@ htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5), include
 
 # HERE WE ARE
 
-hps_all_v8 %>% 
+hps_all_v10 %>% 
   group_by(start_date) %>% 
   summarize(across(c(hps_depression, depression_norm, crying_norm:sad_norm),
                    ~ weighted.mean(., pop))) %>% 
@@ -658,8 +659,8 @@ hps_all_v8 %>%
   ungroup() %>% 
   ggplot(aes(x = start_date)) + 
     geom_line(aes(y = hps_depression, color = "Household Pulse")) + 
-    geom_line(aes(y = google_average/1.5, color = "Avg. related SVIs (re-scaled, normalized)")) + 
-    geom_line(aes(y = depression_norm/1.1, color = "Depression SVI (re-scaled, normalized)")) + 
+    geom_line(aes(y = google_average/1.7, color = "Avg. related SVIs (re-scaled, normalized)")) + 
+    geom_line(aes(y = depression_norm/1.3, color = "Depression SVI (re-scaled, normalized)")) + 
     labs(x = "Date", y = "% Reporting Depression") + 
     scale_color_manual(name = c("", "", ""),
                        values = c("Household Pulse" = "blue",
@@ -668,7 +669,7 @@ hps_all_v8 %>%
     theme_classic() + 
     theme(legend.position = "top")
 
-hps_all_v8 %>% 
+hps_all_v10 %>% 
   group_by(start_date) %>% 
   summarize(across(c(hps_anxiety, anxiety_norm, stress_norm:worry_norm),
                    ~ weighted.mean(., pop))) %>% 
@@ -676,9 +677,9 @@ hps_all_v8 %>%
   mutate(google_average = mean(c(stress_norm:worry_norm))) %>% 
   ungroup() %>% 
   ggplot(aes(x = start_date)) + 
-    geom_line(aes(y = lag(hps_anxiety, n = 6), color = "Household Pulse")) + 
-    geom_line(aes(y = google_average/1.4, color = "Avg. related SVIs (re-scaled, normalized)")) + 
-    geom_line(aes(y = anxiety_norm/1.6, color = "Anxiety SVI (re-scaled, normalized)")) + 
+    geom_line(aes(y = hps_anxiety, color = "Household Pulse")) + 
+    geom_line(aes(y = google_average/1.2, color = "Avg. related SVIs (re-scaled, normalized)")) + 
+    geom_line(aes(y = anxiety_norm/1.4, color = "Anxiety SVI (re-scaled, normalized)")) + 
     labs(x = "Date", y = "% Reporting Anxiety") + 
     scale_color_manual(name = c("", "", ""),
                        values = c("Household Pulse" = "blue",
@@ -770,5 +771,63 @@ htmlreg(l = list(depression_1, depression_2, depression_3, depression_4),
 
 
 
+```
+
+```{r}
+# New verification regressions - hopefully final
+#depression_1 <- felm(log(hps_depression) ~ state|0|0|state, data = hps_all_v11)
+
+depression_1 <- felm(log(depression_norm) ~ log(hps_depression)|0|0|state, data = hps_all_v11)
+
+depression_2 <- felm(I(log(0.353 * crying_norm + 
+                                                   0.163 * depression_norm + 
+                                                   0.529 * lonely_norm + 
+                                                   0.586 * sad_norm + 
+                                                   0.475 * tired_norm))
+                     ~  log(hps_depression)|0|0|state, 
+                     data = hps_all_v11)
+
+depression_3 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v11)
+
+depression_4 <- felm(I(log(0.353 * crying_norm + 
+                                                   0.163 * depression_norm + 
+                                                   0.529 * lonely_norm + 
+                                                   0.586 * sad_norm + 
+                                                   0.475 * tired_norm))
+                     ~ log(hps_depression)|state|0|state, 
+                     data = hps_all_v11)
+
+htmlreg(l = list(depression_1, depression_2, depression_3, depression_4), include.ci = FALSE,
+        digits = 4, file = "depression.doc")
+
+```
+
+```{r}
+anxiety_1 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|0|0|state, data = hps_all_v11)
+
+anxiety_2 <- felm(I(log(0.509 * anxiety + 
+                                                   0.528 * nervous + 
+                                                   0.504 * stress + 
+                                                   0.399 * worry + 
+                                                   0.223 * panic))
+                     ~  log(hps_anxiety)|0|0|state, 
+                     data = hps_all_v11)
+
+anxiety_3 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v11)
+
+anxiety_4 <- felm(I(log(0.509 * anxiety + 
+                                                   0.528 * nervous + 
+                                                   0.504 * stress + 
+                                                   0.399 * worry + 
+                                                   0.223 * panic))
+                     ~ log(hps_anxiety)|state|0|state, 
+                     data = hps_all_v11)
+
+htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4), include.ci = FALSE,
+        digits = 4, file = "anxiety.doc")
+```
+
+```{r}
+# Outcome regressions
 ```
 
