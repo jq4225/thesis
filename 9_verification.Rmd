@@ -579,21 +579,21 @@ plot_usmap(data = anxiety_coef, values = "log(anxiety_norm + 1)") +
 ```{r}
 # Check out therapy vs. therapy searches - hps all v4
 
-therapy_graph <- hps_all_v4 %>% 
+therapy_graph <- hps_all_v11 %>% 
   group_by(start_date) %>% 
   summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
   ggplot(aes(x = start_date)) + 
-    geom_line(aes(y = counseling, color = "Household Pulse")) + 
-    geom_line(aes(y = therapy_norm/7.2, color = "Normalized GTrends (rescaled)")) + 
-    geom_line(aes(y = therapy/5.6, color = "Un-normalized GTrends (rescaled)")) + 
+    geom_line(aes(y = counseling, color = "HPS % receiving therapy")) + 
+    geom_line(aes(y = no_counseling, color = "HPS % needed, but did not get therapy")) + 
+    geom_line(aes(y = therapy_norm/9.5, color = "Normalized GTrends (rescaled)")) + 
     theme_classic() +
     theme(legend.position = "top") + 
-    labs(x = "Date", y = "HPS % receiving counseling/therapy in past month",
+    labs(x = "Date", y = "% of Respondents",
           title = "Therapy GTrends vs. HPS") + 
       scale_color_manual(name = c("", "", ""),
-                       values = c("Household Pulse" = "blue",
-                                  "Normalized GTrends (rescaled)" = "red",
-                                  "Un-normalized GTrends (rescaled)" = "green")) +
+                       values = c("HPS % receiving therapy" = "blue",
+                                  "HPS % needed, but did not get therapy" = "red",
+                                  "Normalized GTrends (rescaled)" = "green")) +
     scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
   
 
@@ -828,6 +828,61 @@ htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4), include.ci = FALSE
 ```
 
 ```{r}
-# Outcome regressions
+# New therapy
+
+therapy_1 <- felm(log(counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+
+therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+
+therapy_3 <- felm(log(no_counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+
+therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+
+therapy_5 <- felm(log(medication) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+
+therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6), include.ci = FALSE, digits = 4, file = "therapy.doc")
+
+therapy_1 <- felm(log(counseling) ~ factor(state)|0|0|state, data = hps_all_v11)
+
+therapy_2 <- felm(log(no_counseling) ~ factor(state)|0|0|state, data = hps_all_v11)
+```
+
+
+```{r}
+# Another graph
+
+therapy_graph_1 <- hps_all_v11 %>% 
+  group_by(start_date) %>% 
+  summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
+  ggplot(aes(x = start_date)) + 
+    geom_line(aes(y = counseling, color = "HPS % receiving therapy")) + 
+    geom_line(aes(y = no_counseling, color = "HPS % needed, but did not get therapy")) + 
+    geom_line(aes(y = therapy_norm/9.5, color = "Normalized GTrends (rescaled)")) + 
+    theme_classic() +
+    theme(legend.position = "top") + 
+    labs(x = "Date", y = "% of Respondents") + 
+      scale_color_manual(name = c("", "", ""),
+                       values = c("HPS % receiving therapy" = "blue",
+                                  "HPS % needed, but did not get therapy" = "red",
+                                  "Normalized GTrends (rescaled)" = "green")) +
+    scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
+
+therapy_graph_2 <- hps_all_v11 %>% 
+  group_by(start_date) %>% 
+  summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
+  ggplot(aes(x = start_date)) + 
+    geom_line(aes(y = medication, color = "HPS % using medication")) + 
+    geom_line(aes(y = medication_or_counseling, color = "HPS % using medication or therapy")) + 
+    geom_line(aes(y = therapy_norm/4, color = "Normalized GTrends (rescaled)")) + 
+    theme_classic() +
+    theme(legend.position = "top") + 
+    labs(x = "Date", y = "% of Respondents") + 
+      # scale_color_manual(name = c("", "", ""),
+      #                  values = c("HPS % receiving therapy" = "blue",
+      #                             "HPS % needed, but did not get therapy" = "red",
+      #                             "Normalized GTrends (rescaled)" = "green")) +
+    scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
 ```
 
