@@ -1602,3 +1602,120 @@ smoking <- left_join(smoking_state, cig_sales, by = c("fips" = "fips_state",
 
 ```
 
+```{r}
+# Adding in addiction
+
+search_term <- "/m/0l08" # addiction
+
+search_term <- "/m/0278r2" # drug rehab
+
+addiction <- tibble()
+
+
+```
+
+```{r}
+# Run this
+
+for(i in 1:54) {
+  
+  if(i < 53) {
+    # Exception case for when we need to search twice for NY
+    if(i != 32) {
+       temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                 dma_codes[(i-1)*4 + 2],
+                                                 dma_codes[(i-1)*4 + 3],
+                                                 dma_codes[(i-1)*4 + 4]),
+                            time = '2015-12-25 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time
+       
+       temp <- temp %>% 
+          mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+          mutate(hits = as.numeric(hits)) %>%
+         pivot_wider(id_cols = date, names_from = geo,
+                                    values_from = hits) %>%
+                        mutate_at(vars(3:6), ~ . * max(.)/max(`US-NY-501`))
+    }
+    else {
+      temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1],
+                                                 dma_codes[(i-1)*4 + 2],
+                                                 dma_codes[(i-1)*4 + 3],
+                                                 dma_codes[(i-1)*4 + 4]),
+                            time = '2015-12-25 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+        distinct() %>%
+        mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+        mutate(hits = as.numeric(hits)) %>%
+        pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+        mutate_at(vars(3:5), ~ . * max(.)/max(`US-NY-501`))
+    }
+   
+  }
+  
+  else if(i == 53) {
+    temp <- gtrends(keyword = search_term, geo = c('US-NY-501', dma_codes[(i-1)*4 + 1]),
+                            time = '2015-12-25 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                values_from = hits) %>%
+      mutate_at(vars(3), ~ . * max(.)/max(`US-NY-501`))
+  }
+  
+  else{
+    temp <- gtrends(keyword = search_term, geo = c('US-NY-501'),
+                            time = '2015-12-25 2020-12-31', 
+                         onlyInterest = TRUE)$interest_over_time %>%
+      mutate(hits = ifelse(hits == "<1", "0.5", hits)) %>%
+      mutate(hits = as.numeric(hits)) %>%
+      pivot_wider(id_cols = date, names_from = geo,
+                  values_from = hits) %>%
+      rename(`US-NY-501-FINAL` = `US-NY-501`)
+  }
+  
+  if(i == 1) {
+    addiction <- temp
+  }
+  else {
+    addiction <- cbind(addiction, temp)
+  }
+  Sys.sleep(3)
+  
+  print(i)
+}
+
+addiction_clean <- addiction[, -which(duplicated(names(addiction)))] %>%
+  select(-`US-NY-501`) %>%
+  rename(`US-NY-501` = `US-NY-501-FINAL`) %>% 
+  pivot_longer(cols = `US-AK-743`:`US-NY-501`,
+               names_to = "dma", values_to = "addiction")
+
+saveRDS(addiction_clean, file = "addiction_scaled.rds")
+```
+
+```{r}
+# Add it in 
+
+# this is for rehab
+
+addiction_clean <- addiction_clean %>%
+  rename('rehab' = 'addiction')
+
+searches_norm3_v20 <- searches_norm3_v19 %>%
+  left_join(addiction_clean, by = c("dma", "date")) %>% 
+  mutate(rehab = rehab / average_3) %>% 
+  mutate(rehab = rehab * 100 / max(rehab))
+
+searches_norm3_v20_5 <- searches_norm3_v20 %>%
+  filter(dma %in% dma_5)
+
+searches_v24 <- searches_v23 %>%
+  left_join(addiction_clean, by = c("dma", "date"))
+
+searches_v24_5 <- searches_v24 %>%
+  filter(dma %in% dma_5)
+
+```
+

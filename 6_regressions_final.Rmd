@@ -455,12 +455,18 @@ pca_weights_anx <- prcomp(pca_anx)
 rotation_anx <- as_tibble(pca_weights_anx$rotation, rownames = "term")
 
 pca_substance <- searches_norm3_v15_5 %>%
-        select(alcohol, alcoholism, cannabis, cigarette, drug, e_cig, substance_abuse,
+        select(alcohol, alcoholism, cannabis, cigarette, e_cig, substance_abuse,
                smoking)
 
 pca_weights_sub <- prcomp(pca_substance)
 
 rotation_sub <- as_tibble(pca_weights_sub$rotation, rownames = "term")
+
+pca_alcohol <- searches_norm3_v18_5 %>%
+        select(alcohol, alcoholism)
+
+pca_smoking <- searches_norm3_v18_5 %>%
+        select(cigarette, e_cig, smoking)
 ```
 
 
@@ -5260,6 +5266,192 @@ htmlreg(l = list(medication_1, medication_2, medication_3, medication_4, medicat
 ```
 
 ```{r}
+medication_1 <- felm(log(medication_less25k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_2 <- felm(log(medication_25to35k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_3 <- felm(log(medication_35to50k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_4 <- felm(log(medication_50to75k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_5 <- felm(log(medication_75to100k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_6 <- felm(log(medication_100to150k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+medication_7 <- felm(log(medication_150to200k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(medication_1, medication_2, medication_3, medication_4, medication_5,
+                 medication_6, medication_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+medication_1 <- felm(log(medication_less25k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_2 <- felm(log(medication_25to35k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_3 <- felm(log(medication_35to50k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_4 <- felm(log(medication_50to75k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_5 <- felm(log(medication_75to100k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_6 <- felm(log(medication_100to150k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+medication_7 <- felm(log(medication_150to200k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(medication_1, medication_2, medication_3, medication_4, medication_5,
+                 medication_6, medication_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+medication_1 <- felm(log(medication_less25k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_2 <- felm(log(medication_25to35k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_3 <- felm(log(medication_35to50k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_4 <- felm(log(medication_50to75k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_5 <- felm(log(medication_75to100k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+medication_6 <- felm(log(medication_100to150k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+medication_7 <- felm(log(medication_150to200k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(medication_1, medication_2, medication_3, medication_4, medication_5,
+                 medication_6, medication_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
 no_counseling_1 <- felm(log(no_counseling_less25k + 1) ~ factor(c2_workplace_closing)  +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
@@ -5319,5 +5511,517 @@ no_counseling_7 <- felm(log(no_counseling_150to200k + 1) ~ factor(c2_workplace_c
 
 htmlreg(l = list(no_counseling_1, no_counseling_2, no_counseling_3, no_counseling_4, no_counseling_5,
                  no_counseling_6, no_counseling_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+no_counseling_1 <- felm(log(no_counseling_less25k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_2 <- felm(log(no_counseling_25to35k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_3 <- felm(log(no_counseling_35to50k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_4 <- felm(log(no_counseling_50to75k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_5 <- felm(log(no_counseling_75to100k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_6 <- felm(log(no_counseling_100to150k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+no_counseling_7 <- felm(log(no_counseling_150to200k + 1) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(no_counseling_1, no_counseling_2, no_counseling_3, no_counseling_4, no_counseling_5,
+                 no_counseling_6, no_counseling_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+no_counseling_1 <- felm(log(no_counseling_less25k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_2 <- felm(log(no_counseling_25to35k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_3 <- felm(log(no_counseling_35to50k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_4 <- felm(log(no_counseling_50to75k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_5 <- felm(log(no_counseling_75to100k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_6 <- felm(log(no_counseling_100to150k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+no_counseling_7 <- felm(log(no_counseling_150to200k + 1) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(no_counseling_1, no_counseling_2, no_counseling_3, no_counseling_4, no_counseling_5,
+                 no_counseling_6, no_counseling_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+```{r}
+no_counseling_1 <- felm(log(no_counseling_less25k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_2 <- felm(log(no_counseling_25to35k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_3 <- felm(log(no_counseling_35to50k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_4 <- felm(log(no_counseling_50to75k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_5 <- felm(log(no_counseling_75to100k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+no_counseling_6 <- felm(log(no_counseling_100to150k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+
+no_counseling_7 <- felm(log(no_counseling_150to200k + 1) ~ stringency_index  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(no_counseling_1, no_counseling_2, no_counseling_3, no_counseling_4, no_counseling_5,
+                 no_counseling_6, no_counseling_7), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+
+```{r}
+# drugs prcomp
+
+pca_drugs <- searches_norm3_v20_5 %>%
+        select(alcohol, cannabis, cigarette, e_cig, smoking)
+
+pca_weights_drugs <- prcomp(pca_drugs)
+
+rotation_drugs <- as_tibble(pca_weights_drugs$rotation, rownames = "term")
+
+pca_addiction <- searches_norm3_v20_5 %>% 
+        dplyr::select(addiction, alcoholism, rehab, substance_abuse)
+
+pca_weights_addiction <- prcomp(pca_addiction)
+
+rotation_addiction <- as_tibble(pca_weights_addiction$rotation, rownames = "term")
+```
+
+```{r}
+# Drugs
+
+drugs_1 <- felm(log(alcohol + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_2 <- felm(log(cannabis + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_3 <- felm(log(cigarette + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_4 <- felm(log(e_cig + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_5 <- felm(log(e_cig + cigarette + smoking + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_6 <- felm(log(0.144 * alcohol + 0.833 * cannabis + 0.451 * cigarette + 
+                            0.172 * e_cig + 0.228 * smoking + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+htmlreg(l = list(drugs_1, drugs_2, drugs_3, drugs_4, drugs_5, drugs_6),
+        include.ci = FALSE,
+        digits = 4,
+        file = "drugs.doc")
+
+# index
+
+drugs_7 <- felm(log(alcoholism + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_8 <- felm(log(addiction + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_9 <- felm(log(rehab + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_10 <- felm(log(substance_abuse + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+drugs_11 <- felm(log(0.308 * addiction + 0.390 * alcoholism + 0.104 * rehab + 
+                             0.861 * substance_abuse + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v20_5$pop),
+                  data = searches_norm3_v20_5 %>% filter(is.na(pop) == FALSE))
+
+htmlreg(l = list(drugs_7, drugs_8, drugs_9, drugs_10, drugs_11), digits = 4, include.ci = FALSE,
+        file = "addiction.doc")
+
+```
+
+```{r}
+# No weighting
+
+drugs_1 <- felm(log(alcohol + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma,
+                  data = searches_norm3_v20_5)
+
+drugs_2 <- felm(log(cannabis + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_3 <- felm(log(cigarette + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_4 <- felm(log(e_cig + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_5 <- felm(log(e_cig + cigarette + smoking + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+            data = searches_norm3_v20_5)
+
+drugs_6 <- felm(log(0.144 * alcohol + 0.833 * cannabis + 0.451 * cigarette + 
+                            0.172 * e_cig + 0.228 * smoking + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+htmlreg(l = list(drugs_1, drugs_2, drugs_3, drugs_4, drugs_5, drugs_6),
+        include.ci = FALSE,
+        digits = 4,
+        file = "drugs.doc")
+
+# index
+
+drugs_7 <- felm(log(alcoholism + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+       data = searches_norm3_v20_5)
+
+drugs_8 <- felm(log(addiction + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_9 <- felm(log(rehab + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_10 <- felm(log(substance_abuse + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+drugs_11 <- felm(log(0.308 * addiction + 0.390 * alcoholism + 0.104 * rehab + 
+                             0.861 * substance_abuse + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v20_5)
+
+htmlreg(l = list(drugs_7, drugs_8, drugs_9, drugs_10, drugs_11), digits = 4, include.ci = FALSE,
+        file = "addiction.doc")
 ```
 

@@ -40,10 +40,23 @@ zero_percent <- searches_norm3_v14 %>%
   group_by(dma) %>%
   mutate(mean = mean(alcohol:sad))
 
+zero_percent <- searches_norm3_v20 %>%
+  group_by(dma) %>%
+  select(dma, addiction, rehab) %>% 
+  summarize(across(.cols = c(addiction:rehab), ~ sum(.==0)),
+            weeks = n()) %>%
+  mutate(across(.cols = c(addiction:rehab), ~ . * 100 / weeks)) %>%
+  group_by(dma) %>%
+  mutate(mean = mean(addiction:rehab))
+
 zero_percent %>% 
   ungroup() %>% 
   summarize(across(alcohol:sad, list(mean = ~ mean(.), sd = sd))) %>% 
   pivot_longer(cols = alcohol_mean:sad_sd, names_to = "term", values_to = "value")
+
+summary_stats <- zero_percent %>% 
+  ungroup() %>% 
+  summarize(across(addiction:rehab, list(mean = ~ mean(.), sd = sd)))
 
 # Read in dma covid and merge
 

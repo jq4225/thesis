@@ -451,6 +451,11 @@ alcohol_final %>%
                        values = c("Alcohol Consumption" = "blue",
                                   "Normalized GTrends (rescaled)" = "red",
                                   "Un-normalized GTrends (rescaled)" = "green"))
+
+# New alcohol graphs
+
+hps_all_v11 %>%
+  group_by(year, month) 
     
 
 ```
