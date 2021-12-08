@@ -891,3 +891,94 @@ therapy_graph_2 <- hps_all_v11 %>%
     scale_x_date(date_breaks = "3 months", date_labels = "%m/%y")
 ```
 
+
+```{r}
+# New smoking and alcohol regressions
+
+alc_1 <- felm(log(alcohol_norm + 1) ~ log(all_alc)|0|0|state, data = alcohol_v2)
+
+alc_2 <- felm(log(alcohol_norm + 1) ~ log(all_alc)|state|0|state, data = alcohol_v2)
+
+alc_3<- felm(log(alcohol_norm + 1) ~ log(all_alc)|state + year|0|state, data = alcohol_v2)
+
+alc_4 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|0|0|state, data = alcohol_v2)
+
+alc_5 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|state|0|state, data = alcohol_v2)
+
+alc_7 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|state + year|0|state, data = alcohol_v2)
+
+htmlreg(l = list(alc_1, alc_2, alc_3, alc_4, alc_5, alc_6), include.ci = FALSE, digits = 4, file = "alc_verif.doc")
+```
+
+```{r}
+cig_1 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|0|0|state, data = smoking_v3)
+
+cig_2 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|state|0|state, data = smoking_v3)
+
+cig_3 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|state + year|0|state, data = smoking_v3)
+
+cig_4 <- felm(log(e_cig_norm+1)~ log(packs_per_capita)|0|0|state, data = smoking_v3)
+
+cig_5 <- felm(log(e_cig_norm+1) ~log(packs_per_capita)|state|0|state, data = smoking_v3)
+
+cig_6 <- felm(log(e_cig_norm+1) ~log(packs_per_capita)|state+year|0|state, data = smoking_v3)
+
+cig_7 <- felm(log(e_cig_norm + cigarettes_norm + smoking_norm+1) 
+              ~log(packs_per_capita)|state+year|0|state, data = smoking_v3)
+
+htmlreg(l = list(cig_1, cig_2, cig_3, cig_4, cig_5, cig_6, cig_7), include.ci = FALSE, digits = 4,
+        file = "smoking_verif.doc")
+
+
+
+```
+```{r}
+# Remaking the graphs
+
+alcohol_v2 %>% 
+  group_by(year, month) %>% 
+  summarize(all_alc = mean(all_alc),,
+            alcohol_norm = mean(alcohol_norm),
+            alcoholism_norm = mean(alcoholism_norm)) %>% 
+  mutate(date = mdy(paste(month, "01", year, sep = "-"))) %>% 
+  ggplot(aes(x = date)) + 
+    geom_line(aes(y = all_alc, color = "Alcohol Consumption")) + 
+    geom_line(aes(y = alcohol_norm  * 0.007, 
+                  color = "Alcohol SVI (rescaled)")) + 
+    geom_line(aes(y = alcoholism_norm * 0.01, 
+                  color = "Alcoholism SVI (rescaled)")) + 
+    theme_classic() + 
+    labs(x = "Date", y = "Gallons per Capita", title = "Alcohol") + 
+    theme(legend.position = "top") + 
+  scale_color_manual(name = c("", "", ""),
+                       values = c("Alcohol Consumption" = "blue",
+                                  "Alcohol SVI (rescaled)" = "red",
+                                 "Alcoholism SVI (rescaled)" = "green"))
+
+smoking_v3 %>%
+  group_by(year, month) %>% 
+  summarize(packs_per_capita = mean(packs_per_capita),,
+            smoking = mean(smoking_norm),
+            cigarettes = mean(cigarettes_norm),
+            e_cig = mean(e_cig_norm)) %>% 
+  mutate(date = mdy(paste(month, "01", year, sep = "-"))) %>% 
+  ggplot(aes(x = date)) + 
+    geom_line(aes(y = packs_per_capita, color = "Imputed Packs Per Capita")) + 
+    geom_line(aes(y = smoking * 0.1, 
+                  color = "Smoking SVI (rescaled)")) + 
+    geom_line(aes(y = cigarettes * 0.09, 
+                  color = "Cigarettes SVI (rescaled)")) + 
+    geom_line(aes(y = e_cig * 0.08, 
+                  color = "E-Cigarettes SVI (rescaled)")) + 
+    theme_classic() + 
+    labs(x = "Date", y = "Gallons per Capita") + 
+    theme(legend.position = "top") + 
+  scale_color_manual(name = c("", "", ""),
+                       values = c("Imputed Packs Per Capita" = "blue",
+                                  "Smoking SVI (rescaled)" = "red",
+                                 "Cigarettes SVI (rescaled)" = "green",
+                                 "E-Cigarettes SVI (rescaled)" = "orange"))
+
+```
+
+

@@ -1235,7 +1235,9 @@ saveRDS(anchor_index_2, file = "anchor_index_state_alc.rds")
 
 search_term <- "/m/02vxs3q"
 
-smoking <- tibble()
+search_term <- "/m/012jc" # alcoholism
+
+alcohol <- tibble()
 
 # read in state codes
 
@@ -1260,7 +1262,7 @@ for(i in 1:14) {
                                                  state_codes[(i-1)*4 + 2],
                                                  state_codes[(i-1)*4 + 3],
                                                  state_codes[(i-1)*4 + 4]),
-                            time = '2019-01-01 2020-12-31', 
+                            time = '2017-01-01 2020-12-31', 
                          onlyInterest = TRUE)$interest_over_time
        
        temp <- temp %>% 
@@ -1348,10 +1350,22 @@ alcohol_norm <- left_join(alcohol_clean, anchor_index_2, by = c("month", "year",
   ungroup() %>% 
   mutate(alcohol_norm = alcohol/average) %>%
   mutate(alcohol_norm = alcohol_norm * 100 / max(alcohol_norm))
+
+# alcoholism 
+alcohol_v2 <- alcohol_final %>%
+  left_join(alcohol_clean %>% rename("alcoholism" = "alcohol")) %>%
+  mutate(alcoholism_norm = alcoholism/average) %>% 
+  mutate(alcoholism_norm = alcoholism_norm * 100 / max(alcoholism_norm))
 ```
 
 ```{r}
-search_term <- "/m/02vxs3q"
+search_term <- "/m/02vxs3q" # smoking
+
+search_term <- "/m/09k76" # cigarettes
+
+search_term <- "/m/02vlckk" # e-cigarettes
+
+
 
 smoking <- tibble()
 ```
@@ -1600,6 +1614,20 @@ smoking <- left_join(smoking_state, cig_sales, by = c("fips" = "fips_state",
   mutate(packs_per_capita = packs_mil * 1000000 / total_pop)
 
 
+```
+
+```{r}
+# Adding in the new smoking searches
+
+smoking_v2 <- smoking_final %>%
+  left_join(smoking_clean %>% rename("cigarettes" = "smoking")) %>% 
+  mutate(cigarettes_norm = cigarettes / average) %>% 
+  mutate(cigarettes_norm = cigarettes_norm * 100 / max(cigarettes_norm))
+
+smoking_v3 <- smoking_v2 %>%
+  left_join(smoking_clean %>% rename("e_cig" = "smoking")) %>% 
+  mutate(e_cig_norm = e_cig / average) %>% 
+  mutate(e_cig_norm = e_cig_norm * 100 / max(e_cig_norm))
 ```
 
 ```{r}
