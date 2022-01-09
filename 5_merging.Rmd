@@ -109,6 +109,40 @@ searches_norm3_v2 <- searches_norm3 %>%
 ```
 
 ```{r}
+# Doing the counters for sip ends too
+
+sip <- searches_norm3_v20 %>%
+  filter(no_sip_most_pop == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+bus <- searches_norm3_v20 %>%
+  filter(busopen_most_pop == 1) %>%
+  group_by(dma) %>%
+  arrange(date) %>%
+  slice(1) %>%
+  select(dma, week) %>%
+  rename('start_week' = 'week')
+
+searches_norm3_v21 <- searches_norm3_v20 %>%
+  left_join(., sip) %>% 
+  mutate(no_sip_most_pop_counter = week - start_week) %>% 
+  select(-start_week) %>% 
+  left_join(., bus) %>% 
+  mutate(busopen_most_pop_counter = week - start_week)
+
+searches_norm3_v21_5 <- searches_norm3_v21 %>%
+  filter(dma %in% dma_5)
+
+# Let's try making them ordered b/c otherwise hard to interpret
+
+
+```
+
+```{r}
 # Merging weather in!
 
 searches_norm3_v2 <- searches_norm3 %>%
