@@ -14,9 +14,17 @@ searches_norm3_v20_5 <- readRDS('clean_data/search/searches_norm3_v20_5.rds')
 ```
 
 ```{r}
+
+searches_norm3_v22 <- searches_norm3_v21 %>%
+  mutate(across(c(busclose_first_counter, busopen_most_pop_counter, 
+                  sip_first_counter, no_sip_most_pop_counter), ~ relevel(factor(.), ref = "0")))
+
+searches_norm3_v22_5 <- searches_norm3_v22 %>%
+  filter(dma %in% dma_5)
+
 anxiety_bus <- felm(I(log(anxiety + 1 )) ~  
-                 factor(busclose_first_counter) * year_indicator + 
-                factor(busopen_most_pop_counter) * year_indicator + 
+                 busclose_first_counter * year_indicator + 
+                busopen_most_pop_counter * year_indicator + 
                         online_only * year_indicator + 
                         hybrid * year_indicator + 
                         other * year_indicator + 
@@ -24,8 +32,8 @@ anxiety_bus <- felm(I(log(anxiety + 1 )) ~
                        log(lockdown + 1) + log(covid + 1) + 
                        factor(income_support) + factor(debt_contract_relief)
                        |factor(week) + factor(dma) + factor(year)|0|dma, 
-              weights = na.omit(searches_norm3_v21_5$pop),
-                  data = searches_norm3_v21_5 %>% filter(is.na(pop) == FALSE))
+              weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
 
 # Reason traditional DiD works better is b/c data fluctuation?
 ```
