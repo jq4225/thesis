@@ -130,8 +130,170 @@ searches_norm3_v21_5 %>%
 ```{r}
 # State pretrends
 
+# Modify HPS to get some counters for each one
+first_lockdown <- hps_all_v11 %>%
+  select(start_date, state, c1_flag, c2_flag, c6_flag) %>% 
+  group_by(state) %>% 
+  arrange(start_date)
+
+c1 <- first_lockdown %>%
+  filter(c1_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c1_start" = "start_date")
+
+c2 <- first_lockdown %>%
+  filter(c2_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c2_start" = "start_date")
+
+c6 <- first_lockdown %>%
+  filter(c6_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c6_start" = "start_date")
+
+first_nolockdown <- hps_all_v11 %>%
+  left_join(c1, by = "state") %>% 
+  left_join(c2, by = "state") %>% 
+  left_join(c6, by = "state") %>% 
+  # This codes dates 1 if they're non-lockdown periods after the first lockdown 
+  mutate(c1 = ifelse(c1_flag == 0 & start_date > c1_start, 1, NA),
+         c2 = ifelse(c2_flag == 0 & start_date > c2_start, 1, NA),
+         c6 = ifelse(c6_flag == 0 & start_date > c6_start, 1, NA)) %>% 
+  group_by(state) %>% 
+  arrange(start_date)
+
+c1_first <- first_nolockdown %>% 
+  filter(c1 == 1) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c1_period" = "period")
+
+c2_first <- first_nolockdown %>% 
+  filter(c2 == 1) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c2_period" = "period")
+
+c6_first <- first_nolockdown %>%
+  filter(c6 == 1) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c6_period" = "period")
+
+hps_all_v12 <- hps_all_v11 %>% 
+  left_join(c1_first, by = "state") %>% 
+  left_join(c2_first, by = "state") %>% 
+  left_join(c6_first, by = "state") %>% 
+  mutate(c1_counter = period - c1_period,
+         c2_counter = period - c2_period,
+         c6_counter = period - c6_period) %>% 
+  select(-c1_period, -c2_period, -c6_period)
+
+hps_all_v12 %>%
+  group_by(c1_counter) %>% 
+  summarize(hps_depression = mean(hps_depression)) %>% 
+  ggplot(aes(x = c1_counter, y = hps_depression)) + geom_line()
+```
+```{r}
+# Trying this again: 1st lockdown, no lockdown after the first, all subsequent lockdowns
+# 
+first_lockdown <- hps_all_v11 %>%
+  group_by(state) %>% 
+  arrange(start_date) %>% 
+  fill(c(c1_flag, c2_flag, c6_flag), .direction = "down") %>% 
+  ungroup() %>% 
+  select(start_date, state, c1_flag, c2_flag, c6_flag) %>%
+  group_by(state) %>%
+  arrange(start_date)
+
+c1 <- first_lockdown %>%
+  filter(c1_flag == 1) %>%
+  slice(1) %>%
+  select(start_date, state) %>%
+  rename("c1_start" = "start_date")
+
+c2 <- first_lockdown %>%
+  filter(c2_flag == 1) %>%
+  slice(1) %>%
+  select(start_date, state) %>%
+  rename("c2_start" = "start_date")
+
+c6 <- first_lockdown %>%
+  filter(c6_flag == 1) %>%
+  slice(1) %>%
+  select(start_date, state) %>%
+  rename("c6_start" = "start_date")
+
+# This is the first period when the lockdown is not in place
+c1_end <- hps_all_v11 %>%
+  select(period, state, c1_flag) %>% 
+  filter(c1_flag == 0 & period != 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>%
+  rename("c1_end" = "period") %>% 
+  select(-c1_flag) %>% 
+  slice(1)
+  
+c2_end <- hps_all_v11 %>%
+  select(period, state, c2_flag) %>% 
+  filter(c2_flag == 0 & period != 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>%
+  rename("c2_end" = "period") %>% 
+  select(-c2_flag) %>% 
+  slice(1)
+
+c6_end <- hps_all_v11 %>%
+  select(period, state, c6_flag) %>% 
+  filter(c6_flag == 0 & period != 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>%
+  rename("c6_end" = "period") %>% 
+  select(-c6_flag) %>% 
+  slice(1)
+  
+  
+
+hps_all_v12 <- hps_all_v11 %>%
+  group_by(state) %>% 
+  arrange(start_date) %>% 
+  fill(c(c1_flag, c2_flag, c6_flag), .direction = "down") %>% 
+  ungroup() %>% 
+  left_join(c1, by = "state") %>% 
+  left_join(c2, by = "state") %>% 
+  left_join(c6, by = "state") %>% 
+  # This codes dates 1 if they're  periods after the first lockdown ends
+  mutate(c1_post = ifelse(c1_flag == 0 & start_date > c1_start, 1, NA),
+         c2_post = ifelse(c2_flag == 0 & start_date > c2_start, 1, NA),
+         c6_post = ifelse(c6_flag == 0 & start_date > c6_start, 1, NA)) %>% 
+  group_by(state) %>% 
+  arrange(start_date) %>% 
+  fill(c1_post:c6_post, .direction = "down") %>% 
+  mutate(across(c1_post:c6_post, ~ ifelse(is.na(.), 0, .))) %>% 
+  ungroup() %>% 
+  left_join(c1_end, by = "state") %>% 
+  left_join(c2_end, by = "state") %>% 
+  left_join(c6_end, by = "state") %>% 
+  mutate(c1_future = ifelse(c1_flag == 1 & period >= c1_end, 1, 0),
+         c2_future = ifelse(c2_flag == 1 & period >= c2_end, 1, 0),
+         c6_future = ifelse(c6_flag == 1 & period >= c6_end, 1, 0)) %>% 
+  # if there is no period end date then you are never in the subsequent lockdown, only the original
+  mutate(across(c1_future:c6_future, ~ ifelse(is.na(.), 0, .))) %>% 
+  mutate(c1_first = c1_flag - c1_future,
+         c2_first = c2_flag - c2_future,
+         c6_first = c6_flag - c6_future) %>% 
+  # mutate(c1_future = ifelse(is.na(c1_future), ifelse(c1_flag == 1, 1, 0), c1_future),
+  #        c2_future = ifelse(is.na(c2_future), ifelse(c2_flag == 1, 1, 0), c2_future),
+  #        c6_future = ifelse(is.na(c6_future), ifelse(c6_flag == 1, 1, 0), c1_future)) %>% 
+  select(-c1_start, -c2_start, -c6_start, -c1_end, -c2_end, -c6_end)
+  
+```
 
 
+```{r}
 depression_1 <- felm(log(hps_depression) ~ factor(c2_workplace_closing)  +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 

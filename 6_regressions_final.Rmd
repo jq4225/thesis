@@ -9540,3 +9540,67 @@ drugs_11 <- felm(log(0.308 * addiction + 0.390 * alcoholism + 0.104 * rehab +
 htmlreg(l = list(drugs_7, drugs_8, drugs_9, drugs_10, drugs_11), digits = 4, include.ci = FALSE,
         file = "addiction.doc")
 ```
+
+```{r}
+# State regressions new, using our new method!!
+
+depression_1 <- felm(log(hps_depression) ~ c1_first + c1_sub + c1_non +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
+
+depression_2 <- felm(log(depression_norm) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+depression_3 <- felm(I(log(0.353 * crying_norm + 
+                                                   0.163 * depression_norm + 
+                                                   0.529 * lonely_norm + 
+                                                   0.586 * sad_norm + 
+                                                   0.475 * tired_norm)) ~ 
+                             factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+anxiety_1 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+anxiety_2 <- felm(log(anxiety_norm) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+anxiety_3 <- felm(I(log(0.924 * anxiety + 0.213 * nervous + 
+                                0.133 * stress + 0.198 * worry + 0.211 * panic)) ~ 
+                             factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+
+htmlreg(l = list(depression_1, depression_2, depression_3, anxiety_1, anxiety_2, anxiety_3),
+        include.ci = FALSE, digits = 4, file = "hps.doc")
+```
+

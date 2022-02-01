@@ -854,3 +854,104 @@ hps_all_v8 <- left_join(hps_all_v7, depression_hps_est, by = c("state", "period"
 hps_all_v9 <- left_join(hps_all_v8, therapy_total, by = c("state", "period" = "week"))
 ```
 
+```{r}
+# Let's try to make a subsequent lockdown dummy
+
+first_lockdown <- hps_all_v11 %>%
+  select(start_date, state, c1_flag, c2_flag, c6_flag) %>% 
+  group_by(state) %>% 
+  arrange(start_date)
+
+c1 <- first_lockdown %>%
+  filter(c1_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c1_start" = "start_date")
+
+c2 <- first_lockdown %>%
+  filter(c2_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c2_start" = "start_date")
+
+c6 <- first_lockdown %>%
+  filter(c6_flag == 1) %>% 
+  slice(1) %>%
+  select(start_date, state) %>% 
+  rename("c6_start" = "start_date")
+
+hps_all_v12 <- hps_all_v11 %>%
+  left_join(c1, by = "state") %>% 
+  left_join(c2, by = "state") %>% 
+  left_join(c6, by = "state") %>% 
+  # This codes dates 1 if they're non-lockdown periods after the first lockdown 
+  mutate(c1 = ifelse(c1_flag == 0 & start_date > c1_start, 1, NA),
+         c2 = ifelse(c2_flag == 0 & start_date > c2_start, 1, NA),
+         c6 = ifelse(c6_flag == 0 & start_date > c6_start, 1, NA)) %>% 
+  # This fills everything that's after the first lockdown as a 1
+  fill(c1:c6, .direction = "down") %>% 
+  # And this fills any initial lockdown/pre-lockdown as 0
+  mutate(across(c1:c6, ~ replace_na(., 0))) %>% 
+  # Sub c1 is: 1 if you're in the first lockdown, 0 if you're in the first pre-lockdown OR subsequent   # lockdowns, -1 if you're in any post-lockdown period w/o a lockdown
+  mutate(sub_c1 = c1_flag - c1,
+         sub_c2 = c2_flag - c2,
+         sub_c6 = c6_flag - c6) %>% 
+  mutate(across(sub_c1:sub_c6, ~ ifelse(. == -1 | . == 0, 0, .)))
+  # mutate(across(sub_c1:sub_c6, as.factor))
+
+hps_all_v12 <- hps_all_v11 %>%
+  left_join(c1, by = "state") %>% 
+  left_join(c2, by = "state") %>% 
+  left_join(c6, by = "state") %>% 
+  group_by(state) %>% 
+  # This makes all subsequent periods after the first lockdown ends a 1
+  mutate(c1 = ifelse(c1_flag == 0 & start_date > c1_start, 1, NA),
+         c2 = ifelse(c2_flag == 0 & start_date > c2_start, 1, NA),
+         c6 = ifelse(c6_flag == 0 & start_date > c6_start, 1, NA)) %>% 
+  fill(c1:c6, .direction = "down") %>% 
+  mutate(across(c1:c6, ~ replace_na(., 0))) %>% 
+  # Pick out all the repeated lockdowns
+  mutate(c1 = ifelse(c1 == 1 & c1_flag == 1, 2, c1),
+         c2 = ifelse(c2 == 1 & c2_flag == 1, 2, c2),
+         c6 = ifelse(c6 == 1 & c6_flag == 1, 2, c6)) %>% 
+  mutate(across(c1:c6, ~ ifelse(. == 1, NA, .))) %>% 
+  # Make only periods after the second lockdown starts equal to 2
+  fill(c1:c6, .direction = "down") %>%
+  mutate(across(c1:c6, ~ replace_na(., 0))) %>% 
+  mutate(across(c1:c6, ~ ifelse(. == 2, 1, .))) %>%
+  # And now we are back to just making only lockdown periods that aren't the first equal to 1
+  mutate(c1_sub = ifelse(c1_flag == 0 & c1 == 1, 0, c1),
+         c2_sub = ifelse(c2_flag == 0 & c2 == 1, 0, c2),
+         c6_sub = ifelse(c6_flag == 0 & c6 == 1, 0, c6)) %>% 
+  mutate(c1_first = c1_flag - c1_sub,
+         c2_first = c2_flag - c2_sub,
+         c6_first = c6_flag-c6_sub) %>% 
+  select(-c1, -c2, -c6) %>% 
+  mutate(c1_non = ifelse(c1_flag == 0 & start_date > c1_start, 1, 0),
+         c2_non = ifelse(c2_flag == 0 & start_date > c2_start, 1, 0),
+         c6_non = ifelse(c6_flag == 0 & start_date > c6_start, 1, 0))
+  
+  
+
+
+```
+
+
+```{r}
+# Testing out some new stuff
+
+export <- read_excel('export.xlsx') %>% 
+  select(-c1_flag, -c2_flag, -c6_flag)
+
+hps_all_v13 <- left_join(hps_all_v11, export, by =c("state", "start_date"))
+
+depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
+```
+
