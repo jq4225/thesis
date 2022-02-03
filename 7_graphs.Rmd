@@ -1747,3 +1747,254 @@ dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
       guides(color=guide_legend(nrow=2, byrow=TRUE))
 ```
 
+```{r}
+therapy_1 <- felm(log(counseling) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_2 <- felm(log(medication) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_3 <- felm(log(no_counseling) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_4 <- felm(log(counseling) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_5 <- felm(log(medication) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_6 <- felm(log(no_counseling) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("c1_post", "c1_future",
+                      "factor(c1_school_closing)1", "factor(c1_school_closing)2",
+                      "factor(c1_school_closing)3"),
+       model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
+       dodge_size = 0.6) %>% 
+    relabel_predictors(c("c1_post" = "Closure end",
+                         "c1_future" = "Subsequent closure start",
+                         "factor(c1_school_closing)1" = "Closure level 1",
+                         "factor(c1_school_closing)2" = "Closure level 2",
+                         "factor(c1_school_closing)3" = "Closure level 3")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("No counseling (strictness)",
+                                                      "Medication (strictness)",
+                                                      "Counseling (strictness)", 
+                                                      "No counseling (start/end)",
+                                                    "Medication (start/end)",
+                                                    "Counseling (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
+```
+
+
+```{r}
+
+therapy_1 <- felm(log(counseling) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_2 <- felm(log(medication) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_3 <- felm(log(no_counseling) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_4 <- felm(log(counseling) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_5 <- felm(log(medication) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_6 <- felm(log(no_counseling) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("c2_post", "c2_future",
+                      "factor(c2_workplace_closing)1", "factor(c2_workplace_closing)2",
+                      "factor(c2_workplace_closing)3"),
+       model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
+       dodge_size = 0.6) %>% 
+    relabel_predictors(c("c2_post" = "Closure end",
+                         "c2_future" = "Subsequent closure start",
+                         "factor(c2_workplace_closing)1" = "Closure level 1",
+                         "factor(c2_workplace_closing)2" = "Closure level 2",
+                         "factor(c2_workplace_closing)3" = "Closure level 3")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("No counseling (strictness)",
+                                                      "Medication (strictness)",
+                                                      "Counseling (strictness)", 
+                                                      "No counseling (start/end)",
+                                                    "Medication (start/end)",
+                                                    "Counseling (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
+```
+
+```{r}
+
+therapy_1 <- felm(log(counseling) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_2 <- felm(log(medication) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_3 <- felm(log(no_counseling) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_4 <- felm(log(counseling) ~ factor(c6_stay_at_home_requirements) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_5 <- felm(log(medication) ~ factor(c6_stay_at_home_requirements) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_6 <- felm(log(no_counseling) ~ factor(c6_stay_at_home_requirements) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("c6_post", "c6_future",
+                      "factor(c6_stay_at_home_requirements)1", "factor(c6_stay_at_home_requirements)2"),
+       model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
+       dodge_size = 0.6) %>% 
+    relabel_predictors(c("c6_post" = "Closure end",
+                         "c6_future" = "Subsequent closure start",
+                         "factor(c6_stay_at_home_requirements)1" = "Order level 1",
+                         "factor(c6_stay_at_home_requirements)2" = "Order level 2")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("No counseling (strictness)",
+                                                      "Medication (strictness)",
+                                                      "Counseling (strictness)", 
+                                                      "No counseling (start/end)",
+                                                    "Medication (start/end)",
+                                                    "Counseling (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
+
+```
+
