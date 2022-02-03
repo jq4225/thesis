@@ -1603,7 +1603,8 @@ dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        vars_order = c("c1_post", "c1_future",
                       "factor(c1_school_closing)1", "factor(c1_school_closing)2",
                       "factor(c1_school_closing)3"),
-       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4"),
+       dodge_size = 1) %>% 
     relabel_predictors(c("c1_post" = "Closure end",
                          "c1_future" = "Subsequent closure start",
                          "factor(c1_school_closing)1" = "Closure level 1",
@@ -1668,7 +1669,8 @@ dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        vars_order = c("c2_post", "c2_future",
                       "factor(c2_workplace_closing)1", "factor(c2_workplace_closing)2",
                       "factor(c2_workplace_closing)3"),
-       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4"),
+       dodge_size = 1) %>% 
     relabel_predictors(c("c2_post" = "Closure end",
                          "c2_future" = "Subsequent closure start",
                          "factor(c2_workplace_closing)1" = "Closure level 1",
@@ -1731,7 +1733,8 @@ dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        ),
        vars_order = c("c6_post", "c6_future",
                       "factor(c6_stay_at_home_requirements)1", "factor(c6_stay_at_home_requirements)2"),
-       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4"),
+       dodge_size = 1) %>% 
     relabel_predictors(c("c6_post" = "Order end",
                          "c6_future" = "Subsequent order start",
                          "factor(c6_stay_at_home_requirements)1" = "Order level 1",
@@ -1811,7 +1814,7 @@ dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
                       "factor(c1_school_closing)1", "factor(c1_school_closing)2",
                       "factor(c1_school_closing)3"),
        model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
-       dodge_size = 0.6) %>% 
+       dodge_size = 1) %>% 
     relabel_predictors(c("c1_post" = "Closure end",
                          "c1_future" = "Subsequent closure start",
                          "factor(c1_school_closing)1" = "Closure level 1",
@@ -1896,7 +1899,7 @@ dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
                       "factor(c2_workplace_closing)1", "factor(c2_workplace_closing)2",
                       "factor(c2_workplace_closing)3"),
        model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
-       dodge_size = 0.6) %>% 
+       dodge_size = 1) %>% 
     relabel_predictors(c("c2_post" = "Closure end",
                          "c2_future" = "Subsequent closure start",
                          "factor(c2_workplace_closing)1" = "Closure level 1",
@@ -1979,7 +1982,7 @@ dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
        vars_order = c("c6_post", "c6_future",
                       "factor(c6_stay_at_home_requirements)1", "factor(c6_stay_at_home_requirements)2"),
        model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
-       dodge_size = 0.6) %>% 
+       dodge_size = 1) %>% 
     relabel_predictors(c("c6_post" = "Closure end",
                          "c6_future" = "Subsequent closure start",
                          "factor(c6_stay_at_home_requirements)1" = "Order level 1",
