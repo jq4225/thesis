@@ -955,3 +955,32 @@ depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
              weights = na.omit(hps_all_v12$pop))
 ```
 
+
+```{r}
+# Visualizing some lockdown dates idk
+
+lockdown_dates <- hps_all_v13 %>% 
+  select(state, start_date, c1_school_closing, c2_workplace_closing, 
+         c6_stay_at_home_requirements) %>% 
+  distinct() %>% 
+  group_by(start_date) %>% 
+  summarize(c1 = mean(c1_school_closing, na.rm = TRUE),
+            c2 = mean(c2_workplace_closing, na.rm = TRUE),
+            c6 = mean(c6_stay_at_home_requirements, na.rm = TRUE)) %>% 
+  pivot_longer(cols = c1:c6, names_to = "type", values_to = "status")
+  
+
+lockdown_dates %>% 
+  ggplot(aes(x = start_date, y = status, color = type)) + geom_line() +
+    scale_color_discrete(name = "NPI Type", labels = c("School Closure", 
+                                                     "Workplace Closure",
+                                                     "Stay-at-home Order")) + 
+    scale_x_date(breaks = "3 months", date_labels = "%b %y") + 
+    labs(x = "Date", y = "Mean lockdown status (higher is stricter)") + 
+        theme_classic() + 
+    theme(legend.position = "top")
+  
+
+
+```
+

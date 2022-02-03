@@ -9544,7 +9544,127 @@ htmlreg(l = list(drugs_7, drugs_8, drugs_9, drugs_10, drugs_11), digits = 4, inc
 ```{r}
 # State regressions new, using our new method!!
 
-depression_1 <- felm(log(hps_depression) ~ c1_first + c1_sub + c1_non +
+depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+depression_2 <- felm(log(hps_depression) ~ c2_post + c2_future + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+depression_3 <- felm(log(hps_depression) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_1 <- felm(log(hps_anxiety) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_2 <- felm(log(hps_anxiety) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_3 <- felm(log(hps_anxiety) ~  c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+
+
+htmlreg(l = list(depression_1, depression_2, depression_3, anxiety_1, anxiety_2, anxiety_3),
+        include.ci = FALSE, digits = 4, file = "hps.doc")
+```
+```{r}
+# Unweighted
+
+depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+              data = hps_all_v13)
+
+depression_2 <- felm(log(hps_depression) ~ c2_post + c2_future + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+              data = hps_all_v13)
+
+depression_3 <- felm(log(hps_depression) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+anxiety_1 <- felm(log(hps_anxiety) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+              data = hps_all_v13)
+
+anxiety_2 <- felm(log(hps_anxiety) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+              data = hps_all_v13)
+
+anxiety_3 <- felm(log(hps_anxiety) ~  c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+
+
+htmlreg(l = list(depression_1, depression_2, depression_3, anxiety_1, anxiety_2, anxiety_3),
+        include.ci = FALSE, digits = 4, file = "hps.doc")
+```
+
+
+```{r}
+# Using lockdown severity
+
+depression_1 <- felm(log(hps_depression) ~ factor(c1_school_closing) +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
@@ -9553,54 +9673,447 @@ depression_1 <- felm(log(hps_depression) ~ c1_first + c1_sub + c1_non +
              data = hps_all_v12 %>% drop_na(pop),
              weights = na.omit(hps_all_v12$pop))
 
-depression_2 <- felm(log(depression_norm) ~ factor(c2_workplace_closing)  +
+depression_2 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
 
-depression_3 <- felm(I(log(0.353 * crying_norm + 
-                                                   0.163 * depression_norm + 
-                                                   0.529 * lonely_norm + 
-                                                   0.586 * sad_norm + 
-                                                   0.475 * tired_norm)) ~ 
-                             factor(c2_workplace_closing)  +
+depression_3 <- felm(log(hps_depression) ~ factor(c6_stay_at_home_requirements) + 
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
 
-anxiety_1 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing)  +
+anxiety_1 <- felm(log(hps_anxiety) ~ factor(c1_school_closing) +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
 
-anxiety_2 <- felm(log(anxiety_norm) ~ factor(c2_workplace_closing)  +
+anxiety_2 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
 
-anxiety_3 <- felm(I(log(0.924 * anxiety + 0.213 * nervous + 
-                                0.133 * stress + 0.198 * worry + 0.211 * panic)) ~ 
-                             factor(c2_workplace_closing)  +
+anxiety_3 <- felm(log(hps_anxiety) ~ factor(c6_stay_at_home_requirements) + 
                initclaims_combined + 
                contclaims_combined + cases_per_100k_5day + 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v11 %>% drop_na(pop),              weights = na.omit(hps_all_v11$pop))
+             data = hps_all_v12 %>% drop_na(pop),
+             weights = na.omit(hps_all_v12$pop))
 
 htmlreg(l = list(depression_1, depression_2, depression_3, anxiety_1, anxiety_2, anxiety_3),
         include.ci = FALSE, digits = 4, file = "hps.doc")
+```
+
+```{r}
+# Unweighted HPS
+
+depression_1 <- felm(log(hps_depression) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+depression_2 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+depression_3 <- felm(log(hps_depression) ~ factor(c6_stay_at_home_requirements) + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+anxiety_1 <- felm(log(hps_anxiety) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+anxiety_2 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+anxiety_3 <- felm(log(hps_anxiety) ~ factor(c6_stay_at_home_requirements) + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v12)
+
+htmlreg(l = list(depression_1, depression_2, depression_3, anxiety_1, anxiety_2, anxiety_3),
+        include.ci = FALSE, digits = 4, file = "hps.doc")
+```
+
+```{r}
+# HPS therapy
+
+therapy_1 <- felm(log(counseling) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_2 <- felm(log(counseling) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_3 <- felm(log(counseling) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_4 <- felm(log(medication) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_5 <- felm(log(medication) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_6 <- felm(log(medication) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_7 <- felm(log(no_counseling) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_8 <- felm(log(no_counseling) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+therapy_9 <- felm(log(no_counseling) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6, therapy_7, 
+                 therapy_8, therapy_9),
+        include.ci = FALSE, digits = 4, file = "therapy.doc")
+
+```
+
+```{r}
+# Unweighted
+
+therapy_1 <- felm(log(counseling) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_2 <- felm(log(counseling) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_3 <- felm(log(counseling) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_4 <- felm(log(medication) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_5 <- felm(log(medication) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_6 <- felm(log(medication) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+          data = hps_all_v13)
+
+therapy_7 <- felm(log(no_counseling) ~ factor(c1_school_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_8 <- felm(log(no_counseling) ~ factor(c2_workplace_closing)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_9 <- felm(log(no_counseling) ~ factor(c6_stay_at_home_requirements)  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6, therapy_7, 
+                 therapy_8, therapy_9),
+        include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+# ending
+therapy_1 <- felm(log(counseling) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_2 <- felm(log(counseling) ~ c2_post + c2_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_3 <- felm(log(counseling) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_4 <- felm(log(medication) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_5 <- felm(log(medication) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_6 <- felm(log(medication) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+          data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_7 <- felm(log(no_counseling) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_8 <- felm(log(no_counseling) ~ c2_post + c2_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+therapy_9 <- felm(log(no_counseling) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13 %>% drop_na(pop),              weights = na.omit(hps_all_v13$pop))
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6, therapy_7, 
+                 therapy_8, therapy_9),
+        include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+# ending
+therapy_1 <- felm(log(counseling) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_2 <- felm(log(counseling) ~ c2_post + c2_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_3 <- felm(log(counseling) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_4 <- felm(log(medication) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_5 <- felm(log(medication) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_6 <- felm(log(medication) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+          data = hps_all_v13)
+
+therapy_7 <- felm(log(no_counseling) ~ c1_post + c1_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13)
+
+therapy_8 <- felm(log(no_counseling) ~ c2_post + c2_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+therapy_9 <- felm(log(no_counseling) ~ c6_post + c6_future  +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+            data = hps_all_v13)
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6, therapy_7, 
+                 therapy_8, therapy_9),
+        include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
+
+```
+
+
+```{r}
+
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5),
+        include.ci = FALSE, digits = 4, file = "therapy.doc")
 ```
 

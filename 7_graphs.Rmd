@@ -1323,7 +1323,427 @@ combined <- ggarrange(plotlist = list(part1, part2, part3, part4))
 ```
 
 ```{r}
+# Coefficient plots!!!
+
+depression_sip<- felm(I(log(0.485 * crying + 0.782 * depression + 
+                                0.127 * lonely + 0.320 * sad + 0.184 * tired + 1)) ~ 
+                                     sip_first * year_indicator + 
+                                     no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v22_5 %>% drop_na(pop),
+             weights = na.omit(searches_norm3_v22_5$pop))
+
+anxiety_sip <- felm(I(log(0.924 * anxiety + 0.213 * nervous + 
+                                0.133 * stress + 0.198 * worry + 0.211 * panic + 1)) ~ 
+                                  sip_first * year_indicator + 
+                                     no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+therapy_sip <- felm(I(log(therapy + 1 )) ~  
+                 sip_first * year_indicator + 
+                no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+```
+
+```{r}
+# 
+
+dwplot(list(depression_sip, anxiety_sip, therapy_sip),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("sip_first:year_indicator", "year_indicator:no_sip_most_pop",
+                      "year_indicator:online_only", "year_indicator:hybrid"),
+       model_order = c("Model 1", "Model 2", "Model 3")) %>% 
+       relabel_predictors(c("sip_first:year_indicator" = "SIP start",
+                          "year_indicator:no_sip_most_pop" = "SIP end",
+                          "year_indicator:online_only" = "Online school reopening",
+                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+      theme_classic() + 
+      scale_color_discrete(name = "Outcome", labels = c("Therapy", "Anxiety", "Depression")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top")
+```
+
+```{r}
+# Try for business closure
+
+depression_bus <- felm(I(log(0.485 * crying + 0.782 * depression + 
+                                0.127 * lonely + 0.320 * sad + 0.184 * tired + 1)) ~ 
+                                     busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             data = searches_norm3_v22_5 %>% drop_na(pop),
+             weights = na.omit(searches_norm3_v22_5$pop))
+
+anxiety_bus <- felm(I(log(0.924 * anxiety + 0.213 * nervous + 
+                                0.133 * stress + 0.198 * worry + 0.211 * panic + 1)) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+therapy_bus <- felm(I(log(therapy + 1 )) ~  
+                 busclose_first * year_indicator + 
+                busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+```
+
+```{r}
+dwplot(list(depression_bus, anxiety_bus, therapy_bus),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop",
+                      "year_indicator:online_only", "year_indicator:hybrid"),
+       model_order = c("Model 1", "Model 2", "Model 3")) %>% 
+       relabel_predictors(c("busclose_first:year_indicator" = "Closure start",
+                          "year_indicator:busopen_most_pop" = "Closure end",
+                          "year_indicator:online_only" = "Online school reopening",
+                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+      theme_classic() + 
+      scale_color_discrete(name = "Outcome", labels = c("Therapy", "Anxiety", "Depression")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top")
+```
 
 
+```{r}
+# substance misuse
+
+substance_busclose <- felm(log(0.144*alcohol + 0.833*cannabis + 0.451*cigarette + 
+                            0.172*e_cig + 0.228*smoking + 1) ~ 
+                                  busclose_first*year_indicator + 
+                                     busopen_most_pop*year_indicator + 
+                        online_only*year_indicator + 
+                        hybrid*year_indicator + 
+                        other*year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+substance_misuse_busclose <- felm(log(0.308 * addiction + 0.390 * alcoholism + 0.104 * rehab + 
+                             0.861 * substance_abuse + 1) ~ 
+                                  busclose_first * year_indicator + 
+                                     busopen_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+              weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+dwplot(list(substance_busclose, substance_misuse_busclose),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop",
+                      "year_indicator:online_only", "year_indicator:hybrid"),
+       model_order = c("Model 1", "Model 2")) %>% 
+       relabel_predictors(c("busclose_first:year_indicator" = "Closure start",
+                          "year_indicator:busopen_most_pop" = "Closure end",
+                          "year_indicator:online_only" = "Online school reopening",
+                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+      theme_classic() + 
+      scale_color_discrete(name = "Outcome", labels = c("Substance Misuse", "Substance Use")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top")
+
+
+```
+
+```{r}
+substance_sip <- felm(log(0.144*alcohol + 0.833*cannabis + 0.451*cigarette + 
+                            0.172*e_cig + 0.228*smoking + 1) ~ 
+                                  sip_first*year_indicator + 
+                                     no_sip_most_pop*year_indicator + 
+                        online_only*year_indicator + 
+                        hybrid*year_indicator + 
+                        other*year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+substance_misuse_sip <- felm(log(0.308 * addiction + 0.390 * alcoholism + 0.104 * rehab + 
+                             0.861 * substance_abuse + 1) ~ 
+                                  sip_first * year_indicator + 
+                                    no_sip_most_pop * year_indicator + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+              weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v22_5 %>% filter(is.na(pop) == FALSE))
+
+dwplot(list(substance_sip, substance_misuse_sip),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("sip_first:year_indicator", "year_indicator:no_sip_most_pop",
+                      "year_indicator:online_only", "year_indicator:hybrid"),
+       model_order = c("Model 1", "Model 2")) %>% 
+       relabel_predictors(c("sip_first:year_indicator" = "SIP start",
+                          "year_indicator:no_sip_most_pop" = "SIP end",
+                          "year_indicator:online_only" = "Online school reopening",
+                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+      theme_classic() + 
+      scale_color_discrete(name = "Outcome", labels = c("Substance Misuse", "Substance Use")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top")
+
+```
+
+```{r}
+# HPS - depression and anxiety
+
+depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+depression_2 <- felm(log(hps_depression) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_1 <- felm(log(hps_anxiety) ~ c1_post + c1_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_2 <- felm(log(hps_anxiety) ~ factor(c1_school_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60",
+       ),
+       vars_order = c("c1_post", "c1_future",
+                      "factor(c1_school_closing)1", "factor(c1_school_closing)2",
+                      "factor(c1_school_closing)3"),
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+    relabel_predictors(c("c1_post" = "Closure end",
+                         "c1_future" = "Subsequent closure start",
+                         "factor(c1_school_closing)1" = "Closure level 1",
+                         "factor(c1_school_closing)2" = "Closure level 2",
+                         "factor(c1_school_closing)3" = "Closure level 3")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("Anxiety (strictness",
+                                                      "Depression (strictness)",
+                                                      "Anxiety (start/end)", 
+                                                      "Depression (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
+                        
+```
+
+```{r}
+
+
+depression_1 <- felm(log(hps_depression) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+depression_2 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_1 <- felm(log(hps_anxiety) ~ c2_post + c2_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_2 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60",
+       ),
+       vars_order = c("c2_post", "c2_future",
+                      "factor(c2_workplace_closing)1", "factor(c2_workplace_closing)2",
+                      "factor(c2_workplace_closing)3"),
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+    relabel_predictors(c("c2_post" = "Closure end",
+                         "c2_future" = "Subsequent closure start",
+                         "factor(c2_workplace_closing)1" = "Closure level 1",
+                         "factor(c2_workplace_closing)2" = "Closure level 2",
+                         "factor(c2_workplace_closing)3" = "Closure level 3")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("Anxiety (strictness",
+                                                      "Depression (strictness)",
+                                                      "Anxiety (start/end)", 
+                                                      "Depression (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
+```
+
+```{r}
+
+
+depression_1 <- felm(log(hps_depression) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+depression_2 <- felm(log(hps_depression) ~ factor(c6_stay_at_home_requirements) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_1 <- felm(log(hps_anxiety) ~ c6_post + c6_future +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+anxiety_2 <- felm(log(hps_anxiety) ~ factor(c6_stay_at_home_requirements) +
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v13 %>% drop_na(pop),
+             weights = na.omit(hps_all_v13$pop))
+
+dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60",
+       ),
+       vars_order = c("c6_post", "c6_future",
+                      "factor(c6_stay_at_home_requirements)1", "factor(c6_stay_at_home_requirements)2"),
+       model_order = c("Model 1", "Model 3", "Model 2", "Model 4")) %>% 
+    relabel_predictors(c("c6_post" = "Order end",
+                         "c6_future" = "Subsequent order start",
+                         "factor(c6_stay_at_home_requirements)1" = "Order level 1",
+                         "factor(c6_stay_at_home_requirements)2" = "Order level 2")) +
+    theme_classic() +
+    scale_color_discrete(name = "Model", labels = c("Anxiety (strictness",
+                                                      "Depression (strictness)",
+                                                      "Anxiety (start/end)", 
+                                                      "Depression (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
 ```
 

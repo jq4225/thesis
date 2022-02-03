@@ -205,70 +205,71 @@ first_lockdown <- hps_all_v11 %>%
   arrange(start_date) %>% 
   fill(c(c1_flag, c2_flag, c6_flag), .direction = "down") %>% 
   ungroup() %>% 
-  select(start_date, state, c1_flag, c2_flag, c6_flag) %>%
+  select(start_date, state, c1_school_closing, c2_workplace_closing, 
+         c6_stay_at_home_requirements) %>%
   group_by(state) %>%
   arrange(start_date)
 
 c1 <- first_lockdown %>%
-  filter(c1_flag == 1) %>%
+  filter(c1_school_closing > 0) %>%
   slice(1) %>%
   select(start_date, state) %>%
   rename("c1_start" = "start_date")
 
 c2 <- first_lockdown %>%
-  filter(c2_flag == 1) %>%
+  filter(c2_workplace_closing > 0) %>%
   slice(1) %>%
   select(start_date, state) %>%
   rename("c2_start" = "start_date")
 
 c6 <- first_lockdown %>%
-  filter(c6_flag == 1) %>%
+  filter(c6_stay_at_home_requirements > 0) %>%
   slice(1) %>%
   select(start_date, state) %>%
   rename("c6_start" = "start_date")
 
 # This is the first period when the lockdown is not in place
 c1_end <- hps_all_v11 %>%
-  select(period, state, c1_flag) %>% 
-  filter(c1_flag == 0 & period != 1) %>% 
+  select(period, state, c1_school_closing) %>% 
+  filter(c1_school_closing == 0 & period != 1) %>% 
   group_by(state) %>% 
   arrange(period) %>%
   rename("c1_end" = "period") %>% 
-  select(-c1_flag) %>% 
+  select(-c1_school_closing) %>% 
   slice(1)
   
 c2_end <- hps_all_v11 %>%
-  select(period, state, c2_flag) %>% 
-  filter(c2_flag == 0 & period != 1) %>% 
+  select(period, state, c2_workplace_closing) %>% 
+  filter(c2_workplace_closing == 0 & period != 1) %>% 
   group_by(state) %>% 
   arrange(period) %>%
   rename("c2_end" = "period") %>% 
-  select(-c2_flag) %>% 
+  select(-c2_workplace_closing) %>% 
   slice(1)
 
 c6_end <- hps_all_v11 %>%
-  select(period, state, c6_flag) %>% 
-  filter(c6_flag == 0 & period != 1) %>% 
+  select(period, state, c6_stay_at_home_requirements) %>% 
+  filter(c6_stay_at_home_requirements == 0 & period != 1) %>% 
   group_by(state) %>% 
   arrange(period) %>%
   rename("c6_end" = "period") %>% 
-  select(-c6_flag) %>% 
+  select(-c6_stay_at_home_requirements) %>% 
   slice(1)
   
-  
 
-hps_all_v12 <- hps_all_v11 %>%
+hps_all_v13 <- hps_all_v11 %>%
   group_by(state) %>% 
   arrange(start_date) %>% 
-  fill(c(c1_flag, c2_flag, c6_flag), .direction = "down") %>% 
+  fill(c(c1_school_closing, c2_workplace_closing, c6_stay_at_home_requirements), 
+       .direction = "down") %>% 
   ungroup() %>% 
   left_join(c1, by = "state") %>% 
   left_join(c2, by = "state") %>% 
   left_join(c6, by = "state") %>% 
   # This codes dates 1 if they're  periods after the first lockdown ends
-  mutate(c1_post = ifelse(c1_flag == 0 & start_date > c1_start, 1, NA),
-         c2_post = ifelse(c2_flag == 0 & start_date > c2_start, 1, NA),
-         c6_post = ifelse(c6_flag == 0 & start_date > c6_start, 1, NA)) %>% 
+  mutate(c1_post = ifelse(c1_school_closing == 0 & start_date > c1_start, 1, NA),
+         c2_post = ifelse(c2_workplace_closing == 0 & start_date > c2_start, 1, NA),
+         c6_post = ifelse(c6_stay_at_home_requirements == 0 & start_date > c6_start, 1, NA)) %>% 
   group_by(state) %>% 
   arrange(start_date) %>% 
   fill(c1_post:c6_post, .direction = "down") %>% 
@@ -277,14 +278,14 @@ hps_all_v12 <- hps_all_v11 %>%
   left_join(c1_end, by = "state") %>% 
   left_join(c2_end, by = "state") %>% 
   left_join(c6_end, by = "state") %>% 
-  mutate(c1_future = ifelse(c1_flag == 1 & period >= c1_end, 1, 0),
-         c2_future = ifelse(c2_flag == 1 & period >= c2_end, 1, 0),
-         c6_future = ifelse(c6_flag == 1 & period >= c6_end, 1, 0)) %>% 
+  mutate(c1_future = ifelse(c1_school_closing >= 1 & period >= c1_end, 1, 0),
+         c2_future = ifelse(c2_workplace_closing >= 1 & period >= c2_end, 1, 0),
+         c6_future = ifelse(c6_stay_at_home_requirements >= 1 & period >= c6_end, 1, 0)) %>% 
   # if there is no period end date then you are never in the subsequent lockdown, only the original
   mutate(across(c1_future:c6_future, ~ ifelse(is.na(.), 0, .))) %>% 
-  mutate(c1_first = c1_flag - c1_future,
-         c2_first = c2_flag - c2_future,
-         c6_first = c6_flag - c6_future) %>% 
+  mutate(c1_first = ifelse(c1_school_closing >= 1, 1, 0) - c1_future,
+         c2_first = ifelse(c2_workplace_closing >= 1, 1, 0) - c2_future,
+         c6_first = ifelse(c6_stay_at_home_requirements >= 1, 1, 0) - c6_future) %>% 
   # mutate(c1_future = ifelse(is.na(c1_future), ifelse(c1_flag == 1, 1, 0), c1_future),
   #        c2_future = ifelse(is.na(c2_future), ifelse(c2_flag == 1, 1, 0), c2_future),
   #        c6_future = ifelse(is.na(c6_future), ifelse(c6_flag == 1, 1, 0), c1_future)) %>% 
