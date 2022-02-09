@@ -1,0 +1,202 @@
+---
+title: "12_mobility"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+library(zoo)
+library(lfe)
+library(texreg)
+```
+
+
+```{r}
+# Mobility data first
+
+mobility <- read_csv('data/2020_US_Region_Mobility_Report.csv') %>% 
+  filter(country_region_code == "US", is.na(sub_region_2) == FALSE) %>% 
+  select(sub_region_1, census_fips_code, retail_and_recreation_percent_change_from_baseline,
+         grocery_and_pharmacy_percent_change_from_baseline,
+         workplaces_percent_change_from_baseline, date)
+
+```
+
+```{r}
+# Lockdown dates by county
+
+goolsbee_interventions <- readRDS('clean_data/county/goolsbee_interventions.rds') %>%
+  mutate(across(c(`sipstart`:`busopen`), ~ ifelse(. == as_date("2021-01-01"),
+                                                   as_date("2030-01-01"), .))) %>%
+  mutate(across(c(`sipstart`:`busopen`), as_date))
+```
+
+```{r}
+# COVID data
+
+covid <- read_csv('data/covid_county.csv') %>% 
+  select(fips, cases, deaths, date) %>% 
+  group_by(fips) %>% 
+  arrange(date) %>% 
+  # fill in missing cases/deaths downwards
+  fill(cases, .direction = "down") %>% 
+  fill(deaths, .direction = "down") %>% 
+  mutate(new_cases = cases - lag(cases),
+         new_deaths = deaths - lag(deaths)) %>% 
+  mutate(new_cases_avg = rollmean(new_cases, k= 7, fill = NA),
+         new_deaths_avg = rollmean(new_deaths, k = 7, fill = NA)) %>% 
+  filter(date >= as_date("2020-02-15"))
+
+# population
+
+pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population) %>%
+  mutate(fips = str_sub(id, str_length(id) - 4, str_length(id))) %>%
+  select(-id) %>% 
+  rename("pop" = "estimate_sex_and_age_total_population")
+```
+
+
+```{r}
+# Join this all so far
+
+mobility_v0 <- left_join(mobility, covid, by = c("census_fips_code" = "fips",
+                                                 "date")) %>% 
+  left_join(goolsbee_interventions, by = c("census_fips_code" = "fips")) %>% 
+  left_join(pop, by = c("census_fips_code" = "fips")) %>% 
+  drop_na(census_fips_code) %>% 
+  mutate(pop = pop/100000,
+         sip = ifelse(date >= sipstart, 1, 0),
+         no_sip = ifelse(date >= sipend, 1, 0),
+         bus = ifelse(date >= busclose, 1, 0),
+         no_bus = ifelse(date >= busopen, 1, 0),
+         new_cases_avg = ifelse(is.na(new_cases_avg), 0, new_cases_avg),
+         new_deaths_avg = ifelse(is.na(new_deaths_avg), 0, new_deaths_avg)) %>% 
+  mutate(new_cases_avg = new_cases_avg/pop,
+         new_deaths_avg = new_deaths_avg/pop)
+```
+
+
+```{r}
+# Now we want searches lol
+
+dma_codes <- read_csv('dma_codes.csv') %>%
+  select(google_code, statefp, cntyfp) %>%
+  mutate(statefp = str_pad(statefp, width = 2, side = "left", pad = "0"),
+         cntyfp = str_pad(cntyfp, width = 3, side = "left", pad = 0)) %>%
+  mutate(fips = str_c(statefp, cntyfp, sep = "")) %>%
+  select(google_code, fips)
+
+searches <- searches_norm3_v22 %>% 
+  select(covid, lockdown, date, dma) %>% 
+  filter(date >= as_date("2020-01-01")) %>% 
+  left_join(dma_codes, by = c("dma" = "google_code")) %>% 
+  rename("week_date" = "date")
+```
+
+
+```{r}
+# Date matching
+dates <- mobility_v0 %>% 
+  select(date) %>% 
+  distinct()
+
+week_dates <- searches %>% 
+  select(week_date) %>% 
+  distinct()
+
+date_match <- expand_grid(dates, week_dates) %>% 
+  mutate(date = as_date(date), week_date = as_date(week_date)) %>% 
+  mutate(diff = abs(as.numeric(date - week_date))) %>% 
+  group_by(date) %>% 
+  arrange(diff) %>% 
+  slice(1) %>% 
+  select(-diff)
+  
+
+mobility_v1 <- left_join(mobility_v0, date_match, by = "date") %>% 
+  left_join(searches, by = c("census_fips_code" = "fips",
+                             "week_date")) %>% 
+  rename("retail_recreation" = "retail_and_recreation_percent_change_from_baseline",
+         "grocery_pharmacy" = "grocery_and_pharmacy_percent_change_from_baseline",
+         "workplaces" = "workplaces_percent_change_from_baseline",
+         "fips" = "census_fips_code") %>% 
+  mutate(day = wday(date),
+         month = month(date),
+         week = week(date)) %>% 
+  mutate(across(c(`sipstart`:`busopen`), ~ ifelse(. == as_date("2030-01-01"), NA, .))) %>% 
+  mutate(sipcounter = as.numeric(date - sipstart),
+         no_sipcounter = as.numeric(date - sipend),
+         buscounter = as.numeric(date - busclose),
+         no_buscounter = as.numeric(date - busopen))
+```
+
+
+```{r}
+# Try this
+
+retail <- felm(retail_recreation ~ sip + no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+
+grocery <- felm(grocery_pharmacy ~ sip + no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+
+workplaces <- felm(workplaces ~ sip + no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+```
+
+```{r}
+retail <- felm(retail_recreation ~ bus + no_bus + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+
+grocery <- felm(grocery_pharmacy ~ bus + no_bus + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+
+workplaces <- felm(workplaces ~ bus + no_bus + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+```
+
+```{r}
+mobility_v1 %>% 
+  group_by(fips) %>% 
+  arrange(date) %>% 
+  mutate(across(retail_recreation:workplaces, ~ rollmean(., k = 7, fill = NA))) %>% 
+  ungroup() %>% 
+  group_by(no_sipcounter) %>% 
+  summarize(across(retail_recreation:workplaces, ~ weighted.mean(., w = pop, na.rm = TRUE))) %>% 
+  pivot_longer(cols = retail_recreation:workplaces, names_to = "mobility", values_to = "value") %>% 
+  ggplot(aes(x = no_sipcounter, y = value, color = mobility)) + 
+    geom_line() + 
+    theme_classic() + 
+    theme(legend.position = "top") + 
+    labs(x = "Days vs. SIP end",
+         y = "% mobility change vs. 2019 baseline") + 
+    scale_color_discrete(name = "Location", labels = c("Grocery & pharmacy",
+                                                       "Retail & recreation",
+                                                       "Workplaces"))
+
+mobility_v1 %>% 
+  group_by(fips) %>% 
+  arrange(date) %>% 
+  mutate(across(retail_recreation:workplaces, ~ rollmean(., k = 7, fill = NA))) %>% 
+  ungroup() %>% 
+  group_by(no_buscounter) %>% 
+  summarize(across(retail_recreation:workplaces, ~ weighted.mean(., w = pop, na.rm = TRUE))) %>% 
+  pivot_longer(cols = retail_recreation:workplaces, names_to = "mobility", values_to = "value") %>% 
+  ggplot(aes(x = no_buscounter, y = value, color = mobility)) + 
+    geom_line() + 
+    theme_classic() + 
+    theme(legend.position = "top") + 
+    labs(x = "Days vs. business reopening ",
+         y = "% mobility change vs. 2019 baseline") + 
+    scale_color_discrete(name = "Location", labels = c("Grocery & pharmacy",
+                                                       "Retail & recreation",
+                                                       "Workplaces"))
+  
+  
+```
+

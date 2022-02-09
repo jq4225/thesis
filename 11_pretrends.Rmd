@@ -305,3 +305,80 @@ depression_1 <- felm(log(hps_depression) ~ factor(c2_workplace_closing)  +
              weights = na.omit(hps_all_v11$pop))
 ```
 
+```{r}
+# pretrends graphing!!!
+
+c1_end <- hps_all_v13 %>% 
+  filter(c1_post == 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c1_end_period" = "period")
+
+c2_end <-  hps_all_v13 %>% 
+  filter(c2_post == 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c2_end_period" = "period")
+
+c6_end <-  hps_all_v13 %>% 
+  filter(c6_post == 1) %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  slice(1) %>% 
+  select(state, period) %>% 
+  rename("c6_end_period" = "period")
+
+hps_all_v14 <- hps_all_v13 %>% 
+  left_join(c1_end, by = "state") %>% 
+  left_join(c2_end, by = "state") %>% 
+  left_join(c6_end, by = "state") %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  mutate(c1_counter = period - c1_end_period,
+         c2_counter = period - c2_end_period,
+         c6_counter = period - c6_end_period) %>% 
+  select(-c1_end_period, -c2_end_period, -c6_end_period) %>% 
+  ungroup()
+
+c1_graph <- hps_all_v14 %>% 
+  group_by(c1_counter) %>% 
+  summarize(c1_depression = weighted.mean(hps_depression, w = pop),
+            c1_anxiety = weighted.mean(hps_anxiety, w = pop))
+
+
+c2_graph <- hps_all_v14 %>% 
+  group_by(c2_counter) %>% 
+  summarize(c2_depression = weighted.mean(hps_depression, w = pop),
+            c2_anxiety = weighted.mean(hps_anxiety, w = pop))
+
+c6_graph <- hps_all_v14 %>% 
+  group_by(c6_counter) %>% 
+  summarize(c6_depression = weighted.mean(hps_depression, w = pop),
+            c6_anxiety = weighted.mean(hps_anxiety, w = pop))
+
+hps_graph <- c1_graph %>% 
+  left_join(c2_graph, by = c("c1_counter" = "c2_counter")) %>% 
+  left_join(c6_graph, by = c("c1_counter" = "c6_counter")) %>% 
+  pivot_longer(cols = c1_depression:c6_anxiety, values_to = "value",
+               names_to = "type") %>% 
+  mutate(lockdown = str_sub(type, 1, 2),
+         symptom = str_sub(type, 4)) %>% 
+  select(-type)
+
+hps_graph %>% 
+  filter(symptom == "depression") %>% 
+  ggplot(aes(x = c1_counter, y = value, color = lockdown)) + 
+     geom_line() +
+     labs(x = "Weeks vs. first lockdown end",
+          y = "% reporting symptoms") + 
+     scale_color_discrete(name = "NPI type",
+                          labels = c("School closure", "Workplace closure",
+                                     "Stay-at-home order")) + 
+     theme_classic()
+
+```
+
