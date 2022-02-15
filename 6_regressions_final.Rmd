@@ -526,6 +526,7 @@ anxiety_sip_index <- felm(I(log(0.924 * anxiety + 0.213 * nervous +
 htmlreg(l = list(depression_sip, depression_sip_index, anxiety_sip, anxiety_sip_index),
         include.ci = FALSE, digits = 4, file = "sip.doc")
 ```
+
 ```{r}
 # Population weights
 depression_sip <- felm(I(log(depression + 1 )) ~  
@@ -665,8 +666,8 @@ anxiety_bus <- felm(I(log(anxiety + 1 )) ~
                        log(lockdown + 1) + log(covid + 1) + 
                        factor(income_support) + factor(debt_contract_relief)
                        |factor(week) + factor(dma) + factor(year)|0|dma, 
-             weights = na.omit(searches_norm3_v15_5$pop),
-                  data = searches_norm3_v15_5 %>% filter(is.na(pop) == FALSE))
+             weights = na.omit(searches_norm3_v22_5$pop),
+                  data = searches_norm3_v_5 %>% filter(is.na(pop) == FALSE))
 
 depression_bus_index <- felm(I(log(0.485 * crying + 0.782 * depression + 
                                 0.127 * lonely + 0.320 * sad + 0.184 * tired + 1)) ~ 

@@ -984,3 +984,7 @@ lockdown_dates %>%
 
 ```
 
+```{r}
+test <- felm()
+```
+

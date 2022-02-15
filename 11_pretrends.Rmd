@@ -381,4 +381,49 @@ hps_graph %>%
      theme_classic()
 
 ```
+```{r}
+# Disaggregating by location
+
+west <- c("WA", "OR", "CA", "NV", "AZ", "ID", "MT", "WY",
+      "CO", "NM", "UT", "HI", "AK")
+south <- c("TX", "OK", "AR", "LA", "MS", "AL", "TN", "KY",
+       "GA", "FL", "SC", "NC", "VA", "WV")
+midwest <- c("KS", "NE", "SD", "ND", "MN", "MO", "IA", "IL",
+         "IN", "MI", "WI", "OH")
+northeast <- c("ME", "NH", "NY", "MA", "RI", "VT", "PA", 
+           "NJ", "CT", "DE", "MD", "DC")
+
+hps_all_v15 <- hps_all_v14 %>% 
+  mutate(region = ifelse(state %in% west, "west", 
+                         ifelse(state %in% south, "south", 
+                                ifelse(state %in% midwest, "midwest",
+                                       ifelse(state %in% northeast, "northeast", NA)))))
+
+hps_all_v15 %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  mutate(hps_depression = rollmean(hps_depression, k = 3, fill = "extend"),
+         hps_anxiety = rollmean(hps_anxiety, k = 3, fill = "extend")) %>% 
+  ungroup() %>% 
+  group_by(c2_counter, region) %>% 
+  summarize(c1_depression = weighted.mean(hps_depression, w = pop),
+            c1_anxiety = weighted.mean(hps_anxiety, w = pop)) %>% 
+  pivot_longer(cols = c1_depression:c1_anxiety, names_to = "symptom", values_to = "value") %>% 
+  mutate(symptom = ifelse(symptom == "c1_anxiety", "Anxiety", "Depression")) %>%
+  mutate(symptom = relevel(factor(symptom), ref = "Depression")) %>% 
+  ggplot(aes(x = c2_counter, y = value, color = region)) + 
+    geom_line() + 
+    xlim(-20, 10) +
+    theme_classic() +
+    labs(x = "Weeks vs. lockdown end",
+         y = "% reporting depression symptoms") + 
+    scale_color_discrete(name = "Region", labels = c("Midwest",
+                                                     "Northeast",
+                                                     "South",
+                                                     "West")) + 
+    theme(legend.position = "top", panel.border = element_rect(color = "black",
+                                    fill = NA,
+                                    size = 0.5)) + 
+    facet_wrap(~symptom)
+```
 

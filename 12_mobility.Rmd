@@ -11,6 +11,8 @@ library(lubridate)
 library(zoo)
 library(lfe)
 library(texreg)
+library(broom)
+library(dotwhisker)
 ```
 
 
@@ -135,30 +137,192 @@ mobility_v1 <- left_join(mobility_v0, date_match, by = "date") %>%
          no_buscounter = as.numeric(date - busopen))
 ```
 
+```{r}
+# Let's round the sipcounter too
+
+mobility_v2 <- mobility_v1 %>% 
+  mutate(sipcounter_wk = round(sipcounter/7),
+         no_sipcounter_wk = round(no_sipcounter/7),
+         buscounter_wk = round(buscounter/7),
+         no_buscounter_wk = round(no_buscounter/7))
+```
+
+```{r}
+# Let's try adding in weather data and school closures
+
+dates <- mobility_v5 %>% 
+  select(date) %>% 
+  distinct()
+
+# school
+
+school <- read_excel('data/policy/covid-school-data.xlsx') %>% 
+  clean_names() %>% 
+  select(district_nces,
+         physical_state, open_date, teaching_method, enrollment)
+
+crosswalk <- read_excel('data/policy/sdlist-20.xls', skip = 2) %>% 
+  clean_names() %>% 
+  mutate(district_nces = str_c(state_fips, district_id_number, sep = ""),
+         county_fips = str_c(state_fips, county_fips, sep = "")) %>% 
+  select(-district_id_number, -school_district_name, -county_names)
+
+school_2 <- left_join(school, crosswalk, by = "district_nces") %>% 
+  drop_na(county_fips, open_date, enrollment) %>% 
+  group_by(county_fips) %>% 
+  ungroup() %>% 
+  filter(teaching_method != "Pending",
+         teaching_method != "Unknown") %>% 
+  select(-physical_state, -district_nces, -state_postal_code, -state_fips) %>% 
+  mutate(open_date = mdy(open_date))
+
+# expand the grid on dates
+
+school_daily <- expand_grid(dates, school_2) %>% 
+  mutate(online_only = 0, on_premises = 0, hybrid = 0, other = 0,
+         enrollment = as.numeric(enrollment)) %>% 
+  mutate(online_only = ifelse(teaching_method == "Online Only"  & open_date <= date,
+                              online_only + enrollment, online_only),
+         on_premises = ifelse(teaching_method == "On Premises" & open_date <= date,
+                               on_premises + enrollment, on_premises),
+         hybrid = ifelse(teaching_method == "Hybrid" & open_date <= date,
+                          hybrid + enrollment, hybrid),
+         other = ifelse(teaching_method == "Other" & open_date <= date,
+                        other + enrollment, other)) %>% 
+  group_by(date, county_fips) %>% 
+  summarize(across(online_only:other, sum)) %>%
+  mutate(enrollment = online_only + on_premises + hybrid + other) %>% 
+  mutate(across(online_only:other, ~ ifelse(enrollment != 0, ./enrollment, .))) %>% 
+  select(-enrollment)
+
+mobility_v5 <- mobility_v5 %>% 
+  mutate(month = month(date), year = year(date)) %>% 
+  left_join(monthly_weather_clean, by = c("year", "month", "fips")) %>% 
+  left_join(school_closure_clean, by = "fips") %>% 
+  mutate(school_all = ifelse(school_close_all > date, 1, 0),
+         school_first = ifelse(school_close_first > date, 1, 0),
+         school_all_counter = date - school_close_all,
+         school_first_counter = date - school_close_first) %>% 
+  left_join(school_daily, by = c("date", "fips" = "county_fips"))
+
+
+  
+
+```
+
 
 ```{r}
 # Try this
 
-retail <- felm(retail_recreation ~ sip + no_sip + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+retail_1 <- felm(retail_recreation ~ sip + no_sip + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1) + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+               weights = mobility_v5$pop)
 
-grocery <- felm(grocery_pharmacy ~ sip + no_sip + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+grocery_1 <- felm(grocery_pharmacy ~ sip + no_sip + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+                weights = mobility_v5$pop)
 
-workplaces <- felm(workplaces ~ sip + no_sip + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+workplaces_1 <- felm(workplaces ~ sip + no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+                   weights = mobility_v5$pop)
 ```
 
 ```{r}
-retail <- felm(retail_recreation ~ bus + no_bus + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+retail_2 <- felm(retail_recreation ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1) + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+               weights = mobility_v5$pop)
 
-grocery <- felm(grocery_pharmacy ~ bus + no_bus + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+grocery_2 <- felm(grocery_pharmacy ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+                weights = mobility_v5$pop)
 
-workplaces <- felm(workplaces ~ bus + no_bus + new_cases_avg + 
-                   log(covid+1) + log(lockdown+1)|day + week + fips|0|fips, data = mobility_v1)
+workplaces_2 <- felm(workplaces ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5,
+                   weights = mobility_v5$pop)
+
+htmlreg(l = list(retail_2, grocery_2, workplaces_2, 
+                 retail_1, grocery_1, workplaces_1),
+        include.ci = FALSE, digits = 3, file = "mobility.doc")
+
+dwplot(list(workplaces_2, retail_2, grocery_2),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("bus", "no_bus", "online_only",
+                      "hybrid"),
+       model_order = c("Model 1", "Model 2", "Model 3")) %>% 
+  relabel_predictors(c("bus" = "Closure start",
+                       "no_bus" = "Closure end",
+                       "online_only" = "Online school reopening",
+                       "hybrid" = "Hybrid school reopening")) + 
+  scale_color_discrete(name = "Mobility type", labels = c("Grocery/pharmacy", "Retail/recreation",
+                                                          "Workplaces"
+                                                          )) + 
+  labs(x = "Est. percentage point change in mobility") + 
+  theme_classic(base_size = 12.5) + 
+  theme(legend.position = "top")
+
+# SIP
+
+dwplot(list(workplaces_1, retail_1, grocery_1),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("sip", "no_sip", "online_only",
+                      "hybrid"),
+       model_order = c("Model 1", "Model 2", "Model 3")) %>% 
+  relabel_predictors(c("sip" = "Order start",
+                       "no_sip" = "Order end",
+                       "online_only" = "Online school reopening",
+                       "hybrid" = "Hybrid school reopening")) + 
+  scale_color_discrete(name = "Mobility type",labels = c("Grocery/pharmacy", "Retail/recreation",
+                                                          "Workplaces")) +
+  labs(x = "Est. percentage point change in mobility") + 
+  theme_classic(base_size = 12.5) + 
+  theme(legend.position = "top")
+
 ```
+
+
+```{r}
+# Original regression, no weights
+retail_2 <- felm(retail_recreation ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1) + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+grocery_2 <- felm(grocery_pharmacy ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+workplaces_2 <- felm(workplaces ~ bus + no_bus + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+retail_1 <- felm(retail_recreation ~ sip + no_sip + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1) + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+grocery_1 <- felm(grocery_pharmacy ~ sip + no_sip + new_cases_avg + unemploy + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+workplaces_1 <- felm(workplaces ~ sip + no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1)  + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, data = mobility_v5)
+
+htmlreg(l = list(retail_2, grocery_2, workplaces_2, 
+                 retail_1, grocery_1, workplaces_1),
+        include.ci = FALSE, digits = 3, file = "mobility.doc")
+```
+
 
 ```{r}
 mobility_v1 %>% 
@@ -179,7 +343,7 @@ mobility_v1 %>%
                                                        "Retail & recreation",
                                                        "Workplaces"))
 
-mobility_v1 %>% 
+mobility_v5 %>% 
   group_by(fips) %>% 
   arrange(date) %>% 
   mutate(across(retail_recreation:workplaces, ~ rollmean(., k = 7, fill = NA))) %>% 
@@ -196,7 +360,761 @@ mobility_v1 %>%
     scale_color_discrete(name = "Location", labels = c("Grocery & pharmacy",
                                                        "Retail & recreation",
                                                        "Workplaces"))
+
+mobility_v5 %>% 
+  group_by(fips) %>% 
+  arrange(date) %>% 
+  mutate(across(retail_recreation:workplaces, ~ rollmean(., k = 7, fill = NA))) %>% 
+  ungroup() %>% 
+  group_by(buscounter) %>% 
+  summarize(across(retail_recreation:workplaces, ~ weighted.mean(., w = pop, na.rm = TRUE))) %>% 
+  pivot_longer(cols = retail_recreation:workplaces, names_to = "mobility", values_to = "value") %>% 
+  ggplot(aes(x = buscounter, y = value, color = mobility)) + 
+    geom_line() + 
+    theme_classic() + 
+    theme(legend.position = "top") + 
+    labs(x = "Days vs. business closure ",
+         y = "% mobility change vs. 2019 baseline") + 
+    scale_color_discrete(name = "Location", labels = c("Grocery & pharmacy",
+                                                       "Retail & recreation",
+                                                       "Workplaces"))
   
   
+```
+
+```{r}
+# Adding in some more stuff
+
+unemployment <- unemployment_county_2016_2020 %>% 
+  filter(year == "2020") %>% 
+  mutate(unemploy = as.numeric(unemploy) * 100/as.numeric(labor_force)) %>% 
+  select(-labor_force)
+
+mobility_v5 <- mobility_v2 %>% 
+  mutate(month = month(date)) %>% 
+  left_join(unemployment, by = c("month" = "period", "fips")) %>% 
+  select(-year)
+```
+
+```{r}
+# event study - imposition
+retail <- felm(retail_recreation ~ relevel(factor(sipcounter_wk), ref = "-1") + 
+                 no_sip + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery <- felm(grocery_pharmacy ~ relevel(factor(sipcounter_wk), ref = "-1") + 
+                  no_sip + new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces <- felm(workplaces ~ relevel(factor(sipcounter_wk), ref = "-1") + no_sip + 
+                     new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                   data = mobility_v5, weights = mobility_v5$pop)
+
+retail <- felm(retail_recreation ~ relevel(factor(buscounter_wk), ref = "-1") + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery <- felm(grocery_pharmacy ~ relevel(factor(buscounter_wk), ref = "-1") + no_bus + 
+                  new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces <- felm(workplaces ~ relevel(factor(buscounter_wk), ref = "-1") + no_bus + 
+                     new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                   data = mobility_v5, weights = mobility_v5$pop)
+
+retail_coefs <- tidy(retail) %>% 
+  slice(1:48) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 43)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "retail")
+
+grocery_coefs <- tidy(grocery) %>% 
+  slice(1:48) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 43)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "grocery")
+
+workplaces_coefs <- tidy(workplaces) %>% 
+  slice(1:48) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 43)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "workplaces")
+
+total_coefs <- bind_rows(retail_coefs, grocery_coefs, workplaces_coefs)
+
+
+total_coefs %>% 
+    ggplot(aes(x = term, y = estimate, color = type)) + 
+      geom_line() + 
+      geom_pointrange(aes(ymin=estimate-ci, ymax=estimate+ci), alpha = 0.6) + 
+      geom_hline(yintercept = 0, colour = "grey60") + 
+      xlim(NA, 15) + 
+      ylim(NA, 10) + 
+      theme_classic() + 
+      labs(x = "Weeks vs. lockdown start",
+           y = "Estimated % change in mobility") + 
+      scale_color_discrete(name = "Mobility type",
+                           labels = c("Grocery/pharmacy",
+                                      "Retail/recreation",
+                                      "Workplaces")) + 
+     theme(legend.position = "top")
+
+```
+
+```{r}
+# event study - end
+retail <- felm(retail_recreation ~ relevel(factor(no_sipcounter_wk), ref = "-1") + sip + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery <- felm(grocery_pharmacy ~ relevel(factor(no_sipcounter_wk), ref = "-1") + sip +  
+                  new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces <- felm(workplaces ~ relevel(factor(no_sipcounter_wk), ref = "-1") + sip + 
+                     new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                   data = mobility_v5, weights = mobility_v5$pop)
+
+retail <- felm(retail_recreation ~ relevel(factor(no_buscounter_wk), ref = "-1") + bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery <- felm(grocery_pharmacy ~ relevel(factor(no_buscounter_wk), ref = "-1") + bus + 
+                  new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces <- felm(workplaces ~ relevel(factor(no_buscounter_wk), ref = "-1") + bus + 
+                     new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+                   data = mobility_v5, weights = mobility_v5$pop)
+
+retail_coefs <- tidy(retail) %>% 
+  slice(1:53) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 46)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "retail")
+
+grocery_coefs <- tidy(grocery) %>% 
+  slice(1:53) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 46)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "grocery")
+
+workplaces_coefs <- tidy(workplaces) %>% 
+  slice(1:53) %>% 
+  mutate(term = as.numeric(str_sub(term, start = 46)),
+         ci = 1.96 * `std.error`) %>% 
+  mutate(type = "workplaces")
+
+total_coefs <- bind_rows(retail_coefs, grocery_coefs, workplaces_coefs)
+
+
+total_coefs %>% 
+    ggplot(aes(x = term, y = estimate, color = type)) + 
+      geom_line() + 
+      geom_pointrange(aes(ymin=estimate-ci, ymax=estimate+ci), alpha = 0.6) + 
+      geom_hline(yintercept = 0, colour = "grey60") + 
+      xlim(-10, 15) + 
+      ylim(-10, 15) + 
+      theme_classic() + 
+      labs(x = "Weeks vs. lockdown end",
+           y = "Estimated % change in mobility") + 
+      scale_color_discrete(name = "Mobility type",
+                           labels = c("Grocery/pharmacy",
+                                      "Retail/recreation",
+                                      "Workplaces")) + 
+     theme(legend.position = "top")
+```
+
+```{r}
+
+retail_1 <- felm(retail_recreation ~ sip + no_sip + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_1 <- felm(grocery_pharmacy ~ sip + no_sip + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplace_1 <- felm(workplaces ~ sip + no_sip + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_2 <- felm(retail_recreation ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_2 <- felm(grocery_pharmacy ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplace_2 <- felm(workplaces ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+htmlreg(l = list(retail_1, grocery_1, workplace_1, retail_2, grocery_2, workplace_2),
+        include.ci = FALSE, digits = 4, file = "mobility.doc")
+
+
+```
+
+```{r}
+# mobility_v5
+
+mobility_v5 <- mobility_v5 %>% 
+  mutate(sipcounter_wk_1 = sipcounter_wk-1,
+         sipcounter_wk_2 = sipcounter_wk-2,
+         sipcounter_wk_3 = sipcounter_wk-3,
+         sipcounter_wk_4 = sipcounter_wk-4,
+         sipcounter_wk_n2 = sipcounter_wk + 2,
+         no_sipcounter_wk_1 = no_sipcounter_wk-1,
+         no_sipcounter_wk_2 = no_sipcounter_wk-2,
+         no_sipcounter_wk_3 = no_sipcounter_wk-3,
+         no_sipcounter_wk_4 = no_sipcounter_wk-4,
+         no_sipcounter_wk_n2 = no_sipcounter_wk + 2,
+         buscounter_wk_1 = buscounter_wk-1,
+         buscounter_wk_2 = buscounter_wk-2,
+         buscounter_wk_3 = buscounter_wk-3,
+         buscounter_wk_4 = buscounter_wk-4,
+         buscounter_wk_n2 = buscounter_wk + 2,
+         no_buscounter_wk_1 = no_buscounter_wk-1,
+         no_buscounter_wk_2 = no_buscounter_wk-2,
+         no_buscounter_wk_3 = no_buscounter_wk-3,
+         no_buscounter_wk_4 = no_buscounter_wk-4,
+         no_buscounter_wk_n2 = no_buscounter_wk + 2,) %>% 
+  mutate(across(sipstart:busopen, as_date)) %>% 
+  mutate(sip_n2 = ifelse(sipcounter_wk_n2 > 0, 1, 0),
+         sip_1 = ifelse(sipcounter_wk_1 > 0, 1, 0),
+         sip_2 = ifelse(sipcounter_wk_2 > 0, 1, 0),
+         sip_3 = ifelse(sipcounter_wk_3 > 0, 1, 0),
+         sip_4 = ifelse(sipcounter_wk_4 > 0, 1, 0),
+         no_sip_n2 = ifelse(no_sipcounter_wk_n2 > 0, 1, 0),
+         no_sip_1 = ifelse(no_sipcounter_wk_1 > 0, 1, 0),
+         no_sip_2 = ifelse(no_sipcounter_wk_2 > 0, 1, 0),
+         no_sip_3 = ifelse(no_sipcounter_wk_3 > 0, 1, 0),
+         no_sip_4 = ifelse(no_sipcounter_wk_4 > 0, 1, 0),
+         bus_n2 = ifelse(buscounter_wk_n2 > 0, 1, 0),
+         bus_1 = ifelse(buscounter_wk_1 > 0, 1, 0),
+         bus_2 = ifelse(buscounter_wk_2 > 0, 1, 0),
+         bus_3 = ifelse(buscounter_wk_3 > 0, 1, 0),
+         bus_4 = ifelse(buscounter_wk_4 > 0, 1, 0),
+         nobus_n2 = ifelse(no_buscounter_wk_n2> 0, 1, 0),
+         no_bus_1 = ifelse(no_buscounter_wk_1 > 0, 1, 0),
+         no_bus_2 = ifelse(no_buscounter_wk_2 > 0, 1, 0),
+         no_bus_3 = ifelse(no_buscounter_wk_3 > 0, 1, 0),
+         no_bus_4 = ifelse(no_buscounter_wk_4 > 0, 1, 0))
+```
+
+```{r}
+# Changing window
+
+
+
+```
+
+```{r}
+# Changing date thresholds
+
+retail_n5 <- felm(retail_recreation ~ bus_n5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_0 <- felm(retail_recreation ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_5 <- felm(retail_recreation ~ bus_5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_10 <- felm(retail_recreation ~ bus_10 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_15<- felm(retail_recreation ~ bus_15 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+
+htmlreg(l = list(retail_10, retail_5, retail_0, retail_n5),
+        include.ci = FALSE, digits = 3, file = "mobility.doc")
+
+```
+
+```{r}
+grocery_n5 <- felm(grocery_pharmacy ~ bus_n5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_0 <- felm(grocery_pharmacy ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_5 <- felm(grocery_pharmacy ~ bus_5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_10 <- felm(grocery_pharmacy ~ bus_10 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_15 <- felm(grocery_pharmacy ~ bus_15 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_n5 <- felm(workplaces ~ bus_n5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_0 <- felm(workplaces ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_5 <- felm(workplaces ~ bus_5 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_10 <- felm(workplaces ~ bus_10 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_15<- felm(workplaces ~ bus_15 + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+# https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette 
+
+dwplot(list(retail_n2, retail_0, retail_2, retail_4),
+       vars_order = c("bus_n2", "bus", "bus_2", "bus_4"),
+       dodge_size = 0.5) %>% 
+    relabel_predictors(c("bus_n2" = "2 weeks after",
+                         "bus" = "Actual",
+                         "bus_2" = "2 weeks before",
+                         "bus_4" = "4 weeks before")) +
+    theme_classic(base_size = 14) +
+      # scale_x_continuous(labels = scales::percent) + 
+      # labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "none") + 
+  # guides(color=guide_legend(nrow=2, byrow=TRUE)) + 
+      labs(x = "% change in mobility") + 
+     scale_color_manual(values = c("#00BA38", "#00BA38", "#00BA38", "#00BA38"))
+
+
+dwplot(list(grocery_n2, grocery_0, grocery_2, grocery_4),
+       vars_order = c("bus_n2", "bus", "bus_2", "bus_4"),
+       dodge_size = 0.5) %>% 
+    relabel_predictors(c("bus_n2" = "2 weeks after",
+                         "bus" = "Actual",
+                         "bus_2" = "2 weeks before",
+                         "bus_4" = "4 weeks before")) +
+    theme_classic(base_size = 14) +
+      # scale_x_continuous(labels = scales::percent) + 
+      # labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "none") + 
+  # guides(color=guide_legend(nrow=2, byrow=TRUE)) + 
+      labs(x = "% change in mobility")
+
+htmlreg(l = list(grocery_10, grocery_5, grocery_0, grocery_n5),
+        include.ci = FALSE, digits = 3, file = "mobility.doc")
+
+htmlreg(l = list(workplaces_10, workplaces_5, workplaces_0, workplaces_n5),
+        include.ci = FALSE, digits = 3, file = "mobility.doc")
+```
+
+
+```{r}
+# Making our own dwplot
+
+grocery_n5_coef <- tidy(grocery_n5) %>% 
+  slice(1) %>% 
+  mutate(type = "grocery",
+         time = "-5")
+
+grocery_0_coef <- tidy(grocery_0) %>% 
+  slice(1) %>% 
+  mutate(type = "grocery",
+         time = "0")
+
+grocery_5_coef <- tidy(grocery_5) %>% 
+  slice(1) %>% 
+  mutate(type = "grocery",
+         time = "5")
+
+grocery_10_coef <- tidy(grocery_10) %>% 
+  slice(1) %>% 
+  mutate(type = "grocery",
+         time = "10")
+
+grocery_15_coef <- tidy(grocery_15) %>% 
+  slice(1) %>% 
+  mutate(type = "grocery",
+         time = "15")
+
+workplaces_n5_coef <- tidy(workplaces_n5) %>% 
+  slice(1) %>% 
+  mutate(type = "workplaces",
+         time = "-5")
+
+workplaces_0_coef <- tidy(workplaces_0) %>% 
+  slice(1) %>% 
+  mutate(type = "workplaces",
+         time = "0")
+
+workplaces_5_coef <- tidy(workplaces_5) %>% 
+  slice(1) %>% 
+  mutate(type = "workplaces",
+         time = "5")
+
+workplaces_10_coef <- tidy(workplaces_10) %>% 
+  slice(1) %>% 
+  mutate(type = "workplaces",
+         time = "10")
+
+workplaces_15_coef <- tidy(workplaces_15) %>% 
+  slice(1) %>% 
+  mutate(type = "workplaces",
+         time = "15")
+
+retail_n5_coef <- tidy(retail_n5) %>% 
+  slice(1) %>% 
+  mutate(type = "retail",
+         time = "-5")
+
+retail_0_coef <- tidy(retail_0) %>% 
+  slice(1) %>% 
+  mutate(type = "retail",
+         time = "0")
+
+retail_5_coef <- tidy(retail_5) %>% 
+  slice(1) %>% 
+  mutate(type = "retail",
+         time = "5")
+
+retail_10_coef <- tidy(retail_10) %>% 
+  slice(1) %>% 
+  mutate(type = "retail",
+         time = "10")
+
+retail_15_coef <- tidy(retail_15) %>% 
+  slice(1) %>% 
+  mutate(type = "retail",
+         time = "15")
+
+total_coefs <- rbind(retail_n5_coef, retail_0_coef, retail_5_coef, retail_10_coef, retail_15_coef,
+                     grocery_n5_coef, grocery_0_coef, grocery_5_coef, grocery_10_coef, 
+                     grocery_15_coef,
+                     workplaces_n5_coef, workplaces_0_coef, workplaces_5_coef, workplaces_10_coef, 
+                     workplaces_15_coef)
+
+# total_coefs %>%
+#   ggplot(aes(y = factor(time), x = estimate, xmin = estimate - 2*std.error,
+#              xmax = estimate + 2 * std.error, color = type)) +
+#     geom_bar() +
+#     geom_errorbarh(aes(color = type), height=.2) +
+#     theme_classic()
+
+total_coefs %>% 
+  filter(time != "15") %>% 
+  ggplot(aes(y = ordered(time, levels = c("-5", "0", "5", "10")), x = estimate, color = type)) + 
+   geom_pointrange(
+    aes(xmin = estimate - 2*std.error,
+             xmax = estimate + 2 * std.error),
+    alpha = 0.6
+    ) + 
+   theme_classic(base_size = 12) +
+   scale_color_discrete(name = "Mobility type",
+                        labels = c("Grocery/pharmacy", 
+                                   "Retail/recreation",
+                                   "Workplaces")) + 
+  theme(legend.position = "top") + 
+       scale_y_discrete(labels = c("5 days after",
+                                   "Actual",
+                                   "5 days before",
+                                   "10 days before")) + 
+  
+  labs(x = "Est. % change in mobility", y = "")
+
+```
+
+```{r}
+
+retail_n5 <- felm(retail_recreation ~ bus + no_bus_n5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_0 <- felm(retail_recreation ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_5 <- felm(retail_recreation ~ bus + no_bus_5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_10 <- felm(retail_recreation ~ bus + no_bus_10 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+retail_15<- felm(retail_recreation ~ bus + no_bus_15 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_n5 <- felm(grocery_pharmacy ~ bus + no_bus_n5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_0 <- felm(grocery_pharmacy ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_5 <- felm(grocery_pharmacy ~ bus + no_bus_5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_10 <- felm(grocery_pharmacy ~ bus + no_bus_10 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_15<- felm(grocery_pharmacy ~ bus + no_bus_15 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_n5 <- felm(workplaces ~ bus + no_bus_n5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_0 <- felm(workplaces ~ bus + no_bus + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_5 <- felm(workplaces ~ bus + no_bus_5 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_10 <- felm(workplaces ~ bus + no_bus_10 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+workplaces_15<- felm(workplaces ~ bus + no_bus_15 + 
+                 new_cases_avg + 
+                   log(covid+1) + log(lockdown+1) + unemploy + 
+                   temp + precip + 
+                 online_only + hybrid + other|day + week + fips|0|fips, 
+               data = mobility_v5, weights = mobility_v5$pop)
+
+grocery_n5_coef <- tidy(grocery_n5) %>% 
+  slice(2) %>% 
+  mutate(type = "grocery",
+         time = "-5")
+
+grocery_0_coef <- tidy(grocery_0) %>% 
+  slice(2) %>% 
+  mutate(type = "grocery",
+         time = "0")
+
+grocery_5_coef <- tidy(grocery_5) %>% 
+  slice(2) %>% 
+  mutate(type = "grocery",
+         time = "5")
+
+grocery_10_coef <- tidy(grocery_10) %>% 
+  slice(2) %>% 
+  mutate(type = "grocery",
+         time = "10")
+
+grocery_15_coef <- tidy(grocery_15) %>% 
+  slice(2) %>% 
+  mutate(type = "grocery",
+         time = "15")
+
+workplaces_n5_coef <- tidy(workplaces_n5) %>% 
+  slice(2) %>% 
+  mutate(type = "workplaces",
+         time = "-5")
+
+workplaces_0_coef <- tidy(workplaces_0) %>% 
+  slice(2) %>% 
+  mutate(type = "workplaces",
+         time = "0")
+
+workplaces_5_coef <- tidy(workplaces_5) %>% 
+  slice(2) %>% 
+  mutate(type = "workplaces",
+         time = "5")
+
+workplaces_10_coef <- tidy(workplaces_10) %>% 
+  slice(2) %>% 
+  mutate(type = "workplaces",
+         time = "10")
+
+workplaces_15_coef <- tidy(workplaces_15) %>% 
+  slice(2) %>% 
+  mutate(type = "workplaces",
+         time = "15")
+
+retail_n5_coef <- tidy(retail_n5) %>% 
+  slice(2) %>% 
+  mutate(type = "retail",
+         time = "-5")
+
+retail_0_coef <- tidy(retail_0) %>% 
+  slice(2) %>% 
+  mutate(type = "retail",
+         time = "0")
+
+retail_5_coef <- tidy(retail_5) %>% 
+  slice(2) %>% 
+  mutate(type = "retail",
+         time = "5")
+
+retail_10_coef <- tidy(retail_10) %>% 
+  slice(2) %>% 
+  mutate(type = "retail",
+         time = "10")
+
+retail_15_coef <- tidy(retail_15) %>% 
+  slice(2) %>% 
+  mutate(type = "retail",
+         time = "15")
+
+total_coefs <- rbind(retail_n5_coef, retail_0_coef, retail_5_coef, retail_10_coef, retail_15_coef,
+                     grocery_n5_coef, grocery_0_coef, grocery_5_coef, grocery_10_coef, 
+                     grocery_15_coef,
+                     workplaces_n5_coef, workplaces_0_coef, workplaces_5_coef, workplaces_10_coef, 
+                     workplaces_15_coef)
+
+
+total_coefs %>% 
+  filter(time != "15") %>% 
+  ggplot(aes(y = ordered(time, levels = c("-5", "0", "5", "10")), x = estimate, color = type)) + 
+   geom_pointrange(
+    aes(xmin = estimate - 2*std.error,
+             xmax = estimate + 2 * std.error),
+    alpha = 0.6
+    ) + 
+   theme_classic(base_size = 12) +
+   scale_color_discrete(name = "Mobility type",
+                        labels = c("Grocery/pharmacy", 
+                                   "Retail/recreation",
+                                   "Workplaces")) + 
+  theme(legend.position = "top") + 
+       scale_y_discrete(labels = c("5 days after",
+                                   "Actual",
+                                   "5 days before",
+                                   "10 days before")) + 
+  
+  labs(x = "Est. % change in mobility", y = "")
 ```
 
