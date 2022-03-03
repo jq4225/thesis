@@ -41,7 +41,7 @@ anxiety_bus <- felm(I(log(anxiety + 1 )) ~
 ```{r}
 # Pre-trends graph
 
-searches_norm3_v20_5 %>% 
+searches_norm3_v23_5 %>% 
   mutate(anxiety_index = 0.924 * anxiety + 0.213 * nervous + 
                             0.133 * stress + 0.198 * worry + 0.211 * panic,
          depression_index = 0.485 * crying + 0.782 * depression + 
@@ -60,7 +60,7 @@ searches_norm3_v20_5 %>%
   mutate(svi = rollmean(svi, k = 3, fill = "extend")) %>% 
   ggplot(aes(x = week, y = svi, color = factor(year_indicator))) +
     geom_line() + 
-    # xlim(0, 20) + 
+    #xlim(NA, 0) + 
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
     facet_wrap(~term, scales = "free") + 
     theme_classic() + 
@@ -69,7 +69,8 @@ searches_norm3_v20_5 %>%
         x = "Week of Year")
 
 # SIP start
-searches_norm3_v21_5 %>% 
+searches_norm3_v23_5 %>% 
+  mutate(sip_first_counter = as.numeric(as.character(sip_first_counter))) %>% 
   mutate(anxiety_index = 0.924 * anxiety + 0.213 * nervous + 
                             0.133 * stress + 0.198 * worry + 0.211 * panic,
          depression_index = 0.485 * crying + 0.782 * depression + 
@@ -86,16 +87,46 @@ searches_norm3_v21_5 %>%
   summarize(svi = weighted.mean(svi, pop), .groups = "drop") %>%
   # group_by(year_indicator, term) %>% 
   # arrange(week) %>% 
-  mutate(svi = rollmean(svi, k = 3, fill = 'extend')) %>% 
+  #mutate(svi = rollmean(svi, k = 3, fill = 'extend')) %>% 
   ggplot(aes(x = sip_first_counter, y = svi, color = factor(year_indicator))) +
     geom_line() + 
-    # xlim(0, 20) + 
+      facet_wrap(~term, scales = "free") + 
+    xlim(NA, 1) + 
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
-    facet_wrap(~term, scales = "free") + 
     theme_classic() + 
    theme(legend.position = "top") + 
-   labs(y = "Population-weighted SVI (3-week moving avg.)",
+   labs(y = "Population-weighted SVI",
         x = "Weeks from SIP start")
+
+searches_norm3_v23_5 %>% 
+  mutate(busclose_first_counter = as.numeric(as.character(busclose_first_counter))) %>% 
+  mutate(anxiety_index = 0.924 * anxiety + 0.213 * nervous + 
+                            0.133 * stress + 0.198 * worry + 0.211 * panic,
+         depression_index = 0.485 * crying + 0.782 * depression + 
+                                0.127 * lonely + 0.320 * sad + 0.184 * tired) %>% 
+  select(busclose_first_counter, 
+         year_indicator, year, depression, depression_index, anxiety, anxiety_index, pop) %>% 
+  rename("Depression" = "depression",
+         "Anxiety" = "anxiety",
+         "Depression Index" = "depression_index",
+         "Anxiety Index" = "anxiety_index") %>% 
+  pivot_longer(cols = `Depression`:`Anxiety Index`, names_to = "term", values_to = "svi") %>% 
+  drop_na(pop) %>% 
+  group_by(busclose_first_counter, year_indicator, term) %>% 
+  summarize(svi = weighted.mean(svi, pop), .groups = "drop") %>%
+  # group_by(year_indicator, term) %>% 
+  # arrange(week) %>% 
+  #mutate(svi = rollmean(svi, k = 3, fill = 'extend')) %>% 
+  ggplot(aes(x = busclose_first_counter, y = svi, color = factor(year_indicator))) +
+    geom_line() + 
+    geom_vline(xintercept = 0, colour = "grey60") + 
+      facet_wrap(~term, scales = "free") + 
+    xlim(NA, 5) + 
+    scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 
+    theme_classic() + 
+   theme(legend.position = "top") + 
+   labs(y = "Population-weighted SVI",
+        x = "Weeks from business closure start")
 
 # SIP end
 searches_norm3_v21_5 %>% 
@@ -116,7 +147,7 @@ searches_norm3_v21_5 %>%
   # group_by(year_indicator, term) %>% 
   # arrange(week) %>% 
   mutate(svi = rollmean(svi, k = 3, fill = 'extend')) %>% 
-  ggplot(aes(x = no_sip_most_pop_counter, y = svi, color = factor(year_indicator))) +
+  ggplot(aes(x = no_sip_most_pop_counter, y = svi, color = year_indicator))) +
     geom_line() + 
     # xlim(0, 20) + 
     scale_color_discrete(name = "Year", labels = c("2016-2019", "2020")) + 

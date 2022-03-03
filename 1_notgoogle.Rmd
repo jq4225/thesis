@@ -265,3 +265,63 @@ searches_v22_5 <- searches_v22 %>%
    filter(dma %in% dma_5)
 ```
 
+```{r}
+# Merge in some of the mental health data!
+
+mental_health <- read_excel('data/county_stats/2021 County Health Rankings Data - v1.xlsx',
+                            sheet = "Ranked Measure Data", skip = 1) %>% 
+  clean_names() %>% 
+  select(fips, state, county, mental_health_provider_rate)
+
+state_mental <- mental_health %>% 
+  filter(is.na(county)) %>% 
+  mutate(state = state2abbr(state)) %>% 
+  select(-fips, -county)
+
+pop <- read_csv('data/county_stats/pop_race.csv', skip = 1) %>% 
+  clean_names() %>%
+  select(id, estimate_sex_and_age_total_population) %>%
+  mutate(fips = str_sub(id, str_length(id) - 4, str_length(id))) %>%
+  select(-id) %>% 
+  rename("pop" = "estimate_sex_and_age_total_population")
+
+dma_mental_health <- left_join(mental_health, pop, by = "fips") %>% 
+  drop_na(county) %>% 
+  left_join(dma_codes, by = "fips") %>% 
+  group_by(google_code) %>% 
+  summarize(mental_health_provider_rate = weighted.mean(mental_health_provider_rate,
+                                                        w = pop, na.rm = TRUE)) %>% 
+  drop_na(google_code)
+
+searches_norm3_v24_5 <- left_join(searches_norm3_v23_5, dma_mental_health, by = c("dma" = "google_code"))
+
+hps_all_v19 <- left_join(hps_all_v18, state_mental, by = "state")
+  
+counseling_1 <- felm(log(counseling) ~ 
+                       factor(c2_workplace_closing) * mental_health_provider_rate + 
+               initclaims_combined + 
+               contclaims_combined + cases_per_100k_5day + 
+               factor(e1_income_support) + factor(e2_debt_contract_relief) + 
+                log(covid_norm+1) + log(lockdown_norm+1)
+             |factor(period) + factor(state) + factor(year)|0|state,
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
+
+therapy_bus <- felm(I(log(therapy + 1 )) ~  
+                 busclose_first * year_indicator + 
+                  busclose_first:year_indicator:mental_health_provider_rate + 
+                busopen_most_pop * year_indicator + 
+                  busopen_most_pop:year_indicator:mental_health_provider_rate + 
+                        online_only * year_indicator + 
+                        hybrid * year_indicator + 
+                        other * year_indicator + 
+                        cases_per_100k + unemploy_rate + temp + precip + 
+                       log(lockdown + 1) + log(covid + 1) + 
+                       factor(income_support) + factor(debt_contract_relief)
+                       |factor(week) + factor(dma) + factor(year)|0|dma, 
+             weights = na.omit(searches_norm3_v24_5$pop),
+                  data = searches_norm3_v24_5 %>% filter(is.na(pop) == FALSE))
+
+
+```
+

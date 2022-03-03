@@ -857,25 +857,25 @@ hps_all_v9 <- left_join(hps_all_v8, therapy_total, by = c("state", "period" = "w
 ```{r}
 # Let's try to make a subsequent lockdown dummy
 
-first_lockdown <- hps_all_v11 %>%
-  select(start_date, state, c1_flag, c2_flag, c6_flag) %>% 
+first_lockdown <- hps_all_v16 %>%
+  select(start_date, state, c1_school_closing, c2_workplace_closing, c6_stay_at_home_requirements) %>% 
   group_by(state) %>% 
   arrange(start_date)
 
 c1 <- first_lockdown %>%
-  filter(c1_flag == 1) %>% 
+  filter(c1_school_closing > 1) %>% 
   slice(1) %>%
   select(start_date, state) %>% 
   rename("c1_start" = "start_date")
 
 c2 <- first_lockdown %>%
-  filter(c2_flag == 1) %>% 
+  filter(c2_workplace_closing > 1) %>% 
   slice(1) %>%
   select(start_date, state) %>% 
   rename("c2_start" = "start_date")
 
 c6 <- first_lockdown %>%
-  filter(c6_flag == 1) %>% 
+  filter(c6_stay_at_home_requirements > 1) %>% 
   slice(1) %>%
   select(start_date, state) %>% 
   rename("c6_start" = "start_date")
@@ -930,6 +930,29 @@ hps_all_v12 <- hps_all_v11 %>%
   mutate(c1_non = ifelse(c1_flag == 0 & start_date > c1_start, 1, 0),
          c2_non = ifelse(c2_flag == 0 & start_date > c2_start, 1, 0),
          c6_non = ifelse(c6_flag == 0 & start_date > c6_start, 1, 0))
+
+# Re code using only transitions to level 2 or above!
+
+hps_all_v18 <- hps_all_v17 %>%
+  left_join(c1, by = "state") %>% 
+  left_join(c2, by = "state") %>% 
+  left_join(c6, by = "state") %>% 
+  group_by(state) %>% 
+  arrange(period) %>% 
+  # This makes all subsequent periods after the first lockdown ends a 1
+  mutate(c1_post_2only = ifelse(c1_school_closing <= 1 & start_date > c1_start, 1, NA),
+         c2_post_2only = ifelse(c2_workplace_closing <= 1 & start_date > c2_start, 1, NA),
+         c6_post_2only = ifelse(c6_stay_at_home_requirements <= 1 & start_date > c6_start, 1, NA)) %>% 
+  fill(c1_post_2only:c6_post_2only, .direction = "down") %>% 
+  mutate(across(c1_post_2only:c6_post_2only, ~ replace_na(., 0))) %>% 
+  # Pick out all the repeated lockdowns
+  mutate(c1_future_2 = ifelse(c1_post_2only == 1 & c1_school_closing > 1, 1, 0),
+         c2_future_2 = ifelse(c2_post_2only == 1 & c2_workplace_closing > 1, 1, 0),
+         c6_future_2 = ifelse(c6_post_2only == 1 & c6_stay_at_home_requirements > 1, 1, 0)) %>% 
+  fill(c1_future_2:c6_future_2, .direction = "down") %>%
+  mutate(across(c1_future_2:c6_future_2, ~ replace_na(., 0)))
+  
+
   
   
 
