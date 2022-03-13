@@ -454,7 +454,7 @@ alcohol_final %>%
 
 # New alcohol graphs
 
-hps_all_v11 %>%
+hps_all_v19 %>%
   group_by(year, month) 
     
 
@@ -584,7 +584,7 @@ plot_usmap(data = anxiety_coef, values = "log(anxiety_norm + 1)") +
 ```{r}
 # Check out therapy vs. therapy searches - hps all v4
 
-therapy_graph <- hps_all_v11 %>% 
+therapy_graph <- hps_all_v19 %>% 
   group_by(start_date) %>% 
   summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
   ggplot(aes(x = start_date)) + 
@@ -703,7 +703,7 @@ hps_all_v10 %>%
 ```{r}
 # Let me see some state graphs
 
-hps_all_v11 %>%
+hps_all_v19 %>%
   filter(state == "NY") %>% 
   group_by(start_date) %>% 
   summarize(across(c(hps_depression, depression_norm, crying_norm:sad_norm),
@@ -807,9 +807,9 @@ htmlreg(l = list(depression_1, depression_2, depression_3, depression_4),
 
 ```{r}
 # New verification regressions - hopefully final
-#depression_1 <- felm(log(hps_depression) ~ state|0|0|state, data = hps_all_v11)
+#depression_1 <- felm(log(hps_depression) ~ state|0|0|state, data = hps_all_v19)
 
-depression_1 <- felm(log(depression_norm) ~ log(hps_depression)|0|0|state, data = hps_all_v11)
+depression_1 <- felm(log(depression_norm) ~ log(hps_depression)|0|0|state, data = hps_all_v19)
 
 depression_2 <- felm(I(log(0.353 * crying_norm + 
                                                    0.163 * depression_norm + 
@@ -817,9 +817,9 @@ depression_2 <- felm(I(log(0.353 * crying_norm +
                                                    0.586 * sad_norm + 
                                                    0.475 * tired_norm))
                      ~  log(hps_depression)|0|0|state, 
-                     data = hps_all_v11)
+                     data = hps_all_v19)
 
-depression_3 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v11)
+depression_3 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v19)
 
 depression_4 <- felm(I(log(0.353 * crying_norm + 
                                                    0.163 * depression_norm + 
@@ -827,16 +827,46 @@ depression_4 <- felm(I(log(0.353 * crying_norm +
                                                    0.586 * sad_norm + 
                                                    0.475 * tired_norm))
                      ~ log(hps_depression)|state|0|state, 
-                     data = hps_all_v11)
+                     data = hps_all_v19)
 
 htmlreg(l = list(depression_1, depression_2, depression_3, depression_4), include.ci = FALSE,
         digits = 4, file = "depression.doc")
 
 ```
 
+```{r}
+# With population weights
+
+depression_1 <- felm(log(depression_norm) ~ log(hps_depression)|0|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+depression_2 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+depression_3 <- felm(I(log(0.353 * crying_norm + 
+                                                   0.163 * depression_norm + 
+                                                   0.529 * lonely_norm + 
+                                                   0.586 * sad_norm + 
+                                                   0.475 * tired_norm))
+                     ~  log(hps_depression)|0|0|state, 
+                     data = hps_all_v19, weights = hps_all_v19$pop)
+
+
+
+depression_4 <- felm(I(log(0.353 * crying_norm + 
+                                                   0.163 * depression_norm + 
+                                                   0.529 * lonely_norm + 
+                                                   0.586 * sad_norm + 
+                                                   0.475 * tired_norm))
+                     ~ log(hps_depression)|state|0|state, 
+                     data = hps_all_v19, weights = hps_all_v19$pop)
+
+htmlreg(l = list(depression_1, depression_2, depression_3, depression_4), include.ci = FALSE,
+        digits = 4, file = "depression.doc")
+```
+
+
 
 ```{r}
-anxiety_1 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|0|0|state, data = hps_all_v11)
+anxiety_1 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|0|0|state, data = hps_all_v19)
 
 anxiety_2 <- felm(I(log(0.509 * anxiety + 
                                                    0.528 * nervous + 
@@ -844,9 +874,9 @@ anxiety_2 <- felm(I(log(0.509 * anxiety +
                                                    0.399 * worry + 
                                                    0.223 * panic))
                      ~  log(hps_anxiety)|0|0|state, 
-                     data = hps_all_v11)
+                     data = hps_all_v19)
 
-anxiety_3 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v11)
+anxiety_3 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v19)
 
 anxiety_4 <- felm(I(log(0.509 * anxiety + 
                                                    0.528 * nervous + 
@@ -854,7 +884,37 @@ anxiety_4 <- felm(I(log(0.509 * anxiety +
                                                    0.399 * worry + 
                                                    0.223 * panic))
                      ~ log(hps_anxiety)|state|0|state, 
-                     data = hps_all_v11)
+                     data = hps_all_v19)
+
+htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4), include.ci = FALSE,
+        digits = 4, file = "anxiety.doc")
+```
+
+```{r}
+# weighted
+
+anxiety_1 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|0|0|state, data = hps_all_v19,
+                  weights = hps_all_v19$pop)
+
+
+anxiety_2 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+anxiety_3 <- felm(I(log(0.509 * anxiety + 
+                                                  0.528 * nervous + 
+                                                   0.504 * stress + 
+                                                   0.399 * worry + 
+                                                   0.223 * panic))
+                     ~  log(hps_anxiety)|0|0|state, 
+                     data = hps_all_v19, weights = hps_all_v19$pop)
+
+
+anxiety_4 <- felm(I(log(0.509 * anxiety + 
+                                                   0.528 * nervous + 
+                                                   0.504 * stress + 
+                                                   0.399 * worry + 
+                                                   0.223 * panic))
+                     ~ log(hps_anxiety)|state|0|state, 
+                     data = hps_all_v19, weights = hps_all_v19$pop)
 
 htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4), include.ci = FALSE,
         digits = 4, file = "anxiety.doc")
@@ -862,34 +922,52 @@ htmlreg(l = list(anxiety_1, anxiety_2, anxiety_3, anxiety_4), include.ci = FALSE
 
 
 
-
 ```{r}
 # New therapy
 
-therapy_1 <- felm(log(counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+therapy_1 <- felm(log(counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19)
 
-therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
-therapy_3 <- felm(log(no_counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+therapy_3 <- felm(log(no_counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19)
 
-therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
-therapy_5 <- felm(log(medication) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v11)
+therapy_5 <- felm(log(medication) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19)
 
-therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v11)
+therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
 htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6), include.ci = FALSE, digits = 4, file = "therapy.doc")
 
-therapy_1 <- felm(log(counseling) ~ factor(state)|0|0|state, data = hps_all_v11)
+therapy_1 <- felm(log(counseling) ~ factor(state)|0|0|state, data = hps_all_v19)
 
-therapy_2 <- felm(log(no_counseling) ~ factor(state)|0|0|state, data = hps_all_v11)
+therapy_2 <- felm(log(no_counseling) ~ factor(state)|0|0|state, data = hps_all_v19)
 ```
 
 
 ```{r}
+# Therapy weighted
+
+therapy_1 <- felm(log(counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19,
+                  weights = hps_all_v19$pop)
+
+therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+therapy_3 <- felm(log(no_counseling) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+therapy_5 <- felm(log(medication) ~ log(therapy_norm+1)|0|0|state, data = hps_all_v19)
+
+therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19, weights = hps_all_v19$pop)
+
+htmlreg(l = list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6), include.ci = FALSE, digits = 4, file = "therapy.doc")
+```
+
+```{r}
 # Another graph
 
-therapy_graph_1 <- hps_all_v11 %>% 
+therapy_graph_1 <- hps_all_v19 %>% 
   group_by(start_date) %>% 
   summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
   ggplot(aes(x = start_date)) + 
@@ -906,7 +984,7 @@ therapy_graph_1 <- hps_all_v11 %>%
     scale_x_date(date_breaks = "3 months", date_labels = "%m/%y") + 
     guides(color = guide_legend(nrow = 2))
 
-therapy_graph_2 <- hps_all_v11 %>% 
+therapy_graph_2 <- hps_all_v19 %>% 
   group_by(start_date) %>% 
   summarize(across(medication:therapy_norm, ~ weighted.mean(., pop, na.rm = TRUE))) %>% 
   ggplot(aes(x = start_date)) + 
@@ -944,6 +1022,58 @@ htmlreg(l = list(alc_1, alc_2, alc_3, alc_4, alc_5, alc_6), include.ci = FALSE, 
 ```
 
 ```{r}
+# Weighted
+pop <- hps_all_v19 %>% select(pop, state) %>% distinct()
+
+alcohol_v3 <- alcohol_v3 %>% left_join(pop, by = "state")
+
+alc_1 <- felm(log(alcohol_norm + 1) ~ log(all_alc)|0|0|state, data = alcohol_v3,
+              weights = alcohol_v3$pop)
+
+alc_2 <- felm(log(alcohol_norm + 1) ~ log(all_alc)|state|0|state, data = alcohol_v3,
+              weights = alcohol_v3$pop)
+
+alc_3<- felm(log(alcohol_norm + 1) ~ log(all_alc)|state + year|0|state, data = alcohol_v3, weights = alcohol_v3$pop)
+
+alc_4 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|0|0|state, data = alcohol_v3,
+              weights = alcohol_v3$pop)
+
+alc_5 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|state|0|state, data = alcohol_v3,
+              weights = alcohol_v3$pop)
+
+alc_6 <- felm(log(alcoholism_norm + 1) ~ log(all_alc)|state + year|0|state, data = alcohol_v3, weights = alcohol_v3$pop)
+
+htmlreg(l = list(alc_1, alc_2, alc_3, alc_4, alc_5, alc_6), include.ci = FALSE, digits = 4, file = "alc_verif.doc")
+```
+
+
+```{r}
+cig_1 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|0|0|state, data = smoking_v3, weights = smoking_v3$total_pop)
+
+cig_2 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|state|0|state, data = smoking_v3, weights = smoking_v3$total_pop)
+
+cig_3 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|state + year|0|state, data = smoking_v3, weights = smoking_v3$total_pop)
+
+cig_4 <- felm(log(e_cig_norm+1)~ log(packs_per_capita)|0|0|state, data = smoking_v3,
+              weights = smoking_v3$total_pop)
+
+cig_5 <- felm(log(e_cig_norm+1) ~log(packs_per_capita)|state|0|state, data = smoking_v3,
+              weights = smoking_v3$total_pop)
+
+cig_6 <- felm(log(e_cig_norm+1) ~log(packs_per_capita)|state+year|0|state, data = smoking_v3, weights = smoking_v3$total_pop)
+
+cig_7 <- felm(log(e_cig_norm + cigarettes_norm + smoking_norm+1) 
+              ~log(packs_per_capita)|state+year|0|state, data = smoking_v3,
+              weights = smoking_v3$total_pop)
+
+htmlreg(l = list(cig_1, cig_2, cig_3, cig_4, cig_5, cig_6, cig_7), include.ci = FALSE, digits = 4,
+        file = "smoking_verif.doc")
+
+
+
+```
+
+```{r}
 cig_1 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|0|0|state, data = smoking_v3)
 
 cig_2 <- felm(log(cigarettes_norm+1) ~ log(packs_per_capita)|state|0|state, data = smoking_v3)
@@ -961,10 +1091,8 @@ cig_7 <- felm(log(e_cig_norm + cigarettes_norm + smoking_norm+1)
 
 htmlreg(l = list(cig_1, cig_2, cig_3, cig_4, cig_5, cig_6, cig_7), include.ci = FALSE, digits = 4,
         file = "smoking_verif.doc")
-
-
-
 ```
+
 ```{r}
 # Remaking the graphs
 

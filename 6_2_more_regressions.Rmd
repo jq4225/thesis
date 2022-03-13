@@ -316,3 +316,8 @@ depression_bus <- felm(I(log(suicide + 1 )) ~
 
 ```
 
+```{r}
+# trying sun and abraham twfe estimator
+
+```
+

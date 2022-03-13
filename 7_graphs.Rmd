@@ -1430,14 +1430,11 @@ dwplot(list(depression_sip, anxiety_sip),
            xintercept = 0,
            colour = "grey60"
        ),
-       vars_order = c("sip_first:year_indicator", "year_indicator:no_sip_most_pop",
-                      "year_indicator:online_only", "year_indicator:hybrid"),
+       vars_order = c("sip_first:year_indicator", "year_indicator:no_sip_most_pop"),
        model_order = c("Model 1", "Model 2"),
        dodge_size = 0.9)%>% 
        relabel_predictors(c("sip_first:year_indicator" = "SIP start",
-                          "year_indicator:no_sip_most_pop" = "SIP end",
-                          "year_indicator:online_only" = "Online school reopening",
-                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+                          "year_indicator:no_sip_most_pop" = "SIP end")) + 
       theme_classic(base_size = 14) + 
       scale_color_discrete(name = "Outcome", labels = c(
                                                         "Anxiety", "Depression")) +
@@ -1524,13 +1521,10 @@ dwplot(list(depression_bus, anxiety_bus),
            xintercept = 0,
            colour = "grey60"
        ),
-       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop",
-                      "year_indicator:online_only", "year_indicator:hybrid"),
+       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop"),
        model_order = c("Model 1", "Model 2")) %>% 
        relabel_predictors(c("busclose_first:year_indicator" = "Closure start",
-                          "year_indicator:busopen_most_pop" = "Closure end",
-                          "year_indicator:online_only" = "Online school reopening",
-                          "year_indicator:hybrid" = "Hybrid school reopening")) + 
+                          "year_indicator:busopen_most_pop" = "Closure end")) + 
       theme_classic(base_size = 14) + 
       scale_color_discrete(name = "Outcome", labels = c("Anxiety", "Depression")) +
       scale_x_continuous(labels = scales::percent) + 
@@ -1572,8 +1566,7 @@ dwplot(list(therapy_bus, yoga_bus),
            xintercept = 0,
            colour = "grey60"
        ),
-       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop",
-                      "year_indicator:online_only", "year_indicator:hybrid"),
+       vars_order = c("busclose_first:year_indicator", "year_indicator:busopen_most_pop"),
        model_order = c("Model 1", "Model 2")) %>% 
        relabel_predictors(c("busclose_first:year_indicator" = "Closure start",
                           "year_indicator:busopen_most_pop" = "Closure end",
@@ -1698,8 +1691,8 @@ depression_1 <- felm(log(hps_depression) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_2 <- felm(log(hps_depression) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -1707,8 +1700,8 @@ depression_2 <- felm(log(hps_depression) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_1 <- felm(log(hps_anxiety) ~ c1_post + c1_future +
                initclaims_combined + 
@@ -1716,8 +1709,8 @@ anxiety_1 <- felm(log(hps_anxiety) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_2 <- felm(log(hps_anxiety) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -1725,8 +1718,8 @@ anxiety_2 <- felm(log(hps_anxiety) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        vline = geom_vline(
@@ -1764,8 +1757,8 @@ depression_1 <- felm(log(hps_depression) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_2 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -1773,8 +1766,8 @@ depression_2 <- felm(log(hps_depression) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_1 <- felm(log(hps_anxiety) ~ c2_post + c2_future +
                initclaims_combined + 
@@ -1782,8 +1775,8 @@ anxiety_1 <- felm(log(hps_anxiety) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_2 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -1791,8 +1784,8 @@ anxiety_2 <- felm(log(hps_anxiety) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        vline = geom_vline(
@@ -1829,8 +1822,8 @@ depression_1 <- felm(log(hps_depression) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_2 <- felm(log(hps_depression) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -1838,8 +1831,8 @@ depression_2 <- felm(log(hps_depression) ~ factor(c6_stay_at_home_requirements) 
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_1 <- felm(log(hps_anxiety) ~ c6_post + c6_future +
                initclaims_combined + 
@@ -1847,8 +1840,8 @@ anxiety_1 <- felm(log(hps_anxiety) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_2 <- felm(log(hps_anxiety) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -1856,8 +1849,8 @@ anxiety_2 <- felm(log(hps_anxiety) ~ factor(c6_stay_at_home_requirements) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_1, depression_2, anxiety_1, anxiety_2),
        vline = geom_vline(
@@ -1890,8 +1883,8 @@ therapy_1 <- felm(log(counseling) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_2 <- felm(log(medication) ~ c1_post + c1_future +
                initclaims_combined + 
@@ -1899,8 +1892,8 @@ therapy_2 <- felm(log(medication) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_3 <- felm(log(no_counseling) ~ c1_post + c1_future +
                initclaims_combined + 
@@ -1908,8 +1901,8 @@ therapy_3 <- felm(log(no_counseling) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_4 <- felm(log(counseling) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -1917,8 +1910,8 @@ therapy_4 <- felm(log(counseling) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_5 <- felm(log(medication) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -1926,8 +1919,8 @@ therapy_5 <- felm(log(medication) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_6 <- felm(log(no_counseling) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -1935,8 +1928,35 @@ therapy_6 <- felm(log(no_counseling) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
+
+dwplot(list(therapy_1, therapy_2, therapy_3),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("c1_post", "c1_future",
+                      "factor(c1_school_closing)1", "factor(c1_school_closing)2",
+                      "factor(c1_school_closing)3"),
+       model_order = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6"),
+       dodge_size = 1) %>% 
+    relabel_predictors(c("c1_post" = "Closure end",
+                         "c1_future" = "Subsequent closure start",
+                         "factor(c1_school_closing)1" = "Closure level 1",
+                         "factor(c1_school_closing)2" = "Closure level 2",
+                         "factor(c1_school_closing)3" = "Closure level 3")) +
+    theme_classic(base_size = 14) +
+    scale_color_discrete(name = "Model", labels = c("No counseling (strictness)",
+                                                      "Medication (strictness)",
+                                                      "Counseling (strictness)", 
+                                                      "No counseling (start/end)",
+                                                    "Medication (start/end)",
+                                                    "Counseling (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
 
 dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
        vline = geom_vline(
@@ -1975,8 +1995,8 @@ therapy_1 <- felm(log(counseling) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_2 <- felm(log(medication) ~ c2_post + c2_future +
                initclaims_combined + 
@@ -1984,8 +2004,8 @@ therapy_2 <- felm(log(medication) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_3 <- felm(log(no_counseling) ~ c2_post + c2_future +
                initclaims_combined + 
@@ -1993,8 +2013,8 @@ therapy_3 <- felm(log(no_counseling) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_4 <- felm(log(counseling) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2002,8 +2022,8 @@ therapy_4 <- felm(log(counseling) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_5 <- felm(log(medication) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2011,8 +2031,8 @@ therapy_5 <- felm(log(medication) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_6 <- felm(log(no_counseling) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2020,8 +2040,8 @@ therapy_6 <- felm(log(no_counseling) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
        vline = geom_vline(
@@ -2049,6 +2069,26 @@ dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
       labs(x = "Effect size (approx. % change)") + 
       theme(legend.position = "top") + 
       guides(color=guide_legend(nrow=2, byrow=TRUE))
+
+dwplot(list(therapy_1, therapy_2, therapy_3),
+       vline = geom_vline(
+           xintercept = 0,
+           colour = "grey60"
+       ),
+       vars_order = c("c2_post", "c2_future"),
+       model_order = c("Model 1", "Model 2", "Model 3"),
+       dodge_size = 1) %>% 
+    relabel_predictors(c("c2_post" = "Closure end",
+                         "c2_future" = "Subsequent closure start")) +
+    theme_classic(base_size = 14) +
+    scale_color_discrete(name = "Model", labels = c( 
+                                                      "No counseling (start/end)",
+                                                    "Medication (start/end)",
+                                                    "Counseling (start/end)")) +
+      scale_x_continuous(labels = scales::percent) + 
+      labs(x = "Effect size (approx. % change)") + 
+      theme(legend.position = "top") + 
+      guides(color=guide_legend(nrow=2, byrow=TRUE))
 ```
 
 ```{r}
@@ -2059,8 +2099,8 @@ therapy_1 <- felm(log(counseling) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_2 <- felm(log(medication) ~ c6_post + c6_future +
                initclaims_combined + 
@@ -2068,8 +2108,8 @@ therapy_2 <- felm(log(medication) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_3 <- felm(log(no_counseling) ~ c6_post + c6_future +
                initclaims_combined + 
@@ -2077,8 +2117,8 @@ therapy_3 <- felm(log(no_counseling) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_4 <- felm(log(counseling) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2086,8 +2126,8 @@ therapy_4 <- felm(log(counseling) ~ factor(c6_stay_at_home_requirements) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_5 <- felm(log(medication) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2095,8 +2135,8 @@ therapy_5 <- felm(log(medication) ~ factor(c6_stay_at_home_requirements) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 therapy_6 <- felm(log(no_counseling) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2104,8 +2144,8 @@ therapy_6 <- felm(log(no_counseling) ~ factor(c6_stay_at_home_requirements) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(therapy_1, therapy_2, therapy_3, therapy_4, therapy_5, therapy_6),
        vline = geom_vline(
@@ -2145,8 +2185,8 @@ depression_3 <- felm(log(depression_black + 1) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_4 <- felm(log(depression_black + 1) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2154,8 +2194,8 @@ depression_4 <- felm(log(depression_black + 1) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_5 <- felm(log(depression_white + 1) ~ c2_post + c2_future +
                initclaims_combined + 
@@ -2163,8 +2203,8 @@ depression_5 <- felm(log(depression_white + 1) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_6 <- felm(log(depression_white + 1) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2172,8 +2212,8 @@ depression_6 <- felm(log(depression_white + 1) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_3, depression_4, depression_5, depression_6),
        vline = geom_vline(
@@ -2213,8 +2253,8 @@ anxiety_3 <- felm(log(anxiety_agg_black + 1) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2222,8 +2262,8 @@ anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c2_post + c2_future +
                initclaims_combined + 
@@ -2231,8 +2271,8 @@ anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c2_post + c2_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c2_workplace_closing) +
                initclaims_combined + 
@@ -2240,8 +2280,8 @@ anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c2_workplace_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(anxiety_3, anxiety_4, anxiety_5, anxiety_6),
        vline = geom_vline(
@@ -2281,8 +2321,8 @@ depression_3 <- felm(log(depression_black + 1) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_4 <- felm(log(depression_black + 1) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -2290,8 +2330,8 @@ depression_4 <- felm(log(depression_black + 1) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_5 <- felm(log(depression_white + 1) ~ c1_post + c1_future +
                initclaims_combined + 
@@ -2299,8 +2339,8 @@ depression_5 <- felm(log(depression_white + 1) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_6 <- felm(log(depression_white + 1) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -2308,8 +2348,8 @@ depression_6 <- felm(log(depression_white + 1) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_3, depression_4, depression_5, depression_6),
        vline = geom_vline(
@@ -2348,8 +2388,8 @@ anxiety_3 <- felm(log(anxiety_agg_black + 1) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -2357,8 +2397,8 @@ anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c1_post + c1_future +
                initclaims_combined + 
@@ -2366,8 +2406,8 @@ anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c1_post + c1_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c1_school_closing) +
                initclaims_combined + 
@@ -2375,8 +2415,8 @@ anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c1_school_closing) +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(anxiety_3, anxiety_4, anxiety_5, anxiety_6),
        vline = geom_vline(
@@ -2416,8 +2456,8 @@ depression_3 <- felm(log(depression_black + 1) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_4 <- felm(log(depression_black + 1) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2425,8 +2465,8 @@ depression_4 <- felm(log(depression_black + 1) ~ factor(c6_stay_at_home_requirem
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_5 <- felm(log(depression_white + 1) ~ c6_post + c6_future +
                initclaims_combined + 
@@ -2434,8 +2474,8 @@ depression_5 <- felm(log(depression_white + 1) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 depression_6 <- felm(log(depression_white + 1) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2443,8 +2483,8 @@ depression_6 <- felm(log(depression_white + 1) ~ factor(c6_stay_at_home_requirem
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(depression_3, depression_4, depression_5, depression_6),
        vline = geom_vline(
@@ -2481,8 +2521,8 @@ anxiety_3 <- felm(log(anxiety_agg_black + 1) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2490,8 +2530,8 @@ anxiety_4 <- felm(log(anxiety_agg_black + 1) ~ factor(c6_stay_at_home_requiremen
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c6_post + c6_future +
                initclaims_combined + 
@@ -2499,8 +2539,8 @@ anxiety_5 <- felm(log(anxiety_agg_white + 1) ~ c6_post + c6_future +
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c6_stay_at_home_requirements) +
                initclaims_combined + 
@@ -2508,8 +2548,8 @@ anxiety_6 <- felm(log(anxiety_agg_white + 1) ~ factor(c6_stay_at_home_requiremen
                factor(e1_income_support) + factor(e2_debt_contract_relief) + 
                 log(covid_norm+1) + log(lockdown_norm+1)
              |factor(period) + factor(state) + factor(year)|0|state,
-             data = hps_all_v13 %>% drop_na(pop),
-             weights = na.omit(hps_all_v13$pop))
+             data = hps_all_v19 %>% drop_na(pop),
+             weights = na.omit(hps_all_v19$pop))
 
 dwplot(list(anxiety_3, anxiety_4, anxiety_5, anxiety_6),
        vline = geom_vline(
@@ -2543,7 +2583,7 @@ dwplot(list(anxiety_3, anxiety_4, anxiety_5, anxiety_6),
 ```{r}
 # Verification stuff -- depression
 
-depression_3 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v13)
+depression_3 <- felm(log(depression_norm) ~ log(hps_depression)|state|0|state, data = hps_all_v19)
 
 depression_4 <- felm(I(log(0.353 * crying_norm + 
                                                    0.163 * depression_norm + 
@@ -2551,9 +2591,9 @@ depression_4 <- felm(I(log(0.353 * crying_norm +
                                                    0.586 * sad_norm + 
                                                    0.475 * tired_norm))
                      ~ log(hps_depression)|state|0|state, 
-                     data = hps_all_v13)
+                     data = hps_all_v19)
 
-anxiety_3 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v13)
+anxiety_3 <- felm(log(anxiety_norm) ~ log(hps_anxiety)|state|0|state, data = hps_all_v19)
 
 anxiety_4 <- felm(I(log(0.509 * anxiety + 
                                                    0.528 * nervous + 
@@ -2561,7 +2601,7 @@ anxiety_4 <- felm(I(log(0.509 * anxiety +
                                                    0.399 * worry + 
                                                    0.223 * panic))
                      ~ log(hps_anxiety)|state|0|state, 
-                     data = hps_all_v13)
+                     data = hps_all_v19)
 
 
 dwplot(list(depression_3, depression_4, anxiety_3, anxiety_4),
@@ -2591,11 +2631,11 @@ dwplot(list(depression_3, depression_4, anxiety_3, anxiety_4),
 ```
 
 ```{r}
-therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v13)
+therapy_2 <- felm(log(counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
-therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v13)
+therapy_4 <- felm(log(no_counseling) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
-therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v13)
+therapy_6 <- felm(log(medication) ~ log(therapy_norm+1)|state|0|state, data = hps_all_v19)
 
 dwplot(list(therapy_2, therapy_4, therapy_6),
        vline = geom_vline(
